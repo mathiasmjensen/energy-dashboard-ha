@@ -1,2 +1,353 @@
-# energy-dashboard-ha
-Just An energy dashboard using EVCC, HA and direct integrations for solar forecasts and more
+# Energy Dashboard HAKit
+
+Standalone React + TypeScript + Vite dashboard for Home Assistant, built with
+HAKit (`@hakit/core` and `@hakit/components`).
+
+The dashboard uses `public/energy-dashboard/background.png` as the scene image
+inside a 1536x864 design canvas, then overlays glass metric cards, central
+power-flow callouts, SVG flow lines, a battery detail panel, and bottom
+analytics cards.
+
+The current Overview redesign uses the assets in
+`public/new-energy-dashboard/` inside a 1672x941 dark-mode canvas with a left
+sidebar, central energy-flow scene, right detail rail, and bottom analytics row.
+
+## Setup
+
+```bash
+npm install
+cp .env.example .env
+npm run dev -- --host 0.0.0.0
+```
+
+Set `VITE_HA_URL` in `.env` to your Home Assistant URL. `VITE_HA_TOKEN` is
+optional; leaving it blank lets HAKit use the normal Home Assistant login flow.
+
+## Scripts
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+npm run build:ha
+npm run test:e2e
+```
+
+## Deploy To Home Assistant Docker
+
+For Home Assistant running in Docker, find the host host path mounted into
+the container as `/config`. The dashboard should be copied to that mount under
+`www/energy-dashboard-hakit`, which Home Assistant serves at
+`/local/energy-dashboard-hakit/`.
+
+1. Optionally set your HA URL for the browser that will open the dashboard:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` if you need to override the URL:
+
+```bash
+VITE_HA_URL=
+VITE_HA_TOKEN=
+```
+
+When the dashboard is opened from Home Assistant at `/local/...`, the production
+build defaults to the same browser origin. Set `VITE_HA_URL` only if you deploy
+the dashboard somewhere else or need a specific HTTPS/reverse-proxy URL. Leave
+`VITE_HA_TOKEN` empty unless you intentionally want to bake a long-lived token
+into the static build.
+
+2. Build for Home Assistant's `/local` path:
+
+```bash
+npm run build:ha
+```
+
+3. Copy the build output into the HA config mount. Replace the destination with
+your host deployment path:
+
+```bash
+mkdir -p /path/to/homeassistant/config/www/energy-dashboard-hakit
+rsync -a --delete dist/ /path/to/homeassistant/config/www/energy-dashboard-hakit/
+```
+
+4. Open the dashboard:
+
+```text
+http://YOUR_HA_HOST_OR_IP:8123/local/energy-dashboard-hakit/index.html
+```
+
+If you host the dashboard outside Home Assistant, set `VITE_HA_URL` to the HA
+origin that the browser can reach before building.
+
+## Entity Mapping
+
+Entity placeholders live in `src/data/energyEntities.ts`. Replace those sensor
+IDs with the real entities from your Home Assistant instance.
+
+Unknown, unavailable, or missing values render as `---`.
+
+## Peak Rates
+
+The Peak Rate card can fetch hourly prices directly from a JSON feed:
+
+```bash
+VITE_PEAK_RATE_URL=http://YOUR_SERVICE_HOST:1000/
+```
+
+The feed should return an array of hourly windows:
+
+```json
+[{ "start": "2026-06-10T22:00:00.000Z", "end": "2026-06-10T23:00:00.000Z", "price": 1.2079 }]
+```
+
+The dashboard shows the current active price and the highest upcoming price in
+the next 24 hours. Because this is a browser fetch from the Home Assistant page,
+the price service must include a CORS header, for example:
+
+```text
+Access-Control-Allow-Origin: *
+```
+
+or the specific Home Assistant origin:
+
+```text
+Access-Control-Allow-Origin: http://YOUR_SERVICE_HOST:30103
+```
+
+If CORS is not enabled, the card falls back to the configured HA tariff entities
+in `src/data/energyEntities.ts`. Set `VITE_PEAK_RATE_URL=disabled` to skip the
+direct fetch entirely.
+
+## Solar Forecast
+
+The Solar Forecast card prefers EVCC's own solar forecast endpoint so it matches
+the EVCC Forecast view:
+
+```bash
+VITE_EVCC_URL=http://YOUR_SERVICE_HOST:7070
+VITE_EVCC_SOLAR_FORECAST_URL=http://YOUR_SERVICE_HOST:7070/api/tariff/solar
+```
+
+EVCC returns forecast power in 15-minute windows. The dashboard integrates each
+window into kWh:
+
+```text
+window kWh = max(0, value) * window_hours / 1000
+```
+
+The value shown for today is the remaining EVCC forecast for the rest of the
+day, matching EVCC's "remaining" semantics. The chart still shows a 24-hour
+shape for the day. EVCC forecast data is cached in `localStorage` for 30 minutes
+and stale cached data is reused if EVCC is temporarily unavailable.
+
+Set this to skip EVCC and use the Open-Meteo fallback:
+
+```bash
+VITE_EVCC_SOLAR_FORECAST_URL=disabled
+```
+
+The Open-Meteo fallback uses `global_tilted_irradiance` and the configured panel
+capacity:
+
+```bash
+VITE_SOLAR_FORECAST_LATITUDE=55.493
+VITE_SOLAR_FORECAST_LONGITUDE=10.2046
+VITE_SOLAR_FORECAST_TILT=30
+VITE_SOLAR_FORECAST_AZIMUTH=0
+VITE_SOLAR_PANEL_CAPACITY_KW=10
+VITE_SOLAR_FORECAST_TIMEZONE=Europe/Copenhagen
+```
+
+## EVCC Controls
+
+The EV charger popup is wired for EVCC semantics:
+
+- Charge mode uses EVCC loadpoint modes: `off`, `pv`, `minpv`, and `now`.
+- Max charging current is not edited from this dashboard; keep that in EVCC.
+- Plan charge loads the current HA plan, lets you edit from/to times, turns the
+  current plan on/off, and shows an interactive energy-price chart below the
+  controls.
+- Planned charging starts in EVCC Fast mode (`now`) and returns to Solar mode
+  (`pv`) at the end of the window or when the plan is disabled.
+
+Update these placeholders in `src/data/energyEntities.ts` to match your EVCC
+entities:
+
+```ts
+evccLoadpointMode: 'select.evcc_loadpoint_mode'
+evccChargePlanEnabled: 'input_boolean.evcc_charge_plan_enabled'
+evccChargePlanStart: 'input_datetime.evcc_charge_start'
+evccChargePlanEnd: 'input_datetime.evcc_charge_end'
+evccSetChargePlanScript: 'script.evcc_set_charge_plan'
+```
+
+For plan-charge changes, the UI calls this HA script:
+
+```ts
+evccSetChargePlanScript: 'script.evcc_set_charge_plan'
+```
+
+The popup calls it through `script.turn_on` with this variable payload:
+
+```yaml
+charge_plan:
+  active: true
+  enabled: true
+  from: "22:00"
+  start: "22:00"
+  start_time: "22:00"
+  to: "06:00"
+  end: "06:00"
+  end_time: "06:00"
+  mode_at_start: "now"
+  mode_at_end: "pv"
+plan:
+  active: true
+  enabled: true
+  id: manual-charge-window
+  from: "22:00"
+  start: "22:00"
+  start_time: "22:00"
+  to: "06:00"
+  end: "06:00"
+  end_time: "06:00"
+  mode_at_start: "now"
+  mode_at_end: "pv"
+```
+
+Mode changes call `select.select_option` on `select.evcc_carport_mode`.
+Turning the current plan off also calls `rest_command.evcc_disable_charge` and
+sets EVCC mode back to `pv`.
+
+### EV Charger History in Home Assistant
+
+The charger popup history tab now builds recent sessions from Home Assistant's
+recorder history instead of calling EVCC directly. Make sure these EVCC entities
+exist in HA and are included in `recorder`:
+
+- `binary_sensor.evcc_carport_charging`
+- `sensor.evcc_carport_session_energy`
+- `sensor.evcc_carport_charge_duration`
+- `sensor.evcc_carport_vehicle_soc` (optional, used for a friendlier vehicle label)
+
+Example recorder setup:
+
+```yaml
+recorder:
+  include:
+    entities:
+      - binary_sensor.evcc_carport_charging
+      - sensor.evcc_carport_session_energy
+      - sensor.evcc_carport_charge_duration
+      - sensor.evcc_carport_vehicle_soc
+```
+
+The dashboard reconstructs session windows from `binary_sensor.evcc_carport_charging`
+and uses `sensor.evcc_carport_session_energy` to capture delivered energy for each
+session. If recorder excludes those entities, the history tab will stay empty.
+
+Example Home Assistant helpers, REST commands, script, and automations:
+
+```yaml
+input_datetime:
+  evcc_charge_start:
+    name: EVCC charge start
+    has_date: false
+    has_time: true
+  evcc_charge_end:
+    name: EVCC charge end
+    has_date: false
+    has_time: true
+
+input_boolean:
+  evcc_charge_plan_enabled:
+    name: EVCC charge plan enabled
+
+rest_command:
+  evcc_enable_charge:
+    url: "http://YOUR_EVCC_HOST/api/loadpoints/1/mode/now"
+    method: POST
+  evcc_disable_charge:
+    url: "http://YOUR_EVCC_HOST/api/loadpoints/1/mode/pv"
+    method: POST
+
+script:
+  evcc_set_charge_plan:
+    alias: EVCC Set Charge Plan
+    mode: restart
+    fields:
+      charge_plan:
+        selector:
+          object:
+    sequence:
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.evcc_charge_start
+        data:
+          time: "{{ charge_plan.from }}:00"
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.evcc_charge_end
+        data:
+          time: "{{ charge_plan.to }}:00"
+      - choose:
+          - conditions: "{{ charge_plan.enabled | bool }}"
+            sequence:
+              - service: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.evcc_charge_plan_enabled
+        default:
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.evcc_charge_plan_enabled
+
+automation:
+  - alias: EVCC Start Planned Charging
+    trigger:
+      - platform: time
+        at: input_datetime.evcc_charge_start
+    condition:
+      - condition: state
+        entity_id: input_boolean.evcc_charge_plan_enabled
+        state: "on"
+    action:
+      - service: select.select_option
+        target:
+          entity_id: select.evcc_carport_mode
+        data:
+          option: now
+      - service: rest_command.evcc_enable_charge
+
+  - alias: EVCC Stop Planned Charging
+    trigger:
+      - platform: time
+        at: input_datetime.evcc_charge_end
+    condition:
+      - condition: state
+        entity_id: input_boolean.evcc_charge_plan_enabled
+        state: "on"
+    action:
+      - service: select.select_option
+        target:
+          entity_id: select.evcc_carport_mode
+        data:
+          option: pv
+      - service: rest_command.evcc_disable_charge
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.evcc_charge_plan_enabled
+```
+
+## Playwright Screenshots
+
+Playwright is installed as a dev dependency for visual QA. On this WSL machine,
+Chromium needs Homebrew libraries on the runtime path:
+
+```bash
+export LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:$LD_LIBRARY_PATH
+npm run test:e2e
+npx playwright screenshot --viewport-size=1536,864 http://localhost:5173/ /tmp/energy-dashboard.png
+```
