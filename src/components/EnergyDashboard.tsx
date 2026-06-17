@@ -1,7 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { EvChargerModal } from './EvChargerModal'
+import { MobileDashboard } from './mobile/MobileDashboard'
 import { useEnergyData } from '../hooks/useEnergyData'
+import { useEvChargerController } from '../hooks/useEvChargerController'
+import { useIsMobileView } from '../hooks/useIsMobileView'
 import { usePeakRates } from '../hooks/usePeakRates'
 import type { PeakRateDay, PeakRateWindow } from '../hooks/usePeakRates'
 import { useSceneScale } from '../hooks/useSceneScale'
@@ -39,6 +42,7 @@ type IconName =
 
 export function EnergyDashboard() {
   const scale = useSceneScale()
+  const isMobileView = useIsMobileView()
   const data = useEnergyData()
   const peakRates = usePeakRates()
   const solarForecast = useSolarForecast()
@@ -71,10 +75,11 @@ export function EnergyDashboard() {
   const fallbackPriceDay = createFallbackPriceDay(now)
   const priceDays = peakRates.days.length ? peakRates.days : [fallbackPriceDay]
   const priceCurve = peakRates.hourlyPrices.length ? peakRates.hourlyPrices : FALLBACK_PRICE_CURVE
+  const hasPeakRateWindows = peakRates.windows.length > 0
   const fallbackCurrentPrice = fallbackPriceDay.prices[now.getHours()]?.price.toFixed(2) ?? data.peakRateNow
-  const averagePrice = peakRates.average ?? fallbackPriceDay.average ?? data.peakRateNow
-  const currentPrice = peakRates.now ?? fallbackCurrentPrice
-  const peakPrice = peakRates.peak ?? fallbackPriceDay.peak ?? data.peakRateNext
+  const averagePrice = peakRates.average ?? (hasPeakRateWindows ? '---' : fallbackPriceDay.average ?? data.peakRateNow)
+  const currentPrice = peakRates.now ?? (hasPeakRateWindows ? '---' : fallbackCurrentPrice)
+  const peakPrice = peakRates.peak ?? (hasPeakRateWindows ? '---' : fallbackPriceDay.peak ?? data.peakRateNext)
   const displayDate = now.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
   const displayTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const batterySoc = appendUnit(data.batterySoc, '%')
@@ -106,6 +111,64 @@ export function EnergyDashboard() {
     offsetDays: insightDayOffset,
     windows: peakRates.windows,
   })
+  const evController = useEvChargerController({
+    chargeMode: data.evccChargeMode,
+    chargeModeOptions: data.evccChargeModeOptions,
+    chargePlanEnabled: data.evccChargePlanEnabled,
+    chargePlanFrom: data.evccChargePlanFrom,
+    chargePlanTo: data.evccChargePlanTo,
+    priceAverage: averagePrice,
+    priceCurrent: currentPrice,
+    priceDays,
+    pricePeak: peakPrice,
+    priceSeries: priceCurve,
+  })
+
+  if (isMobileView) {
+    return (
+      <MobileDashboard
+        battery={{
+          energy: data.batteryEnergy,
+          power: data.batteryPower,
+          soc: data.batterySoc,
+          socValue: data.batterySocValue,
+          status: data.batteryStatus,
+        }}
+        charger={{
+          chargeRate: data.evChargePower,
+          sessionDuration: data.evChargeSessionDuration,
+          sessionEnergy: data.evChargeSessionEnergy,
+          status: data.evChargeStatus,
+        }}
+        controller={evController}
+        displayDate={displayDate}
+        displayTime={displayTime}
+        distribution={{
+          battery: data.batteryEnergy,
+          ev: todayTotals.evKwh,
+          grid: todayTotals.gridKwh,
+          home: todayTotals.homeKwh,
+          solar: solarProductionEnergyKwh,
+        }}
+        overview={{
+          batteryMeta: batteryFlowMeta,
+          batteryPower: data.batteryPower,
+          evMeta: data.evChargeStatus,
+          evPower: data.evChargePower,
+          gridMeta: data.gridStatus,
+          gridPower: data.gridPower,
+          homePower: data.homePower,
+          solarPower: data.solarPower,
+        }}
+        prices={energyPriceInsight}
+        solarForecast={solarForecastInsight}
+        solarProduction={{
+          curve: solarPowerCurve,
+          value: solarProductionEnergyKwh,
+        }}
+      />
+    )
+  }
 
   return (
     <main className="dashboard-shell" style={shellStyle}>
@@ -211,18 +274,9 @@ export function EnergyDashboard() {
 
         {isEvChargerOpen ? (
           <EvChargerModal
-            chargeMode={data.evccChargeMode}
-            chargeModeOptions={data.evccChargeModeOptions}
-            chargePlanEnabled={data.evccChargePlanEnabled}
-            chargePlanFrom={data.evccChargePlanFrom}
-            chargePlanTo={data.evccChargePlanTo}
             chargeRate={data.evChargePower}
+            controller={evController}
             onClose={closeEvCharger}
-            priceAverage={averagePrice}
-            priceCurrent={currentPrice}
-            priceDays={priceDays}
-            pricePeak={peakPrice}
-            priceSeries={priceCurve}
             sessionDuration={data.evChargeSessionDuration}
             sessionEnergy={data.evChargeSessionEnergy}
             status={data.evChargeStatus}
@@ -797,7 +851,7 @@ function LineChart({
 
   return (
     <div className={`overview-line-chart ${className ?? ''}`.trim()} aria-label={label}>
-      <svg viewBox="0 0 310 120" aria-hidden="true">
+      <svg viewBox="-4 0 318 120" aria-hidden="true">
         <defs>
           <linearGradient id={`line-fill-${color.replace('#', '')}`} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity="0.26" />
@@ -859,12 +913,19 @@ function getChartPolyline(values: number[]) {
   const width = 310
   const height = 92
   const offsetY = 12
-  const step = width / Math.max(1, normalizedValues.length - 1)
+  const step = width / Math.max(1, normalizedValues.length)
   const dots = normalizedValues.map((value, index) => ({
-    x: Number((index * step).toFixed(1)),
+    x: Number((step * (index + 0.5)).toFixed(1)),
     y: Number((offsetY + height - (value / max) * height).toFixed(1)),
   }))
-  const line = dots.map((point) => `${point.x},${point.y}`).join(' ')
+  const firstPoint = dots[0]
+  const lastPoint = dots[dots.length - 1]
+  const linePoints = [
+    { x: 0, y: firstPoint.y },
+    ...dots,
+    { x: width, y: lastPoint.y },
+  ]
+  const line = linePoints.map((point) => `${point.x},${point.y}`).join(' ')
   const fill = `M0,120 L${line.replaceAll(' ', ' L')} L${width},120 `
 
   return { dots: dots.filter((_, index) => index % 3 === 0), fill, line }
@@ -1002,30 +1063,34 @@ function getEnergyPriceInsight({
   offsetDays: number
   windows: PeakRateWindow[]
 }): EnergyPriceInsight {
-  const { labels, values } = getPeakRateBuckets(windows, now, mode, offsetDays)
+  const { labels, startMs, values } = getPeakRateBuckets(windows, now, mode, offsetDays)
   const average = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
   const peak = values.length ? Math.max(...values) : 0
   const low = values.length ? Math.min(...values) : 0
   const isTodayOverview = mode === 'today' && offsetDays === 0
   const isLiveTimeline = mode === 'timeline' && offsetDays === 0
+  const requestedStartMs = getInsightWindowStartMs(now, mode, offsetDays)
+  const isSelectedWindow = startMs === requestedStartMs
 
   return {
     pointLabels: labels,
     points: values,
     primaryLabel: isLiveTimeline
       ? 'Average for the next 24 hours'
-      : isTodayOverview
+      : isTodayOverview && isSelectedWindow
         ? 'Average price today'
+        : mode === 'today'
+          ? 'Average price for published day'
         : mode === 'timeline'
           ? 'Average for this 24 hour window'
           : 'Average price for selected day',
     primaryValue: formatInsightPrice(average),
-    summaryItems: isLiveTimeline
+    summaryItems: isLiveTimeline && isSelectedWindow
       ? [
           { label: 'Now', value: `${currentPrice} DKK` },
           { label: '24h peak', value: `${formatInsightPrice(peak)} DKK` },
         ]
-      : isTodayOverview
+      : isTodayOverview && isSelectedWindow
         ? [
             { label: 'Now', value: `${currentPrice} DKK` },
             { label: 'Day peak', value: `${formatInsightPrice(peak)} DKK` },
@@ -1034,7 +1099,7 @@ function getEnergyPriceInsight({
             { label: 'Low', value: `${formatInsightPrice(low)} DKK` },
             { label: 'Peak', value: `${formatInsightPrice(peak)} DKK` },
           ],
-    windowLabel: formatInsightWindowLabel(now, mode, offsetDays),
+    windowLabel: formatInsightWindowLabelForStart(now, mode, startMs),
   }
 }
 
@@ -1059,18 +1124,48 @@ function getSolarForecastBuckets(
 }
 
 function getPeakRateBuckets(windows: PeakRateWindow[], now: Date, mode: InsightViewMode, offsetDays: number) {
-  const startMs = getInsightWindowStartMs(now, mode, offsetDays)
-  const values = Array.from({ length: 24 }, (_, index) => {
+  const requestedStartMs = getInsightWindowStartMs(now, mode, offsetDays)
+  let startMs = requestedStartMs
+  let values = buildPeakRateBucketValues(windows, startMs)
+
+  if (!values.some((value) => value > 0) && windows.length > 0) {
+    const fallbackStartMs = getFirstPublishedPeakRateStart(windows, requestedStartMs, mode)
+
+    if (fallbackStartMs !== null) {
+      startMs = fallbackStartMs
+      values = buildPeakRateBucketValues(windows, startMs)
+    }
+  }
+
+  return {
+    labels: Array.from({ length: 24 }, (_, index) => formatBucketLabel(startMs + index * 3_600_000, mode)),
+    startMs,
+    values,
+  }
+}
+
+function buildPeakRateBucketValues(windows: PeakRateWindow[], startMs: number) {
+  return Array.from({ length: 24 }, (_, index) => {
     const bucketStart = startMs + index * 3_600_000
     const bucketEnd = bucketStart + 3_600_000
     const activeWindow = windows.find((window) => window.startMs < bucketEnd && window.endMs > bucketStart)
     return Number((activeWindow?.price ?? 0).toFixed(2))
   })
+}
 
-  return {
-    labels: Array.from({ length: 24 }, (_, index) => formatBucketLabel(startMs + index * 3_600_000, mode)),
-    values,
+function getFirstPublishedPeakRateStart(windows: PeakRateWindow[], requestedStartMs: number, mode: InsightViewMode) {
+  const firstWindow = windows.find((window) => window.endMs > requestedStartMs) ?? windows[0] ?? null
+
+  if (!firstWindow) {
+    return null
   }
+
+  if (mode === 'today') {
+    const localDate = new Date(firstWindow.startMs)
+    return new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate()).getTime()
+  }
+
+  return firstWindow.startMs
 }
 
 function getInsightWindowStartMs(now: Date, mode: InsightViewMode, offsetDays: number) {
@@ -1083,8 +1178,10 @@ function getInsightWindowStartMs(now: Date, mode: InsightViewMode, offsetDays: n
 }
 
 function formatInsightWindowLabel(now: Date, mode: InsightViewMode, offsetDays: number) {
-  const startMs = getInsightWindowStartMs(now, mode, offsetDays)
+  return formatInsightWindowLabelForStart(now, mode, getInsightWindowStartMs(now, mode, offsetDays))
+}
 
+function formatInsightWindowLabelForStart(now: Date, mode: InsightViewMode, startMs: number) {
   if (mode === 'today') {
     const date = new Date(startMs)
     const dayDelta = Math.round((startMs - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) / DAY_MS)
