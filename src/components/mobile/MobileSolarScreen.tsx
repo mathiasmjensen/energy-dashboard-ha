@@ -5,7 +5,6 @@ import {
   GlassCard,
   MobileBarChart,
   MobileIcon,
-  MobileLineChart,
   NodeIcon,
   SOLAR_PERIODS,
   SectionHeading,
@@ -54,7 +53,7 @@ export function MobileSolarScreen({
         title="Solar forecast"
         unit="kWh"
       >
-        <MobileLineChart color="#f7b62f" labels={solarForecast.pointLabels} points={solarForecast.points} unit="kWh" />
+        <MobileBarChart color="#f7b62f" labels={solarForecast.pointLabels} unit="kWh" values={solarForecast.points} />
       </AnalyticsCard>
 
       <AnalyticsCard
@@ -65,7 +64,7 @@ export function MobileSolarScreen({
         title="Energy prices"
         unit="DKK/kWh"
       >
-        <MobileLineChart color="#3b82ff" labels={prices.pointLabels} points={prices.points} unit="DKK/kWh" />
+        <MobileBarChart color="#3b82ff" labels={prices.pointLabels} unit="DKK/kWh" values={prices.points} />
       </AnalyticsCard>
     </div>
   )

@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import type { PeakRateHour } from '../../hooks/usePeakRates'
-import type { EvChargerBottomMode, EvChargerController } from '../../hooks/useEvChargerController'
+import type { EvChargerBottomMode, EvChargerController, EvPlanPriceHour } from '../../hooks/useEvChargerController'
 import { assetPath } from '../../utils/assetPath'
 
 const DASH = '---'
@@ -113,6 +112,8 @@ export function EvChargerActivitySection({
             <span>{controller.planStatus}</span>
           </div>
 
+          {layout === 'mobile' ? <ActivePlanSummary controller={controller} /> : null}
+
           <div className="ev-plan__controls">
             <label>
               <span>From</span>
@@ -142,9 +143,18 @@ export function EvChargerActivitySection({
           </div>
 
           <div className="ev-plan__summary">
-            <span>Now {controller.priceSummary.current} DKK/kWh</span>
-            <span>Average {controller.priceSummary.average} DKK/kWh</span>
-            <span>Peak {controller.priceSummary.peak} DKK/kWh</span>
+            <span>
+              <small>Now</small>
+              <strong>{controller.priceSummary.current} DKK/kWh</strong>
+            </span>
+            <span>
+              <small>Average</small>
+              <strong>{controller.priceSummary.average} DKK/kWh</strong>
+            </span>
+            <span>
+              <small>Peak</small>
+              <strong>{controller.priceSummary.peak} DKK/kWh</strong>
+            </span>
           </div>
 
           <div className="ev-plan__day-switcher">
@@ -171,9 +181,9 @@ export function EvChargerActivitySection({
           </div>
 
           <PricePlanChart
-            from={controller.planFrom}
+            endMs={controller.planEndMs}
             prices={controller.priceHours}
-            to={controller.planTo}
+            startMs={controller.planStartMs}
             onHourClick={controller.handlePriceHourClick}
             onHourPointerDown={controller.handlePriceHourPointerDown}
             onHourPointerEnter={controller.handlePriceHourPointerEnter}
@@ -208,6 +218,46 @@ export function EvChargerContent({
       <EvChargerSettingsSection controller={controller} />
       <EvChargerActivitySection controller={controller} layout={layout} />
     </>
+  )
+}
+
+function ActivePlanSummary({ controller }: { controller: EvChargerController }) {
+  const modeLabel =
+    controller.modeOptions.find((option) => option.value === controller.selectedMode)?.label ?? controller.selectedMode
+
+  return (
+    <section className="ev-active-plan" aria-label="Active charge plan">
+      <div className="ev-active-plan__header">
+        <div>
+          <span>Active plan</span>
+          <strong>{controller.planWindowLabel}</strong>
+        </div>
+        <label className="ev-switch ev-switch--plan">
+          <input
+            aria-label="Active charge plan enabled"
+            checked={controller.isPlanEnabled}
+            type="checkbox"
+            onChange={(event) => controller.handlePlanEnabledChange(event.target.checked)}
+          />
+          <span aria-hidden="true" />
+        </label>
+      </div>
+
+      <div className="ev-active-plan__grid">
+        <div>
+          <span>Status</span>
+          <strong>{controller.isPlanEnabled ? 'Enabled' : 'Paused'}</strong>
+        </div>
+        <div>
+          <span>Price day</span>
+          <strong>{controller.selectedPriceDay.label}</strong>
+        </div>
+        <div>
+          <span>Charge mode</span>
+          <strong>{modeLabel}</strong>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -332,38 +382,36 @@ function SettingRow({
 }
 
 function PricePlanChart({
-  from,
+  endMs,
   onHourClick,
   onHourPointerDown,
   onHourPointerEnter,
   onHourPointerLeave,
   onHourPointerUp,
   prices,
-  to,
+  startMs,
 }: {
-  from: string
-  onHourClick: (hour: number) => void
-  onHourPointerDown: (hour: number) => void
-  onHourPointerEnter: (hour: number) => void
+  endMs: number
+  onHourClick: (window: EvPlanPriceHour) => void
+  onHourPointerDown: (window: EvPlanPriceHour) => void
+  onHourPointerEnter: (window: EvPlanPriceHour) => void
   onHourPointerLeave: () => void
   onHourPointerUp: () => void
-  prices: PeakRateHour[]
-  to: string
+  prices: EvPlanPriceHour[]
+  startMs: number
 }) {
-  const priceByHour = new Map(prices.map((price) => [price.hour, price]))
-  const values = Array.from({ length: 24 }, (_, index) => priceByHour.get(index) ?? null)
-  const availablePrices = values.map((value) => value?.price ?? 0)
+  const values = prices.slice(0, 24)
+  const availablePrices = values.map((value) => value.price)
   const max = Math.max(...availablePrices, 0.01)
-  const fromHour = getHour(from)
-  const toHour = getHour(to)
 
   return (
     <div className="ev-price-chart" aria-label="Energy prices by hour" onPointerLeave={onHourPointerLeave}>
       {values.map((priceWindow, index) => {
-        const selected = isHourInWindow(index, fromHour, toHour)
-        const hourLabel = `${index.toString().padStart(2, '0')}:00`
-        const price = priceWindow?.price ?? 0
-        const priceLabel = priceWindow ? `${price.toFixed(2)} DKK/kWh` : 'No price data'
+        const selected = priceWindow.startMs >= startMs && priceWindow.startMs < endMs
+        const datePrefix = index === 0 || values[index - 1]?.date !== priceWindow.date ? `${priceWindow.date} ` : ''
+        const hourLabel = `${datePrefix}${priceWindow.label}`
+        const price = priceWindow.price
+        const priceLabel = `${price.toFixed(2)} DKK/kWh`
 
         return (
           <button
@@ -371,16 +419,18 @@ function PricePlanChart({
             className="ev-price-bar"
             data-price-label={`${hourLabel} · ${priceLabel}`}
             data-selected={selected}
-            disabled={!priceWindow}
+            disabled={priceWindow.disabled}
             key={index}
             style={{ '--bar-height': `${Math.max(5, (price / max) * 100)}%` } as CSSProperties}
             title={`${hourLabel} ${priceLabel}`}
             type="button"
-            onClick={() => onHourClick(index)}
-            onPointerDown={() => onHourPointerDown(index)}
-            onPointerEnter={() => onHourPointerEnter(index)}
+            onClick={() => onHourClick(priceWindow)}
+            onPointerDown={() => onHourPointerDown(priceWindow)}
+            onPointerEnter={() => onHourPointerEnter(priceWindow)}
             onPointerUp={onHourPointerUp}
-          />
+          >
+            <span className="ev-price-bar__fill" />
+          </button>
         )
       })}
     </div>
@@ -416,21 +466,4 @@ function renderIcon(name: 'bolt' | 'clock' | 'close' | 'history') {
         </>
       )
   }
-}
-
-function getHour(value: string) {
-  const hour = Number.parseInt(value.slice(0, 2), 10)
-  return Number.isInteger(hour) ? Math.min(23, Math.max(0, hour)) : 0
-}
-
-function isHourInWindow(hour: number, from: number, to: number) {
-  if (from === to) {
-    return true
-  }
-
-  if (from < to) {
-    return hour >= from && hour < to
-  }
-
-  return hour >= from || hour < to
 }
