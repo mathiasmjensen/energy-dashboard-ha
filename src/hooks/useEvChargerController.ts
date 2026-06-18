@@ -7,6 +7,13 @@ import type { PeakRateDay, PeakRateHour } from './usePeakRates'
 
 export type EvChargerBottomMode = 'history' | 'plan'
 
+export type EvPlanPriceHour = PeakRateHour & {
+  disabled: boolean
+  endMs: number
+  index: number
+  startMs: number
+}
+
 export type UseEvChargerControllerProps = {
   chargeMode: string
   chargeModeOptions: string[]
@@ -25,11 +32,13 @@ export type EvChargerController = {
   isPlanEnabled: boolean
   modeOptions: typeof EVCC_CHARGE_MODES
   planFrom: string
+  planEndMs: number
   planStatus: string
+  planStartMs: number
   planTo: string
   planWindowLabel: string
   priceDayCount: number
-  priceHours: PeakRateHour[]
+  priceHours: EvPlanPriceHour[]
   priceSummary: {
     average: string
     current: string
@@ -46,9 +55,9 @@ export type EvChargerController = {
   handlePlanFromChange: (value: string) => void
   handlePlanToChange: (value: string) => void
   handlePreviousPriceDay: () => void
-  handlePriceHourClick: (hour: number) => void
-  handlePriceHourPointerDown: (hour: number) => void
-  handlePriceHourPointerEnter: (hour: number) => void
+  handlePriceHourClick: (window: EvPlanPriceHour) => void
+  handlePriceHourPointerDown: (window: EvPlanPriceHour) => void
+  handlePriceHourPointerEnter: (window: EvPlanPriceHour) => void
   handlePriceHourPointerLeave: () => void
   handlePriceHourPointerUp: () => void
   handleSavePlan: () => void
@@ -73,44 +82,45 @@ export function useEvChargerController({
   const sessionHistory = useEvccChargeSessions()
   const [selectedMode, setSelectedMode] = useState<EvccChargeMode>(() => normalizeEvccMode(chargeMode))
   const [bottomMode, setBottomMode] = useState<EvChargerBottomMode>('plan')
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  const nextFullHourMs = useMemo(() => getNextFullHourMs(nowMs), [nowMs])
   const [planFrom, setPlanFrom] = useState(() => normalizeClockValue(chargePlanFrom, '22:00'))
   const [planTo, setPlanTo] = useState(() => normalizeClockValue(chargePlanTo, '06:00'))
+  const [planRange, setPlanRange] = useState(() =>
+    resolvePlanRange(normalizeClockValue(chargePlanFrom, '22:00'), normalizeClockValue(chargePlanTo, '06:00'), getNextFullHourMs(Date.now())),
+  )
   const [isPlanEnabled, setIsPlanEnabled] = useState(chargePlanEnabled)
   const [planStatus, setPlanStatus] = useState('Ready to save plan')
-  const [chartAnchorHour, setChartAnchorHour] = useState<number | null>(null)
-  const [dragStartHour, setDragStartHour] = useState<number | null>(null)
+  const [chartAnchorMs, setChartAnchorMs] = useState<number | null>(null)
+  const [dragStartMs, setDragStartMs] = useState<number | null>(null)
   const [didDragChart, setDidDragChart] = useState(false)
-  const [selectedPriceDayIndex, setSelectedPriceDayIndex] = useState(0)
   const canCallService = ready && Boolean(connection)
-  const todayDateKey = formatLocalDateKey(new Date())
-  const todayPriceDayIndex = priceDays.findIndex((day) => day.date === todayDateKey)
-  const safePriceDayIndex =
-    todayPriceDayIndex >= 0
-      ? Math.min(Math.max(selectedPriceDayIndex, todayPriceDayIndex), priceDays.length - 1)
-      : Math.min(selectedPriceDayIndex, Math.max(0, priceDays.length - 1))
-  const selectedPriceDay = priceDays[safePriceDayIndex] ?? createEmptyPriceDay()
+
+  useEffect(() => {
+    const tickId = window.setInterval(() => setNowMs(Date.now()), 60_000)
+
+    return () => window.clearInterval(tickId)
+  }, [])
 
   useEffect(() => {
     setSelectedMode(normalizeEvccMode(chargeMode))
   }, [chargeMode])
 
   useEffect(() => {
-    setPlanFrom(normalizeClockValue(chargePlanFrom, '22:00'))
+    const nextFrom = normalizeClockValue(chargePlanFrom, '22:00')
+    setPlanFrom(nextFrom)
+    setPlanRange((current) => resolvePlanRange(nextFrom, formatClock(current.endMs), getNextFullHourMs(Date.now())))
   }, [chargePlanFrom])
 
   useEffect(() => {
-    setPlanTo(normalizeClockValue(chargePlanTo, '06:00'))
+    const nextTo = normalizeClockValue(chargePlanTo, '06:00')
+    setPlanTo(nextTo)
+    setPlanRange((current) => resolvePlanRange(formatClock(current.startMs), nextTo, getNextFullHourMs(Date.now())))
   }, [chargePlanTo])
 
   useEffect(() => {
     setIsPlanEnabled(chargePlanEnabled)
   }, [chargePlanEnabled])
-
-  useEffect(() => {
-    if (todayPriceDayIndex >= 0) {
-      setSelectedPriceDayIndex(todayPriceDayIndex)
-    }
-  }, [todayPriceDayIndex])
 
   const entityExists = useCallback((entityId: string) => Boolean(entities[entityId]), [entities])
 
@@ -177,23 +187,25 @@ export function useEvChargerController({
       return
     }
 
-    const startDate = selectedPriceDay.date
-    const endDate = getPlanEndDate(startDate, planFrom, planTo)
+    const startDate = formatLocalDateKey(new Date(planRange.startMs))
+    const endDate = formatLocalDateKey(new Date(planRange.endMs))
+    const startTime = formatClock(planRange.startMs)
+    const endTime = formatClock(planRange.endMs)
     const plan = {
       active: isPlanEnabled,
       date: startDate,
       day: startDate,
       enabled: isPlanEnabled,
-      end: planTo,
+      end: endTime,
       end_date: endDate,
-      end_time: planTo,
-      from: planFrom,
+      end_time: endTime,
+      from: startTime,
       mode_at_end: 'pv',
       mode_at_start: 'now',
-      start: planFrom,
+      start: startTime,
       start_date: startDate,
-      start_time: planFrom,
-      to: planTo,
+      start_time: startTime,
+      to: endTime,
     }
 
     callService({
@@ -211,8 +223,8 @@ export function useEvChargerController({
       target: entityId,
     })
 
-    setPlanStatus(`Plan saved ${selectedPriceDay.label} ${planFrom} - ${planTo}`)
-  }, [callService, canCallService, entityExists, isPlanEnabled, planFrom, planTo, selectedPriceDay.date, selectedPriceDay.label])
+    setPlanStatus(`Plan saved ${formatPlanRangeLabel(planRange.startMs, planRange.endMs)}`)
+  }, [callService, canCallService, entityExists, isPlanEnabled, planRange.endMs, planRange.startMs])
 
   const handleModeChange = useCallback(
     (mode: EvccChargeMode) => {
@@ -239,69 +251,98 @@ export function useEvChargerController({
     [callInputBoolean, callRestCommand, callSelectOption, chargeModeOptions],
   )
 
-  const applyChartWindow = useCallback((fromHour: number, toHour: number) => {
-    setPlanFrom(formatHour(fromHour))
-    setPlanTo(formatHour(toHour))
+  const applyChartWindow = useCallback((startMs: number, endMs: number) => {
+    setPlanRange({ endMs, startMs })
+    setPlanFrom(formatClock(startMs))
+    setPlanTo(formatClock(endMs))
     setPlanStatus('Unsaved chart selection')
   }, [])
 
   const handlePriceHourClick = useCallback(
-    (hour: number) => {
+    (window: EvPlanPriceHour) => {
+      if (window.disabled) {
+        return
+      }
+
       if (didDragChart) {
         setDidDragChart(false)
-        setChartAnchorHour(null)
+        setChartAnchorMs(null)
         return
       }
 
-      if (chartAnchorHour === null) {
-        setChartAnchorHour(hour)
-        applyChartWindow(hour, hour + 1)
+      if (chartAnchorMs === null) {
+        setChartAnchorMs(window.startMs)
+        applyChartWindow(window.startMs, window.endMs)
         return
       }
 
-      applyChartWindow(chartAnchorHour, hour + 1)
-      setChartAnchorHour(null)
+      if (window.startMs <= chartAnchorMs) {
+        setChartAnchorMs(null)
+        applyChartWindow(window.startMs, window.endMs)
+        return
+      }
+
+      applyChartWindow(chartAnchorMs, window.startMs)
+      setChartAnchorMs(null)
     },
-    [applyChartWindow, chartAnchorHour, didDragChart],
+    [applyChartWindow, chartAnchorMs, didDragChart],
   )
 
   const handlePriceHourPointerDown = useCallback(
-    (hour: number) => {
-      setDragStartHour(hour)
+    (window: EvPlanPriceHour) => {
+      if (window.disabled) {
+        return
+      }
+
+      setDragStartMs(window.startMs)
       setDidDragChart(false)
-      applyChartWindow(hour, hour + 1)
+      applyChartWindow(window.startMs, window.endMs)
     },
     [applyChartWindow],
   )
 
   const handlePriceHourPointerEnter = useCallback(
-    (hour: number) => {
-      if (dragStartHour === null) {
+    (window: EvPlanPriceHour) => {
+      if (dragStartMs === null || window.disabled) {
         return
       }
 
-      if (hour !== dragStartHour) {
+      if (window.startMs !== dragStartMs) {
         setDidDragChart(true)
       }
 
-      applyChartWindow(dragStartHour, hour + 1)
+      if (window.startMs > dragStartMs) {
+        applyChartWindow(dragStartMs, window.startMs)
+      }
     },
-    [applyChartWindow, dragStartHour],
+    [applyChartWindow, dragStartMs],
   )
 
   const handlePriceHourPointerUp = useCallback(() => {
-    setDragStartHour(null)
+    setDragStartMs(null)
   }, [])
 
   const handlePlanFromChange = useCallback((value: string) => {
     setPlanFrom(value)
+    if (isClockValue(value)) {
+      const nextRange = resolvePlanRange(value, planTo, nextFullHourMs)
+      setPlanRange(nextRange)
+      setPlanTo(formatClock(nextRange.endMs))
+    }
     setPlanStatus('Unsaved changes')
-  }, [])
+    setChartAnchorMs(null)
+  }, [nextFullHourMs, planTo])
 
   const handlePlanToChange = useCallback((value: string) => {
     setPlanTo(value)
+    if (isClockValue(value)) {
+      const endMs = resolvePlanEndAfterStart(value, planRange.startMs)
+      setPlanRange((current) => ({ ...current, endMs }))
+      setPlanTo(formatClock(endMs))
+    }
     setPlanStatus('Unsaved changes')
-  }, [])
+    setChartAnchorMs(null)
+  }, [planRange.startMs])
 
   const handleSavePlan = useCallback(() => {
     callInputBoolean(ENERGY_ENTITIES.evccChargePlanEnabled, isPlanEnabled)
@@ -309,22 +350,25 @@ export function useEvChargerController({
   }, [callChargePlanScript, callInputBoolean, isPlanEnabled])
 
   const handlePriceHourPointerLeave = useCallback(() => {
-    setDragStartHour(null)
+    setDragStartMs(null)
   }, [])
 
   const handlePreviousPriceDay = useCallback(() => {
-    setSelectedPriceDayIndex((current) => Math.max(0, current - 1))
-    setChartAnchorHour(null)
-    setDragStartHour(null)
-    setPlanStatus('Reviewing previous price day')
+    setChartAnchorMs(null)
+    setDragStartMs(null)
   }, [])
 
   const handleNextPriceDay = useCallback(() => {
-    setSelectedPriceDayIndex((current) => Math.min(Math.max(0, priceDays.length - 1), current + 1))
-    setChartAnchorHour(null)
-    setDragStartHour(null)
-    setPlanStatus('Reviewing next price day')
-  }, [priceDays.length])
+    setChartAnchorMs(null)
+    setDragStartMs(null)
+  }, [])
+
+  const priceHours = useMemo(
+    () => createRollingPriceHours(priceDays, priceSeries, nextFullHourMs),
+    [nextFullHourMs, priceDays, priceSeries],
+  )
+
+  const selectedPriceDay = useMemo(() => createRollingPriceDay(priceHours), [priceHours])
 
   const priceSummary = useMemo(
     () => ({
@@ -333,14 +377,6 @@ export function useEvChargerController({
       peak: selectedPriceDay.peak ?? pricePeak,
     }),
     [priceAverage, priceCurrent, pricePeak, selectedPriceDay.average, selectedPriceDay.peak],
-  )
-
-  const priceHours = useMemo(
-    () =>
-      selectedPriceDay.prices.length
-        ? selectedPriceDay.prices
-        : numbersToPriceHours(priceSeries, todayDateKey),
-    [priceSeries, selectedPriceDay.prices, todayDateKey],
   )
 
   return {
@@ -360,13 +396,15 @@ export function useEvChargerController({
     isPlanEnabled,
     modeOptions: EVCC_CHARGE_MODES,
     planFrom,
+    planEndMs: planRange.endMs,
     planStatus,
+    planStartMs: planRange.startMs,
     planTo,
-    planWindowLabel: `${planFrom} - ${planTo}`,
-    priceDayCount: priceDays.length,
+    planWindowLabel: formatPlanRangeLabel(planRange.startMs, planRange.endMs),
+    priceDayCount: 1,
     priceHours,
     priceSummary,
-    safePriceDayIndex,
+    safePriceDayIndex: 0,
     selectedMode,
     selectedPriceDay,
     sessionHistory,
@@ -396,54 +434,171 @@ function getEvccModeServiceOption(mode: EvccChargeMode, entityOptions: string[])
   return entityOptions.find((option) => normalizeEvccMode(option) === mode) ?? mode
 }
 
-function getHour(value: string) {
-  const hour = Number.parseInt(value.slice(0, 2), 10)
-  return Number.isInteger(hour) ? Math.min(23, Math.max(0, hour)) : 0
-}
-
-function formatHour(hour: number) {
-  const normalizedHour = ((hour % 24) + 24) % 24
-  return `${normalizedHour.toString().padStart(2, '0')}:00`
-}
-
-function createEmptyPriceDay(date = formatLocalDateKey(new Date())): PeakRateDay {
-  return {
-    average: null,
-    date,
-    label: 'Today',
-    peak: null,
-    prices: [],
-  }
-}
-
-function numbersToPriceHours(prices: number[], date: string): PeakRateHour[] {
-  return prices.slice(0, 24).map((price, hour) => ({
-    date,
-    endIso: '',
-    hour,
-    label: `${hour.toString().padStart(2, '0')}:00`,
-    price,
-    startIso: '',
-  }))
-}
-
-function getPlanEndDate(startDate: string, planFrom: string, planTo: string) {
-  if (getHour(planTo) > getHour(planFrom)) {
-    return startDate
-  }
-
-  const [year, month, day] = startDate.split('-').map(Number)
-  const endDate = new Date(year, month - 1, day + 1)
-
-  return formatLocalDateKey(endDate)
-}
-
 function formatLocalDateKey(date: Date) {
   const year = date.getFullYear()
   const month = `${date.getMonth() + 1}`.padStart(2, '0')
   const day = `${date.getDate()}`.padStart(2, '0')
 
   return `${year}-${month}-${day}`
+}
+
+function getNextFullHourMs(timestamp: number) {
+  const date = new Date(timestamp)
+  date.setMinutes(0, 0, 0)
+
+  if (date.getTime() <= timestamp) {
+    date.setHours(date.getHours() + 1)
+  }
+
+  return date.getTime()
+}
+
+function isClockValue(value: string) {
+  return /^\d{2}:\d{2}$/.test(value)
+}
+
+function getClockParts(value: string) {
+  const [hourValue, minuteValue] = value.split(':')
+  const hour = Number.parseInt(hourValue, 10)
+  const minute = Number.parseInt(minuteValue, 10)
+
+  return {
+    hour: Number.isInteger(hour) ? Math.min(23, Math.max(0, hour)) : 0,
+    minute: Number.isInteger(minute) ? Math.min(59, Math.max(0, minute)) : 0,
+  }
+}
+
+function setDateClock(baseMs: number, value: string) {
+  const { hour, minute } = getClockParts(value)
+  const date = new Date(baseMs)
+  date.setHours(hour, minute, 0, 0)
+
+  return date.getTime()
+}
+
+function resolveFutureStartMs(value: string, earliestStartMs: number) {
+  let startMs = setDateClock(earliestStartMs, value)
+
+  while (startMs < earliestStartMs) {
+    startMs += 24 * 60 * 60 * 1000
+  }
+
+  return startMs
+}
+
+function resolvePlanEndAfterStart(value: string, startMs: number) {
+  let endMs = setDateClock(startMs, value)
+
+  while (endMs <= startMs) {
+    endMs += 24 * 60 * 60 * 1000
+  }
+
+  return endMs
+}
+
+function resolvePlanRange(from: string, to: string, earliestStartMs: number) {
+  const startMs = resolveFutureStartMs(from, earliestStartMs)
+  const endMs = resolvePlanEndAfterStart(to, startMs)
+
+  return { endMs, startMs }
+}
+
+function formatClock(timestamp: number) {
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: '2-digit',
+    hour12: false,
+    minute: '2-digit',
+  })
+}
+
+function formatShortDate(timestamp: number) {
+  return new Date(timestamp).toLocaleDateString([], {
+    day: '2-digit',
+    month: 'short',
+  })
+}
+
+function formatPlanRangeLabel(startMs: number, endMs: number) {
+  const startDate = formatLocalDateKey(new Date(startMs))
+  const endDate = formatLocalDateKey(new Date(endMs))
+  const timeLabel = `${formatClock(startMs)} - ${formatClock(endMs)}`
+
+  return startDate === endDate ? timeLabel : `${timeLabel} next day`
+}
+
+function getPriceWindowStartMs(price: PeakRateHour) {
+  const isoMs = Date.parse(price.startIso)
+
+  if (Number.isFinite(isoMs)) {
+    return isoMs
+  }
+
+  const [year, month, day] = price.date.split('-').map(Number)
+  return new Date(year, month - 1, day, price.hour, 0, 0, 0).getTime()
+}
+
+function getPriceWindowEndMs(price: PeakRateHour, startMs: number) {
+  const isoMs = Date.parse(price.endIso)
+
+  if (Number.isFinite(isoMs) && isoMs > startMs) {
+    return isoMs
+  }
+
+  return startMs + 60 * 60 * 1000
+}
+
+function getAllPriceHours(priceDays: PeakRateDay[]) {
+  return priceDays
+    .flatMap((day) => day.prices)
+    .map((price) => {
+      const startMs = getPriceWindowStartMs(price)
+      const endMs = getPriceWindowEndMs(price, startMs)
+
+      return { ...price, endMs, startMs }
+    })
+    .sort((left, right) => left.startMs - right.startMs)
+}
+
+function createRollingPriceHours(priceDays: PeakRateDay[], fallbackPrices: number[], startMs: number): EvPlanPriceHour[] {
+  const sourcePrices = getAllPriceHours(priceDays)
+
+  return Array.from({ length: 24 }, (_, index) => {
+    const bucketStartMs = startMs + index * 60 * 60 * 1000
+    const bucketEndMs = bucketStartMs + 60 * 60 * 1000
+    const sourcePrice = sourcePrices.find((price) => price.startMs <= bucketStartMs && bucketStartMs < price.endMs)
+    const bucketDate = formatLocalDateKey(new Date(bucketStartMs))
+    const bucketHour = new Date(bucketStartMs).getHours()
+    const fallbackPrice = fallbackPrices[bucketHour % Math.max(1, fallbackPrices.length)] ?? 0
+
+    return {
+      date: bucketDate,
+      disabled: bucketStartMs < startMs,
+      endIso: new Date(bucketEndMs).toISOString(),
+      endMs: bucketEndMs,
+      hour: bucketHour,
+      index,
+      label: formatClock(bucketStartMs),
+      price: sourcePrice?.price ?? fallbackPrice,
+      startIso: new Date(bucketStartMs).toISOString(),
+      startMs: bucketStartMs,
+    }
+  })
+}
+
+function createRollingPriceDay(priceHours: EvPlanPriceHour[]): PeakRateDay {
+  const prices = priceHours.filter((price) => !price.disabled)
+  const average = prices.length ? prices.reduce((sum, price) => sum + price.price, 0) / prices.length : null
+  const peak = prices.length ? Math.max(...prices.map((price) => price.price)) : null
+  const firstStartMs = prices[0]?.startMs ?? Date.now()
+  const lastEndMs = prices[prices.length - 1]?.endMs ?? firstStartMs + 24 * 60 * 60 * 1000
+
+  return {
+    average: average === null ? null : average.toFixed(2),
+    date: `${formatShortDate(firstStartMs)} - ${formatShortDate(lastEndMs)}`,
+    label: 'Next 24 hours',
+    peak: peak === null ? null : peak.toFixed(2),
+    prices,
+  }
 }
 
 function normalizeClockValue(value: string | null | undefined, fallback: string) {

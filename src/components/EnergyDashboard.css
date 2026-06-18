@@ -1391,6 +1391,10 @@
   translate: 20px 0;
 }
 
+.ev-switch--plan {
+  flex: 0 0 auto;
+}
+
 .ev-plan {
   margin-top: 12px;
   padding: 14px 16px 12px;
@@ -1475,18 +1479,151 @@
 }
 
 .ev-plan__save {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  overflow: hidden;
   height: 38px;
   padding: 0 18px;
-  color: #06100a !important;
-  background: linear-gradient(180deg, #52f184, #26c45d);
+  color: #06130b !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.56), transparent 34%),
+    linear-gradient(135deg, #8cffaa 0%, #32de6b 48%, #15b14f 100%);
+  border: 1px solid rgba(150, 255, 177, 0.64);
   border-radius: 7px;
-  font-weight: 780;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    inset 0 -12px 24px rgba(5, 86, 35, 0.18),
+    0 12px 26px rgba(35, 208, 94, 0.28),
+    0 0 0 1px rgba(91, 255, 129, 0.1);
+  font-weight: 820;
+  isolation: isolate;
+  letter-spacing: 0.01em;
+  transition: filter 140ms ease, transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+
+.ev-plan__save::before {
+  position: absolute;
+  inset: 1px 14px auto;
+  z-index: -1;
+  height: 44%;
+  content: "";
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), transparent);
+  border-radius: inherit;
+  opacity: 0.82;
+  pointer-events: none;
+}
+
+.ev-plan__save::after {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  content: "›";
+  color: rgba(3, 16, 8, 0.9);
+  background: rgba(255, 255, 255, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.ev-plan__save:hover,
+.ev-plan__save:focus-visible {
+  filter: brightness(1.06) saturate(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    inset 0 -12px 24px rgba(5, 86, 35, 0.15),
+    0 16px 36px rgba(35, 208, 94, 0.36),
+    0 0 0 3px rgba(91, 255, 129, 0.12);
+}
+
+.ev-plan__save:active {
+  transform: translateY(1px) scale(0.99);
 }
 
 .ev-plan__summary {
   display: flex;
   gap: 14px;
   margin-top: 12px;
+}
+
+.ev-plan__summary span {
+  display: grid;
+  gap: 3px;
+}
+
+.ev-plan__summary small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.1;
+}
+
+.ev-plan__summary strong {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.ev-active-plan {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(8, 12, 19, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+}
+
+.ev-active-plan__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ev-active-plan__header span,
+.ev-active-plan__grid span {
+  display: block;
+  color: #94a0b0;
+  font-size: 10px;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.ev-active-plan__header strong {
+  display: block;
+  margin-top: 5px;
+  color: #f7f9fd;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.ev-active-plan__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ev-active-plan__grid div {
+  min-width: 0;
+  padding: 9px 10px;
+  background: rgba(4, 8, 13, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 13px;
+}
+
+.ev-active-plan__grid strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 5px;
+  color: #f5f8fc;
+  font-size: 12px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ev-plan__day-switcher {
@@ -1536,7 +1673,7 @@
   position: relative;
   display: flex;
   align-items: end;
-  gap: 5px;
+  gap: 6px;
   height: 78px;
   margin-top: 12px;
   padding: 10px 10px 0;
@@ -1559,14 +1696,28 @@
   z-index: 1;
   flex: 1;
   min-width: 0;
-  height: var(--bar-height);
+  height: 100%;
+  min-height: 0;
   padding: 0;
   align-self: flex-end;
   appearance: none;
-  background: linear-gradient(180deg, rgba(47, 134, 255, 0.75), rgba(47, 134, 255, 0.28));
-  border-radius: 4px 4px 0 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   cursor: pointer;
-  transition: filter 120ms ease, transform 120ms ease;
+  transition: filter 140ms ease, transform 140ms ease;
+}
+
+.ev-price-bar__fill {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 0;
+  height: var(--bar-height);
+  min-height: 2px;
+  background: linear-gradient(180deg, #70a7ff, #1f73ff);
+  border-radius: 8px;
+  box-shadow: 0 0 14px rgba(59, 130, 255, 0.48);
 }
 
 .ev-price-bar::after {
@@ -1590,8 +1741,12 @@
 }
 
 .ev-price-bar[data-selected='true'] {
-  background: linear-gradient(180deg, #46ef78, #1faa4c);
-  box-shadow: 0 0 12px rgba(51, 214, 107, 0.38);
+  transform: none;
+}
+
+.ev-price-bar[data-selected='true'] .ev-price-bar__fill {
+  background: linear-gradient(180deg, #73f28b, #29c75c);
+  box-shadow: 0 0 14px rgba(51, 214, 107, 0.48);
 }
 
 .ev-price-bar:disabled {
@@ -1601,7 +1756,7 @@
 
 .ev-price-bar:hover,
 .ev-price-bar:focus-visible {
-  filter: brightness(1.2);
+  filter: brightness(1.12);
   transform: translateY(-2px);
 }
 
@@ -1737,27 +1892,34 @@
 }
 
 .mobile-dashboard {
+  --mobile-nav-height: 76px;
+  --mobile-nav-gap: 12px;
+  --mobile-bottom-space: calc(var(--mobile-nav-height) + var(--mobile-nav-gap) + env(safe-area-inset-bottom));
   min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
     radial-gradient(circle at 18% 0%, rgba(38, 102, 222, 0.22), transparent 28%),
     radial-gradient(circle at 82% 12%, rgba(78, 117, 219, 0.14), transparent 24%),
     linear-gradient(180deg, #060a11, #05070d 52%, #04060c);
+  overflow: visible;
 }
 
 .mobile-app-shell {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  position: relative;
+  display: block;
   width: min(100%, 430px);
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
   padding:
     max(10px, env(safe-area-inset-top))
     max(14px, env(safe-area-inset-right))
-    max(8px, env(safe-area-inset-bottom))
+    0
     max(14px, env(safe-area-inset-left));
-  overflow: hidden;
+  overflow: visible;
 }
 
 .mobile-status-bar {
@@ -1906,10 +2068,11 @@
 }
 
 .mobile-tab-panel {
-  min-height: 0;
-  overflow-y: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: visible;
   padding-right: 2px;
-  padding-bottom: 88px;
+  padding-bottom: var(--mobile-bottom-space);
   scrollbar-width: none;
 }
 
@@ -1920,7 +2083,7 @@
 .mobile-screen {
   display: grid;
   gap: 8px;
-  padding-bottom: 12px;
+  padding-bottom: 16px;
 }
 
 .mobile-meta-row {
@@ -2905,8 +3068,151 @@
   padding: 16px;
 }
 
+.mobile-screen--ev[data-mode='status'] {
+  gap: 8px;
+}
+
+.mobile-screen--ev[data-mode='status'] .mobile-vehicle-card {
+  min-height: 72px;
+  padding: 10px 12px;
+}
+
+.mobile-screen--ev[data-mode='status'] .mobile-vehicle-card img {
+  width: 104px;
+  right: 4px;
+}
+
+.mobile-screen--ev[data-mode='status'] .mobile-vehicle-copy {
+  gap: 5px;
+}
+
+.mobile-screen--ev[data-mode='status'] .mobile-vehicle-copy strong {
+  font-size: 17px;
+}
+
+.mobile-screen--ev[data-mode='status'] .mobile-vehicle-copy span {
+  font-size: 12px;
+}
+
+.mobile-screen--ev[data-mode='status'] .mobile-vehicle-copy small {
+  font-size: 11px;
+}
+
+.mobile-ev-section--status {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.mobile-ev-section--status .mobile-section-heading {
+  margin: 0;
+  font-size: 16px;
+}
+
+.mobile-ev-section--status .ev-summary-grid--mobile {
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
+}
+
+.mobile-ev-section--status .ev-summary-grid--mobile .ev-summary-image {
+  min-height: 160px;
+  background: rgba(8, 12, 18, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+.mobile-ev-section--status .ev-summary-grid--mobile .ev-summary-image img {
+  width: 78px;
+  height: 132px;
+}
+
+.mobile-ev-section--status .ev-summary-stats {
+  gap: 6px;
+}
+
+.mobile-ev-section--status .ev-status-card {
+  min-height: 58px;
+  padding: 9px 10px;
+  background: rgba(8, 12, 18, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+.mobile-ev-section--status .ev-status-card strong {
+  font-size: 15px;
+}
+
+.mobile-ev-section--status .ev-status-card small {
+  margin-top: 2px;
+  font-size: 10px;
+}
+
+.mobile-ev-section--status .ev-stat-list {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  background: rgba(8, 12, 18, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.mobile-ev-section--status .ev-modal-stat {
+  min-height: 34px;
+  padding: 0 10px;
+  gap: 8px;
+}
+
+.mobile-ev-section--status .ev-modal-stat strong {
+  font-size: 13px;
+}
+
+.mobile-ev-section--status .ev-modal-stat p {
+  font-size: 10px;
+}
+
+.mobile-ev-section--status .ev-modal-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.mobile-ev-section--status .ev-settings {
+  display: grid;
+  gap: 6px;
+}
+
+.mobile-ev-section--status .ev-settings h3 {
+  font-size: 14px;
+}
+
+.mobile-ev-section--status .ev-settings__list {
+  background: rgba(8, 12, 18, 0.48);
+  border-radius: 16px;
+}
+
+.mobile-ev-section--status .ev-setting-row {
+  min-height: 44px;
+  padding: 7px 10px;
+}
+
+.mobile-ev-section--status .ev-setting-row p {
+  font-size: 10px;
+}
+
+.mobile-ev-section--status .ev-setting-row strong {
+  font-size: 12px;
+}
+
 .mobile-ev-section .ev-summary-grid {
   gap: 12px;
+}
+
+.mobile-ev-section--plan {
+  padding: 14px;
+  background:
+    linear-gradient(180deg, rgba(21, 28, 39, 0.94), rgba(10, 14, 21, 0.98)),
+    rgba(10, 14, 21, 0.95);
 }
 
 .mobile-ev-section .ev-settings,
@@ -2931,26 +3237,201 @@
   gap: 10px;
 }
 
+.mobile-ev-section--plan .ev-plan {
+  display: grid;
+  gap: 12px;
+}
+
+.mobile-ev-section--plan .ev-plan__header {
+  gap: 6px;
+}
+
+.mobile-ev-section--plan .ev-plan__header h3 {
+  font-size: 25px;
+  line-height: 1.02;
+}
+
+.mobile-ev-section--plan .ev-plan__header p {
+  max-width: 285px;
+  color: #a8b1bf;
+  font-size: 13px;
+  line-height: 1.22;
+}
+
+.mobile-ev-section--plan .ev-plan__meta {
+  justify-content: flex-start;
+  margin-top: 0;
+}
+
+.mobile-ev-section--plan .ev-plan__meta > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  color: #7af28a;
+  background: rgba(48, 221, 101, 0.11);
+  border: 1px solid rgba(89, 231, 115, 0.18);
+  border-radius: 999px;
+  font-size: 12px;
+}
+
 .mobile-ev-section .ev-plan__controls {
   display: grid;
   gap: 10px;
 }
 
+.mobile-ev-section--plan .ev-plan__controls {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 0;
+}
+
+.mobile-ev-section--plan .ev-plan__controls label {
+  gap: 7px;
+  min-width: 0;
+  padding: 10px 12px;
+  background: rgba(8, 12, 19, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+}
+
+.mobile-ev-section--plan .ev-plan__controls span {
+  color: #94a0b0;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.mobile-ev-section--plan .ev-plan__controls input {
+  height: auto;
+  padding: 0;
+  color: #f7f9fd;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 22px;
+  font-weight: 720;
+  letter-spacing: 0;
+}
+
+.mobile-ev-section--plan .ev-plan__controls input:focus {
+  outline: none;
+}
+
+.mobile-ev-section--plan .ev-plan__controls label:focus-within {
+  border-color: rgba(78, 147, 255, 0.46);
+  box-shadow: 0 0 0 3px rgba(47, 134, 255, 0.12);
+}
+
+.mobile-ev-section--plan .ev-plan__save {
+  grid-column: 1 / -1;
+  height: 56px;
+  margin-top: 4px;
+  border-radius: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    inset 0 -15px 28px rgba(5, 86, 35, 0.18),
+    0 18px 42px rgba(38, 196, 93, 0.34),
+    0 0 0 1px rgba(116, 255, 148, 0.12);
+  font-size: 17px;
+}
+
+.mobile-ev-section--plan .ev-plan__save::after {
+  width: 25px;
+  height: 25px;
+  font-size: 22px;
+}
+
 .mobile-ev-section .ev-plan__summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .mobile-ev-section .ev-plan__summary span {
-  padding: 10px 11px;
+  min-width: 0;
+  padding: 11px 12px;
   background: rgba(8, 12, 18, 0.48);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 14px;
 }
 
+.mobile-ev-section--plan .ev-plan__summary {
+  margin-top: 0;
+}
+
+.mobile-ev-section--plan .ev-plan__summary span {
+  min-height: 58px;
+  background: rgba(8, 12, 19, 0.62);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.mobile-ev-section--plan .ev-plan__summary span:first-child {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 62px;
+  background:
+    linear-gradient(135deg, rgba(47, 134, 255, 0.18), transparent 62%),
+    rgba(8, 12, 19, 0.7);
+  border-color: rgba(86, 150, 255, 0.18);
+}
+
+.mobile-ev-section--plan .ev-plan__summary small {
+  color: #94a0b0;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mobile-ev-section--plan .ev-plan__summary strong {
+  color: #f5f8fc;
+  font-size: 13px;
+  line-height: 1.12;
+  white-space: nowrap;
+}
+
+.mobile-ev-section--plan .ev-plan__summary span:first-child strong {
+  font-size: 16px;
+}
+
 .mobile-ev-section .ev-plan__day-switcher {
   margin-top: 10px;
+}
+
+.mobile-ev-section--plan .ev-plan__day-switcher {
+  grid-template-columns: 42px 1fr 42px;
+  gap: 10px;
+  margin-top: 0;
+  padding: 6px;
+  background: rgba(8, 12, 19, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+}
+
+.mobile-ev-section--plan .ev-plan__day-switcher button {
+  width: 36px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(4, 8, 13, 0.52);
+}
+
+.mobile-ev-section--plan .ev-plan__day-switcher span {
+  display: grid;
+  gap: 2px;
+  align-items: center;
+  justify-items: center;
+}
+
+.mobile-ev-section--plan .ev-plan__day-switcher strong {
+  font-size: 14px;
+}
+
+.mobile-ev-section--plan .ev-plan__day-switcher small {
+  font-size: 11px;
 }
 
 .mobile-ev-section .ev-price-chart {
@@ -2959,6 +3440,46 @@
   border-top: 0;
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(47, 134, 255, 0.12), rgba(8, 12, 18, 0.24));
+}
+
+.mobile-ev-section--plan .ev-price-chart {
+  height: 146px;
+  margin-top: 0;
+  gap: 6px;
+  padding: 14px 4px 18px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.mobile-ev-section--plan .ev-price-chart::before {
+  inset: 12px 0 18px;
+  height: auto;
+  background: repeating-linear-gradient(
+    to top,
+    transparent 0 25px,
+    rgba(255, 255, 255, 0.06) 25px 26px
+  );
+}
+
+.mobile-ev-section--plan .ev-price-chart::after {
+  display: none;
+}
+
+.mobile-ev-section--plan .ev-price-bar {
+  z-index: 2;
+}
+
+.mobile-ev-section--plan .ev-price-bar__fill {
+  left: 0;
+  right: 0;
+  min-height: 4px;
+  border-radius: 8px;
+}
+
+.mobile-ev-section--plan .ev-price-bar[data-selected='true'] {
+  transform: none;
 }
 
 .mobile-ev-section--history .ev-history-list {
@@ -2986,17 +3507,26 @@
 }
 
 .mobile-bottom-nav {
+  position: fixed;
+  right: max(14px, calc((100vw - 430px) / 2 + 14px));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  left: max(14px, calc((100vw - 430px) / 2 + 14px));
+  z-index: 60;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
-  margin-top: 8px;
-  padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+  min-height: var(--mobile-nav-height);
+  margin: 0;
+  padding: 7px 8px;
   background:
     linear-gradient(180deg, rgba(21, 28, 39, 0.95), rgba(10, 14, 20, 0.96)),
     rgba(9, 12, 18, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 22px;
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.22);
+  box-shadow:
+    0 -8px 24px rgba(0, 0, 0, 0.22),
+    0 18px 44px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(22px);
 }
 
 .mobile-bottom-nav__item {
@@ -3065,8 +3595,7 @@
     grid-template-columns: 1fr 112px;
   }
 
-  .mobile-card-summary,
-  .mobile-ev-section .ev-plan__summary {
+  .mobile-card-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
