@@ -60,19 +60,17 @@ test.describe('energy dashboard', () => {
     await expect(dialog).not.toBeVisible()
   })
 
-  test('renders the mobile home tab with storyboard chrome and four-tab navigation', async ({ page }) => {
+  test('renders the mobile home tab with four-tab navigation', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/')
 
     await expect(page.locator('.mobile-dashboard')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible()
-    await expect(page.locator('.mobile-status-bar')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Open notifications' })).toBeVisible()
-    await expect(page.locator('.mobile-home-hero img')).toBeVisible()
+    await expect(page.locator('.mobile-status-bar')).toHaveCount(0)
+    await expect(page.locator('.mobile-top-bar')).toHaveCount(0)
+    await expect(page.locator('.mobile-home-hero-card img')).toBeVisible()
     await expect(page.locator('.mobile-bottom-nav__item')).toHaveCount(4)
     await expect(page.locator('.mobile-bottom-nav')).not.toContainText('More')
-    await expect(page.locator('.mobile-kpi-row')).toBeVisible()
+    await expect(page.locator('.mobile-home-metric')).toHaveCount(5)
     await expect(page.getByRole('heading', { name: 'Solar forecast' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Energy prices' })).toBeVisible()
   })
@@ -83,7 +81,6 @@ test.describe('energy dashboard', () => {
 
     await page.getByRole('button', { name: 'Solar' }).click()
     await expect(page.getByTestId('mobile-tab-solar')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Solar', exact: true })).toBeVisible()
     await expect(page.getByRole('tab', { name: 'Day' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Energy flow' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Solar production' })).toBeVisible()
@@ -98,7 +95,6 @@ test.describe('energy dashboard', () => {
 
     await page.getByRole('button', { name: 'Battery' }).click()
     await expect(page.getByTestId('mobile-tab-battery')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Battery', exact: true })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Battery history' })).toBeVisible()
     await expect(page.locator('.mobile-battery-hero-card')).toBeVisible()
 
@@ -110,7 +106,6 @@ test.describe('energy dashboard', () => {
 
     await page.getByRole('button', { name: 'EV' }).click()
     await expect(page.getByTestId('mobile-tab-ev')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'EV Charger', exact: true })).toBeVisible()
     await expect(page.locator('.mobile-vehicle-card')).toBeVisible()
     await expect(page.getByRole('tab', { name: 'Plan' })).toBeVisible()
     await expect(page.getByRole('tab', { name: 'History' })).toBeVisible()
