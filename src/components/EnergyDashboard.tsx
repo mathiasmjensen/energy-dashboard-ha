@@ -9,7 +9,7 @@ import {
   getEnergyPriceInsight,
   getSolarForecastInsight,
   type InsightViewMode,
-} from './dashboard/dashboardInsights'
+} from '../services/dashboardInsights'
 import { MobileDashboard } from './mobile/MobileDashboard'
 import { useEnergyData } from '../hooks/useEnergyData'
 import { useEvChargerController } from '../hooks/useEvChargerController'
@@ -112,6 +112,7 @@ export function EnergyDashboard() {
     return (
       <MobileDashboard
         battery={{
+          capacity: data.batteryCapacity,
           energy: data.batteryEnergy,
           power: data.batteryPower,
           soc: data.batterySoc,
@@ -157,6 +158,7 @@ export function EnergyDashboard() {
   return (
     <DesktopDashboard
       battery={{
+        capacity: data.batteryCapacity,
         energy: data.batteryEnergy,
         meta: batteryFlowMeta,
         power: data.batteryPower,

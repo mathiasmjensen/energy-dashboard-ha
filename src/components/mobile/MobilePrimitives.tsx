@@ -1,16 +1,8 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
-import { getBarGeometry, getChartGeometry, formatChartValue } from './MobileUtils'
-import type { BatteryPeriod, MobileTab, SolarPeriod } from './MobileTypes'
-
-export const MOBILE_TABS: Array<{ icon: MobileIconName; key: MobileTab; label: string; title: string }> = [
-  { icon: 'home', key: 'home', label: 'Home', title: 'Home' },
-  { icon: 'solar', key: 'solar', label: 'Solar', title: 'Solar' },
-  { icon: 'battery', key: 'battery', label: 'Battery', title: 'Battery' },
-  { icon: 'car', key: 'ev', label: 'EV', title: 'EV Charger' },
-]
-
-export const SOLAR_PERIODS: SolarPeriod[] = ['Day', 'Week', 'Month', 'Year']
-export const BATTERY_PERIODS: BatteryPeriod[] = ['Day', 'Week', 'Month']
+import { formatChartValue, getBarChartGeometry, getMobileLineChartGeometry } from '../../services/chartGeometry'
+import type { MobileTab } from './MobileTypes'
+import { MOBILE_TABS } from './MobileConstants'
+import type { MobileIconName } from './MobileConstants'
 
 export function MobileStatusBar({ displayTime }: { displayTime: string }) {
   return (
@@ -277,7 +269,7 @@ export function MobileBarChart({
   unit: 'DKK/kWh' | 'kW' | 'kWh'
   values: number[]
 }) {
-  const geometry = getBarGeometry(values)
+  const geometry = getBarChartGeometry(values)
 
   return (
     <div
@@ -322,7 +314,7 @@ export function MobileLineChart({
   points: number[]
   unit: '%' | 'DKK/kWh' | 'kWh'
 }) {
-  const geometry = getChartGeometry(points)
+  const geometry = getMobileLineChartGeometry(points)
 
   return (
     <div className="mobile-line-chart" data-flat={geometry.isFlat}>
@@ -355,18 +347,6 @@ export function MobileLineChart({
     </div>
   )
 }
-
-export type MobileIconName =
-  | 'battery'
-  | 'bell'
-  | 'car'
-  | 'chevronDown'
-  | 'grid'
-  | 'home'
-  | 'menu'
-  | 'refresh'
-  | 'solar'
-  | 'sun'
 
 export function MobileIcon({ name }: { name: MobileIconName }) {
   return (

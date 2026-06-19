@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { BatteryPeriod, MobileDashboardProps } from './MobileTypes'
-import { GlassCard, MobileLineChart, SmallMetricCard, SectionHeading, SegmentedControl, StatusChip, BATTERY_PERIODS } from './MobilePrimitives'
+import { BATTERY_PERIODS } from './MobileConstants'
+import { GlassCard, MobileLineChart, SmallMetricCard, SectionHeading, SegmentedControl, StatusChip } from './MobilePrimitives'
 
 export function MobileBatteryScreen({
   battery,
