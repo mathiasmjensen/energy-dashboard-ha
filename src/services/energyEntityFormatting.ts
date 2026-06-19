@@ -115,12 +115,50 @@ export function formatGridStatus(value: number | null) {
   return value > 0 ? 'Importing' : 'Exporting'
 }
 
+export function formatWeather(resolved: ResolvedEnergyEntities, key: EnergyEntityKey) {
+  const entity = getResolvedEntity(resolved, key)
+  const temperature = getWeatherTemperature(entity?.attributes ?? {})
+  const unit = normalizeTemperatureUnit(entity?.attributes?.temperature_unit)
+  const condition = getEntityState(resolved, key)
+
+  return {
+    condition: condition ? formatWeatherCondition(condition) : 'Weather',
+    temperature: temperature === null ? `--- ${unit}` : `${temperature.toFixed(1)} ${unit}`,
+  }
+}
+
 export function boundedPercent(value: number | null) {
   if (value === null) {
     return 0
   }
 
   return Math.min(100, Math.max(0, value))
+}
+
+function getWeatherTemperature(attributes: Record<string, unknown>) {
+  const rawValue = attributes.temperature ?? attributes.apparent_temperature
+  const value = typeof rawValue === 'number' ? rawValue : Number.parseFloat(String(rawValue ?? '').replace(',', '.'))
+
+  return Number.isFinite(value) ? value : null
+}
+
+function normalizeTemperatureUnit(value: unknown) {
+  const unit = typeof value === 'string' && value.trim() ? value.trim() : 'C'
+  return unit.replace('°', '')
+}
+
+function formatWeatherCondition(value: string) {
+  const normalized = value
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[-_]+/g, ' ')
+    .replace(/partlycloudy/i, 'partly cloudy')
+    .trim()
+
+  if (!normalized) {
+    return 'Weather'
+  }
+
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase()
 }
 
 export function getEvccSchedulePlans(resolved: ResolvedEnergyEntities) {
@@ -159,12 +197,12 @@ export function getEvccSchedulePlans(resolved: ResolvedEnergyEntities) {
     )
 }
 
-function getRawEntityState(resolved: ResolvedEnergyEntities, key: EnergyEntityKey) {
+export function getRawEntityState(resolved: ResolvedEnergyEntities, key: EnergyEntityKey) {
   const entity = getResolvedEntity(resolved, key)
   return entity?.state ?? null
 }
 
-function getEntityAttribute(resolved: ResolvedEnergyEntities, key: EnergyEntityKey, attribute: string) {
+export function getEntityAttribute(resolved: ResolvedEnergyEntities, key: EnergyEntityKey, attribute: string) {
   return getResolvedEntity(resolved, key)?.attributes[attribute]
 }
 

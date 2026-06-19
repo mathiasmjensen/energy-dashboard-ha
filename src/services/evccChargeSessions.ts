@@ -70,6 +70,37 @@ export function writeEvccChargeSessionCache(sessions: EvccChargeSession[]) {
   }
 }
 
+export function getEvccSessionsUrl() {
+  const configured = getEnvValue('VITE_EVCC_SESSIONS_URL')?.trim()
+
+  if (configured?.toLowerCase() === 'disabled') {
+    return ''
+  }
+
+  if (configured) {
+    return configured
+  }
+
+  const baseUrl = getEnvValue('VITE_EVCC_URL')?.trim()
+  return baseUrl ? `${baseUrl.replace(/\/$/, '')}/api/sessions` : ''
+}
+
+function getEnvValue(key: string) {
+  return (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.[key]
+}
+
+export function getEvccSessionsFromAttributes(attributes: Record<string, unknown>, state?: string | null) {
+  const payload = getFirstSessionPayload([
+    attributes.sessions,
+    attributes.items,
+    attributes.data,
+    attributes.value,
+    state,
+  ])
+
+  return payload ? mapEvccSessions(payload as EvccApiSession[]) : []
+}
+
 export function mapEvccSessions(payload: EvccApiSession[]): EvccChargeSession[] {
   return payload
     .map((session) => {
@@ -89,6 +120,35 @@ export function mapEvccSessions(payload: EvccApiSession[]): EvccChargeSession[] 
       } satisfies EvccChargeSession
     })
     .sort((left, right) => right.startTs - left.startTs)
+}
+
+function getFirstSessionPayload(values: unknown[]) {
+  for (const value of values) {
+    const parsedValue = typeof value === 'string' ? parseJson(value) : value
+
+    if (Array.isArray(parsedValue)) {
+      return parsedValue
+    }
+
+    if (parsedValue && typeof parsedValue === 'object') {
+      const record = parsedValue as Record<string, unknown>
+      const nested = record.sessions ?? record.items ?? record.data ?? record.value
+
+      if (Array.isArray(nested)) {
+        return nested
+      }
+    }
+  }
+
+  return null
+}
+
+function parseJson(value: string) {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
 }
 
 function formatDateLabel(value: Date) {

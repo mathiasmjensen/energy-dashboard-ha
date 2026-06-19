@@ -10,6 +10,7 @@ import {
   formatPlanEnabled,
   formatPlanTime,
   formatState,
+  formatWeather,
   getEntityOptions,
   getEvccSchedulePlans,
   getNumericState,
@@ -37,8 +38,11 @@ export function useEnergyData() {
     const gridPowerValue = getNumericState(resolved, 'gridPower')
     const selfPowered = getNumericState(resolved, 'selfPoweredPercent')
     const solarPowerValue = getNumericState(resolved, 'solarPower')
+    const weather = formatWeather(resolved, 'weatherHome')
 
     return {
+      weatherCondition: weather.condition,
+      weatherTemperature: weather.temperature,
       solarPower: formatState(resolved, 'solarPower', 'kW'),
       solarPowerValue,
       solarPercent: formatState(resolved, 'solarPercent', '%'),

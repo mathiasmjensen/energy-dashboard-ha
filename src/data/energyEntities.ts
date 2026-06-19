@@ -35,6 +35,10 @@ export const ENERGY_ENTITIES = {
   energyIndependence: 'sensor.evcc_stat_total_charged_kwh',
   peakRateNow: 'sensor.evcc_tariff_grid',
   peakRateNext: 'sensor.evcc_tariff_feed_in',
+  peakRateFeed: 'sensor.energy_dashboard_peak_rates',
+  solarForecastFeed: 'sensor.energy_dashboard_solar_forecast',
+  evccChargeSessions: 'sensor.energy_dashboard_evcc_charge_sessions',
+  weatherHome: 'weather.home',
 } as const
 
 export const ENERGY_ENTITY_CANDIDATES: Partial<Record<keyof typeof ENERGY_ENTITIES, string[]>> = {
@@ -99,6 +103,10 @@ export const ENERGY_ENTITY_CANDIDATES: Partial<Record<keyof typeof ENERGY_ENTITI
     'sensor.foxess_pv_energy_today',
     'sensor.foxess_generation_energy_today',
     'sensor.foxess_inverter_generation_today',
+  ],
+  weatherHome: [
+    'weather.forecast_home',
+    'weather.home',
   ],
 } as const
 

@@ -151,6 +151,10 @@ export function EnergyDashboard() {
           curve: solarPowerCurve,
           value: solarProductionEnergyKwh,
         }}
+        weather={{
+          condition: data.weatherCondition,
+          temperature: data.weatherTemperature,
+        }}
       />
     )
   }
@@ -199,6 +203,10 @@ export function EnergyDashboard() {
       prices={energyPriceInsight}
       sceneStyle={sceneStyle}
       shellStyle={shellStyle}
+      weather={{
+        condition: data.weatherCondition,
+        temperature: data.weatherTemperature,
+      }}
       solar={{
         forecast: solarForecastInsight,
         power: data.solarPower,

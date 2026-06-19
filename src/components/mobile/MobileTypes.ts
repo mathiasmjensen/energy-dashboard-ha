@@ -60,4 +60,8 @@ export type MobileDashboardProps = {
     curve: number[]
     value: string
   }
+  weather: {
+    condition: string
+    temperature: string
+  }
 }

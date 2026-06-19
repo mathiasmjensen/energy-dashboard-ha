@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { getForecastResult, normalizeEvccForecast, normalizeForecast } from '../src/services/solarForecast'
+import {
+  getEvccSolarForecastUrl,
+  getForecastResult,
+  getSolarForecastStateFromAttributes,
+  normalizeEvccForecast,
+  normalizeForecast,
+} from '../src/services/solarForecast'
 
 test.describe('solar forecast service', () => {
   test('normalizes Open-Meteo irradiance into hourly kWh and power', () => {
@@ -42,6 +48,26 @@ test.describe('solar forecast service', () => {
         time: '2026-06-12T10:30:00+02:00',
       },
     ])
+  })
+
+  test('reads EVCC solar rates from HA sensor attributes without a default browser LAN URL', () => {
+    const state = getSolarForecastStateFromAttributes(
+      {
+        rates: [
+          {
+            end: '2026-06-12T12:00:00+02:00',
+            start: '2026-06-12T11:00:00+02:00',
+            value: 1200,
+          },
+        ],
+      },
+      null,
+      10,
+    )
+
+    expect(state.source).toBe('evcc')
+    expect(state.windows[0].powerKw).toBe(1.2)
+    expect(getEvccSolarForecastUrl()).toBe('')
   })
 
   test('builds hourly result series and remaining EVCC forecast totals', () => {
