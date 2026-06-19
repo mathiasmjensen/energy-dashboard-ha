@@ -6,10 +6,10 @@ import {
   MobileBarChart,
   MobileIcon,
   NodeIcon,
-  SOLAR_PERIODS,
   SectionHeading,
   SegmentedControl,
 } from './MobilePrimitives'
+import { SOLAR_PERIODS } from './MobileConstants'
 
 export function MobileSolarScreen({
   distribution,

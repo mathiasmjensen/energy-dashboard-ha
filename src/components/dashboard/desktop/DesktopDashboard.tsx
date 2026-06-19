@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { EvChargerController } from '../../../hooks/useEvChargerController'
-import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../dashboardInsights'
+import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../services/dashboardInsights'
 import { assetPath } from '../../../utils/assetPath'
 import { EvChargerModal } from '../../EvChargerModal'
 import { EnergyFlowMap, FlowNode } from './DesktopFlow'
@@ -19,6 +19,7 @@ const NAV_ITEMS = [{ active: true, icon: 'home' as const, label: 'Overview' }]
 
 export type DesktopDashboardProps = {
   battery: {
+    capacity: string
     energy: string
     meta: string
     power: string
@@ -159,6 +160,7 @@ export function DesktopDashboard({
           />
           <SolarProductionPanel curve={solar.production.curve} value={solar.production.value} />
           <BatteryStatusPanel
+            capacity={battery.capacity}
             energy={battery.energy}
             power={battery.power}
             soc={battery.soc}

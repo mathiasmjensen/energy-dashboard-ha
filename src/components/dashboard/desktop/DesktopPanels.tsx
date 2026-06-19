@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react'
 import { assetPath } from '../../../utils/assetPath'
-import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../dashboardInsights'
+import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../services/dashboardInsights'
 import { BarChart, InsightToolbar, Panel, PanelHeader } from './DesktopShared'
+import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/batteryMetrics'
 
 export function EnergyDistributionPanel({
   battery,
@@ -83,12 +84,14 @@ export function SolarProductionPanel({ curve, value }: { curve: number[]; value:
 }
 
 export function BatteryStatusPanel({
+  capacity,
   energy,
   power,
   soc,
   socValue,
   status,
 }: {
+  capacity: string
   energy: string
   power: string
   soc: string
@@ -96,10 +99,11 @@ export function BatteryStatusPanel({
   status: string
 }) {
   const timeEstimate = getBatteryTimeEstimate({
-    capacity: energy,
-    power,
-    socValue,
+    capacityKwh: parseDisplayNumber(capacity),
+    powerKw: parseDisplayNumber(power),
+    socPercent: socValue,
     status,
+    storedEnergyKwh: parseDisplayNumber(energy),
   })
 
   return (
@@ -262,81 +266,4 @@ export function EvChargerOverviewCard({
       </div>
     </button>
   )
-}
-
-function getBatteryTimeEstimate({
-  capacity,
-  power,
-  socValue,
-  status,
-}: {
-  capacity: string
-  power: string
-  socValue: number
-  status: string
-}) {
-  const normalizedStatus = status.toLowerCase()
-  const capacityKwh = parseDisplayNumber(capacity)
-  const powerKw = parseDisplayNumber(power)
-
-  if (normalizedStatus === 'charging') {
-    return {
-      label: 'Time to full',
-      value:
-        capacityKwh === null || powerKw === null || powerKw <= 0.05
-          ? '---'
-          : formatDurationHours((capacityKwh * (100 - socValue)) / 100 / powerKw),
-    }
-  }
-
-  if (normalizedStatus === 'discharging') {
-    return {
-      label: 'Time to empty',
-      value:
-        capacityKwh === null || powerKw === null || powerKw <= 0.05
-          ? '---'
-          : formatDurationHours((capacityKwh * socValue) / 100 / powerKw),
-    }
-  }
-
-  return {
-    label: 'Time estimate',
-    value: '---',
-  }
-}
-
-function parseDisplayNumber(value: string) {
-  if (value === '---') {
-    return null
-  }
-
-  const parsed = Number.parseFloat(value.replace(',', '.'))
-  return Number.isFinite(parsed) ? parsed : null
-}
-
-function formatDurationHours(hours: number) {
-  if (!Number.isFinite(hours) || hours < 0) {
-    return '---'
-  }
-
-  const totalMinutes = Math.round(hours * 60)
-
-  if (totalMinutes < 1) {
-    return '<1m'
-  }
-
-  const days = Math.floor(totalMinutes / 1440)
-  const remainingMinutes = totalMinutes - days * 1440
-  const wholeHours = Math.floor(remainingMinutes / 60)
-  const minutes = remainingMinutes % 60
-
-  if (days > 0) {
-    return `${days}d ${wholeHours}h`
-  }
-
-  if (wholeHours > 0) {
-    return `${wholeHours}h ${minutes}m`
-  }
-
-  return `${minutes}m`
 }

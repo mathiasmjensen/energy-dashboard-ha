@@ -21,6 +21,7 @@ export type BatteryPeriod = 'Day' | 'Month' | 'Week'
 
 export type MobileDashboardProps = {
   battery: {
+    capacity: string
     energy: string
     power: string
     soc: string

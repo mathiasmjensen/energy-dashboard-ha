@@ -1,5 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react'
-import type { InsightHeaderControls, InsightViewMode } from '../dashboardInsights'
+import type { InsightHeaderControls } from '../../../services/dashboardInsights'
+import {
+  formatChartValue,
+  formatChartXAxisLabel,
+  getBarChartGeometry,
+  getDesktopLineChartGeometry,
+} from '../../../services/chartGeometry'
 
 export type IconName =
   | 'battery'
@@ -132,7 +138,7 @@ export function BarChart({
   unit: 'DKK/kWh' | 'kW' | 'kWh'
   values: number[]
 }) {
-  const geometry = getBarGeometry(values)
+  const geometry = getBarChartGeometry(values)
 
   return (
     <div
@@ -143,13 +149,13 @@ export function BarChart({
     >
       <span
         className="overview-bar-chart__zero"
-        style={{ '--zero-y': `${geometry.zero}%` } as CSSProperties}
+        style={{ '--zero-y': `${geometry.zeroY}%` } as CSSProperties}
       />
-      {geometry.items.map((bar, index) => (
+      {geometry.bars.map((bar, index) => (
         <button
           aria-label={`${formatChartXAxisLabel(labels, index)} ${formatChartValue(values[index] ?? 0, unit)}`}
           className="chart-hover-target"
-          data-negative={bar.value < 0}
+          data-negative={bar.isNegative}
           data-tooltip={`${formatChartXAxisLabel(labels, index)} · ${formatChartValue(values[index] ?? 0, unit)}`}
           key={index}
           style={
@@ -182,7 +188,7 @@ export function LineChart({
   points: number[]
   unit: 'DKK/kWh' | 'kW' | 'kWh'
 }) {
-  const geometry = getChartPolyline(points)
+  const geometry = getDesktopLineChartGeometry(points)
 
   return (
     <div className={`overview-line-chart ${className ?? ''}`.trim()} aria-label={label}>
@@ -228,96 +234,6 @@ export function OverviewIcon({ name }: { name: IconName }) {
       {renderOverviewIcon(name)}
     </svg>
   )
-}
-
-function getBarGeometry(values: number[]) {
-  const normalizedValues = values.length ? values : [0]
-  const domain = getChartDomain(normalizedValues)
-  const zero = valueToPercent(0, domain.min, domain.max)
-  const items = normalizedValues.map((value) => {
-    const valueY = valueToPercent(value, domain.min, domain.max)
-    const distance = Math.abs(zero - valueY)
-
-    if (distance < 2) {
-      return {
-        height: 2,
-        top: Math.max(0, Math.min(98, zero - 1)),
-        value,
-      }
-    }
-
-    return {
-      height: distance,
-      top: Math.min(zero, valueY),
-      value,
-    }
-  })
-  const uniqueValues = new Set(normalizedValues.map((value) => value.toFixed(4)))
-
-  return {
-    isFlat: uniqueValues.size <= 1,
-    items,
-    zero,
-  }
-}
-
-function formatChartXAxisLabel(labels: string[] | undefined, index: number) {
-  return labels?.[index] ?? formatChartHour(index)
-}
-
-function formatChartHour(index: number) {
-  return `${index.toString().padStart(2, '0')}:00`
-}
-
-function formatChartValue(value: number, unit: 'DKK/kWh' | 'kW' | 'kWh') {
-  return `${value.toFixed(2)} ${unit}`
-}
-
-function getChartPolyline(values: number[]) {
-  const normalizedValues = values.length ? values : [0]
-  const domain = getChartDomain(normalizedValues)
-  const width = 310
-  const top = 12
-  const bottom = 112
-  const height = bottom - top
-  const offsetY = 12
-  const step = width / Math.max(1, normalizedValues.length)
-  const zeroY = mapValueToY(0, domain.min, domain.max, top, height)
-  const dots = normalizedValues.map((value, index) => ({
-    x: Number((step * (index + 0.5)).toFixed(1)),
-    y: Number(mapValueToY(value, domain.min, domain.max, offsetY, height).toFixed(1)),
-  }))
-  const firstPoint = dots[0]
-  const lastPoint = dots[dots.length - 1]
-  const linePoints = [{ x: 0, y: firstPoint.y }, ...dots, { x: width, y: lastPoint.y }]
-  const line = linePoints.map((point) => `${point.x},${point.y}`).join(' ')
-  const fill = `M0,${zeroY} L${line.replaceAll(' ', ' L')} L${width},${zeroY} `
-
-  return { dots: dots.filter((_, index) => index % 3 === 0), fill, line, zeroY }
-}
-
-function getChartDomain(values: number[]) {
-  const finiteValues = values.filter(Number.isFinite)
-  const actualMin = Math.min(...finiteValues, 0)
-  const actualMax = Math.max(...finiteValues, 0)
-
-  if (actualMin === actualMax) {
-    const pad = Math.max(Math.abs(actualMax) * 0.35, 1)
-    return { max: actualMax + pad, min: actualMin - pad }
-  }
-
-  const range = actualMax - actualMin
-  const pad = Math.max(range * 0.12, 0.15)
-
-  return { max: actualMax + pad, min: actualMin - pad }
-}
-
-function mapValueToY(value: number, min: number, max: number, top: number, height: number) {
-  return top + (1 - (value - min) / (max - min)) * height
-}
-
-function valueToPercent(value: number, min: number, max: number) {
-  return (1 - (value - min) / (max - min)) * 100
 }
 
 function renderOverviewIcon(name: IconName) {
@@ -371,8 +287,4 @@ function renderOverviewIcon(name: IconName) {
     case 'zap':
       return <path d="m13 2-8 12h6l-1 8 9-14h-6V2Z" fill="currentColor" stroke="none" />
   }
-}
-
-export function getInsightToggleLabel(mode: InsightViewMode) {
-  return mode === 'today' ? 'timeline' : 'today overview'
 }

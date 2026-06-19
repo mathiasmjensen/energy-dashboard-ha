@@ -1,5 +1,5 @@
-import type { PeakRateDay, PeakRateWindow } from '../../hooks/usePeakRates'
-import type { SolarForecastWindow } from '../../hooks/useSolarForecast'
+import type { PeakRateDay, PeakRateWindow } from '../hooks/usePeakRates'
+import type { SolarForecastWindow } from '../hooks/useSolarForecast'
 
 export const DAY_MS = 24 * 60 * 60 * 1000
 export const FALLBACK_SOLAR_CURVE = [0, 0, 0, 0, 0.2, 0.8, 1.6, 3, 4.8, 6.5, 7.6, 8, 7.8, 7, 6, 4.5, 2.8, 1.3, 0.4, 0, 0, 0, 0, 0]
