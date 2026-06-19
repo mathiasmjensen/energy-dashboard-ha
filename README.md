@@ -87,11 +87,68 @@ origin that the browser can reach before building.
 Entity placeholders live in `src/data/energyEntities.ts`. Replace those sensor
 IDs with the real entities from your Home Assistant instance.
 
+Weather is read from `weather.forecast_home` or `weather.home` by default for
+the dashboard status chips. If your weather integration uses another entity ID,
+update `weatherHome` in `src/data/energyEntities.ts`.
+
 Unknown, unavailable, or missing values render as `---`.
+
+## Home Assistant Package
+
+A complete drop-in package is available at
+`home-assistant/energy-dashboard-hakit.yaml`. Copy it to a valid Home Assistant
+package slug path:
+
+```text
+/config/packages/energy_dashboard_hakit.yaml
+```
+
+Then ensure `configuration.yaml` has packages enabled:
+
+```yaml
+homeassistant:
+  packages: !include_dir_named packages
+```
+
+The package creates the helper entities, endpoint-backed sensors, EVCC REST
+commands, charge-plan script, and start/stop automations expected by the
+dashboard.
 
 ## Peak Rates
 
-The Peak Rate card can fetch hourly prices directly from a JSON feed:
+For phone/mobile-internet access, Home Assistant should fetch the price endpoint
+and expose the result as an entity attribute. The dashboard reads
+`sensor.energy_dashboard_peak_rates` first and only uses browser fetching if you
+explicitly set `VITE_PEAK_RATE_URL`.
+
+Recommended HA entity shape:
+
+```yaml
+sensor.energy_dashboard_peak_rates
+  attributes:
+    prices:
+      - start: "2026-06-10T22:00:00.000Z"
+        end: "2026-06-10T23:00:00.000Z"
+        price: 1.2079
+```
+
+Example using HA `command_line` to wrap an array endpoint into a `prices`
+attribute:
+
+```yaml
+command_line:
+  - sensor:
+      name: Energy Dashboard Peak Rates
+      unique_id: energy_dashboard_peak_rates
+      command: >-
+        python3 -c "import json, urllib.request; data=json.load(urllib.request.urlopen('http://YOUR_SERVICE_HOST:1000/', timeout=10)); print(json.dumps({'count': len(data), 'prices': data}))"
+      value_template: "{{ value_json.count }}"
+      json_attributes:
+        - prices
+      scan_interval: 900
+```
+
+Optional browser fallback:
 
 ```bash
 VITE_PEAK_RATE_URL=http://YOUR_SERVICE_HOST:1000/
@@ -104,27 +161,30 @@ The feed should return an array of hourly windows:
 ```
 
 The dashboard shows the current active price and the highest upcoming price in
-the next 24 hours. Because this is a browser fetch from the Home Assistant page,
-the price service must include a CORS header, for example:
-
-```text
-Access-Control-Allow-Origin: *
-```
-
-or the specific Home Assistant origin:
-
-```text
-Access-Control-Allow-Origin: http://YOUR_SERVICE_HOST:30103
-```
-
-If CORS is not enabled, the card falls back to the configured HA tariff entities
-in `src/data/energyEntities.ts`. Set `VITE_PEAK_RATE_URL=disabled` to skip the
-direct fetch entirely.
+the next 24 hours. Keep `VITE_PEAK_RATE_URL=disabled` for normal HA-hosted
+deployments so phones never try to fetch private LAN endpoints directly.
 
 ## Solar Forecast
 
-The Solar Forecast card prefers EVCC's own solar forecast endpoint so it matches
-the EVCC Forecast view:
+For phone/mobile-internet access, Home Assistant should fetch EVCC's solar
+forecast endpoint and expose it as `sensor.energy_dashboard_solar_forecast`.
+The dashboard reads this entity first.
+
+Example HA REST sensor:
+
+```yaml
+rest:
+  - resource: http://YOUR_SERVICE_HOST:7070/api/tariff/solar
+    scan_interval: 900
+    sensor:
+      - name: Energy Dashboard Solar Forecast
+        unique_id: energy_dashboard_solar_forecast
+        value_template: "{{ value_json.rates | count }}"
+        json_attributes:
+          - rates
+```
+
+Optional browser fallback:
 
 ```bash
 VITE_EVCC_URL=http://YOUR_SERVICE_HOST:7070
@@ -159,6 +219,34 @@ VITE_SOLAR_FORECAST_TILT=30
 VITE_SOLAR_FORECAST_AZIMUTH=0
 VITE_SOLAR_PANEL_CAPACITY_KW=10
 VITE_SOLAR_FORECAST_TIMEZONE=Europe/Copenhagen
+```
+
+## EVCC Charge History
+
+For phone/mobile-internet access, Home Assistant should fetch EVCC charge
+sessions and expose them as `sensor.energy_dashboard_evcc_charge_sessions`.
+The dashboard reads this entity first and only uses browser-side EVCC fetching
+if `VITE_EVCC_SESSIONS_URL` or `VITE_EVCC_URL` is explicitly configured.
+
+Example HA `command_line` sensor wrapping EVCC's root array response:
+
+```yaml
+command_line:
+  - sensor:
+      name: Energy Dashboard EVCC Charge Sessions
+      unique_id: energy_dashboard_evcc_charge_sessions
+      command: >-
+        python3 -c "import json, urllib.request; data=json.load(urllib.request.urlopen('http://YOUR_SERVICE_HOST:7070/api/sessions', timeout=10)); print(json.dumps({'count': len(data), 'sessions': data[:25]}))"
+      value_template: "{{ value_json.count }}"
+      json_attributes:
+        - sessions
+      scan_interval: 300
+```
+
+Optional browser fallback:
+
+```bash
+VITE_EVCC_SESSIONS_URL=http://YOUR_SERVICE_HOST:7070/api/sessions
 ```
 
 ## EVCC Controls

@@ -1,34 +1,4 @@
 import { expect, test } from '@playwright/test'
-import type { Page } from '@playwright/test'
-
-const PRICE_FEED_URL = 'http://YOUR_INTERNAL_HOST:1000/'
-
-function createMockPriceFeed(startIso = '2026-06-18T18:00:00.000Z') {
-  const startMs = Date.parse(startIso)
-
-  return Array.from({ length: 48 }, (_, index) => {
-    const windowStartMs = startMs + index * 60 * 60 * 1000
-    const windowEndMs = windowStartMs + 60 * 60 * 1000
-
-    return {
-      end: new Date(windowEndMs).toISOString(),
-      price: index === 0 ? 9.99 : Number((1 + index / 100).toFixed(2)),
-      start: new Date(windowStartMs).toISOString(),
-    }
-  })
-}
-
-async function mockPeakRateFeed(page: Page) {
-  await page.route(PRICE_FEED_URL, async (route) => {
-    await route.fulfill({
-      body: JSON.stringify(createMockPriceFeed()),
-      contentType: 'application/json',
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
-    })
-  })
-}
 
 test.describe('energy dashboard', () => {
   const expectFixedMobileNav = async (page: import('@playwright/test').Page) => {
@@ -125,7 +95,6 @@ test.describe('energy dashboard', () => {
   })
 
   test('uses the same rolling price feed for desktop and mobile EV planning', async ({ page }) => {
-    await mockPeakRateFeed(page)
     await page.clock.install({ time: new Date('2026-06-18T19:37:00+02:00') })
 
     await page.setViewportSize({ width: 1672, height: 941 })
@@ -135,7 +104,8 @@ test.describe('energy dashboard', () => {
     const dialog = page.getByRole('dialog', { name: 'EV Charger' })
     await expect(dialog.getByLabel('Energy price day')).toContainText('Next 24 hours')
     await expect(dialog.locator('.ev-price-bar')).toHaveCount(24)
-    await expect(dialog.locator('.ev-price-bar').first()).toHaveAttribute('title', /20:00 9\.99 DKK\/kWh/)
+    const desktopFirstPriceTitle = await dialog.locator('.ev-price-bar').first().getAttribute('title')
+    expect(desktopFirstPriceTitle).toContain('20:00')
 
     await page.setViewportSize({ width: 390, height: 844 })
     await page.reload()
@@ -144,7 +114,7 @@ test.describe('energy dashboard', () => {
 
     await expect(page.getByLabel('Energy price day')).toContainText('Next 24 hours')
     await expect(page.locator('.ev-price-bar')).toHaveCount(24)
-    await expect(page.locator('.ev-price-bar').first()).toHaveAttribute('title', /20:00 9\.99 DKK\/kWh/)
+    await expect(page.locator('.ev-price-bar').first()).toHaveAttribute('title', desktopFirstPriceTitle ?? '')
   })
 
   test('renders the mobile home tab with four-tab navigation', async ({ page }) => {

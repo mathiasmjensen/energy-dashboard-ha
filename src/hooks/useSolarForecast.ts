@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useHass } from '@hakit/core'
+import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
+import { getRawEntityState, getResolvedEntity } from '../services/energyEntityFormatting'
 import {
   getEvccSolarForecastUrl,
   getForecastResult,
   getInitialSolarForecastState,
   getPanelCapacityKw,
+  getSolarForecastStateFromAttributes,
   getSolarForecastUrl,
   normalizeEvccForecast,
   normalizeForecast,
@@ -22,13 +26,25 @@ const POLL_MS = 60 * 60 * 1000
 const EVCC_POLL_MS = 15 * 60 * 1000
 
 export function useSolarForecast(): SolarForecastResult {
+  const entities = useHass((state) => state.entities)
   const evccForecastUrl = getEvccSolarForecastUrl()
   const [forecastState, setForecastState] = useState<SolarForecastState>(() => getInitialSolarForecastState(evccForecastUrl))
   const forecastUrl = getSolarForecastUrl()
   const panelCapacityKw = getPanelCapacityKw()
+  const resolved = useMemo(() => resolveEnergyEntities(entities), [entities])
+  const haForecastState = useMemo(() => {
+    const entity = getResolvedEntity(resolved, 'solarForecastFeed')
+
+    return getSolarForecastStateFromAttributes(
+      (entity?.attributes ?? {}) as Record<string, unknown>,
+      getRawEntityState(resolved, 'solarForecastFeed'),
+      panelCapacityKw,
+    )
+  }, [panelCapacityKw, resolved])
+  const hasHaForecast = haForecastState.windows.length > 0
 
   useEffect(() => {
-    if (!evccForecastUrl) {
+    if (!evccForecastUrl || hasHaForecast) {
       return
     }
 
@@ -75,10 +91,10 @@ export function useSolarForecast(): SolarForecastResult {
       controller.abort()
       window.clearInterval(pollId)
     }
-  }, [evccForecastUrl])
+  }, [evccForecastUrl, hasHaForecast])
 
   useEffect(() => {
-    if (!forecastUrl || evccForecastUrl) {
+    if (!forecastUrl || evccForecastUrl || hasHaForecast) {
       return
     }
 
@@ -111,7 +127,13 @@ export function useSolarForecast(): SolarForecastResult {
       controller.abort()
       window.clearInterval(pollId)
     }
-  }, [evccForecastUrl, forecastUrl, panelCapacityKw])
+  }, [evccForecastUrl, forecastUrl, hasHaForecast, panelCapacityKw])
 
-  return useMemo(() => getForecastResult(forecastState.windows, forecastState.source), [forecastState])
+  return useMemo(
+    () =>
+      hasHaForecast
+        ? getForecastResult(haForecastState.windows, haForecastState.source)
+        : getForecastResult(forecastState.windows, forecastState.source),
+    [forecastState, haForecastState, hasHaForecast],
+  )
 }

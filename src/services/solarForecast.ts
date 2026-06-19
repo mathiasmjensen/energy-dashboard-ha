@@ -52,7 +52,7 @@ export type SolarForecastResult = {
 }
 
 export function getSolarForecastUrl() {
-  const configured = import.meta.env.VITE_SOLAR_FORECAST_URL?.trim()
+  const configured = getEnvValue('VITE_SOLAR_FORECAST_URL')?.trim()
 
   if (configured?.toLowerCase() === 'disabled') {
     return ''
@@ -69,14 +69,14 @@ export function getSolarForecastUrl() {
     latitude: String(getEnvNumber('VITE_SOLAR_FORECAST_LATITUDE', DEFAULT_LATITUDE)),
     longitude: String(getEnvNumber('VITE_SOLAR_FORECAST_LONGITUDE', DEFAULT_LONGITUDE)),
     tilt: String(getEnvNumber('VITE_SOLAR_FORECAST_TILT', DEFAULT_TILT)),
-    timezone: import.meta.env.VITE_SOLAR_FORECAST_TIMEZONE?.trim() || DEFAULT_TIMEZONE,
+    timezone: getEnvValue('VITE_SOLAR_FORECAST_TIMEZONE')?.trim() || DEFAULT_TIMEZONE,
   })
 
   return `https://api.open-meteo.com/v1/forecast?${params.toString()}`
 }
 
 export function getEvccSolarForecastUrl() {
-  const configured = import.meta.env.VITE_EVCC_SOLAR_FORECAST_URL?.trim()
+  const configured = getEnvValue('VITE_EVCC_SOLAR_FORECAST_URL')?.trim()
 
   if (configured?.toLowerCase() === 'disabled') {
     return ''
@@ -86,7 +86,11 @@ export function getEvccSolarForecastUrl() {
     return configured
   }
 
-  const baseUrl = import.meta.env.VITE_EVCC_URL?.trim() || 'http://YOUR_INTERNAL_HOST:7070'
+  const baseUrl = getEnvValue('VITE_EVCC_URL')?.trim()
+  if (!baseUrl) {
+    return ''
+  }
+
   return `${baseUrl.replace(/\/$/, '')}/api/tariff/solar`
 }
 
@@ -143,6 +147,38 @@ export function normalizeEvccForecast(payload: EvccSolarPayload) {
   }
 
   return windows
+}
+
+export function getSolarForecastStateFromAttributes(
+  attributes: Record<string, unknown>,
+  state: string | null | undefined,
+  panelCapacityKw: number,
+): SolarForecastState {
+  const payload = getFirstSolarPayload([
+    attributes.rates,
+    attributes.forecast,
+    attributes.windows,
+    attributes.data,
+    attributes.hourly,
+    state,
+  ])
+
+  if (!payload) {
+    return { source: 'open-meteo', windows: [] }
+  }
+
+  const evccWindows = normalizeEvccForecast(payload as EvccSolarPayload)
+  if (evccWindows.length) {
+    return { source: 'evcc', windows: evccWindows }
+  }
+
+  const openMeteoPayload =
+    payload && typeof payload === 'object' && 'hourly' in payload
+      ? (payload as OpenMeteoPayload)
+      : ({ hourly: payload } as OpenMeteoPayload)
+  const openMeteoWindows = normalizeForecast(openMeteoPayload, panelCapacityKw)
+
+  return { source: 'open-meteo', windows: openMeteoWindows }
 }
 
 export function readEvccSolarCache() {
@@ -245,10 +281,38 @@ export function getForecastResult(
 }
 
 function getEnvNumber(key: string, fallback: number) {
-  const rawValue = import.meta.env[key]?.trim()
+  const rawValue = getEnvValue(key)?.trim()
   const value = Number.parseFloat(rawValue ?? '')
 
   return Number.isFinite(value) ? value : fallback
+}
+
+function getEnvValue(key: string) {
+  return (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.[key]
+}
+
+function getFirstSolarPayload(values: unknown[]) {
+  for (const value of values) {
+    const parsedValue = typeof value === 'string' ? parseJson(value) : value
+
+    if (parsedValue && typeof parsedValue === 'object') {
+      if (Array.isArray(parsedValue)) {
+        return { rates: parsedValue }
+      }
+
+      return parsedValue
+    }
+  }
+
+  return null
+}
+
+function parseJson(value: string) {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
 }
 
 function getLocalDateKey(value: string | number | Date) {

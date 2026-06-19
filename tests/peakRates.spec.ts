@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { getPeakRateResult, normalizePeakRates } from '../src/services/peakRates'
+import { getPeakRatePayloadFromAttributes, getPeakRateResult, getPeakRateUrl, normalizePeakRates } from '../src/services/peakRates'
 
 test.describe('peak rates service', () => {
   test('normalizes upstream price windows to DKK and sorts by start time', () => {
@@ -19,6 +19,21 @@ test.describe('peak rates service', () => {
     expect(windows).toHaveLength(2)
     expect(windows[0].price).toBe(1.25)
     expect(windows[1].price).toBe(0.85)
+  })
+
+  test('reads HA sensor attributes before any optional browser price endpoint', () => {
+    const payload = getPeakRatePayloadFromAttributes({
+      prices: [
+        {
+          end: '2026-06-12T12:00:00+02:00',
+          price: 1.5,
+          start: '2026-06-12T11:00:00+02:00',
+        },
+      ],
+    })
+
+    expect(normalizePeakRates(payload)).toHaveLength(1)
+    expect(getPeakRateUrl()).toBe('')
   })
 
   test('creates the active, average, peak, and day summaries for the next 24 hours', () => {

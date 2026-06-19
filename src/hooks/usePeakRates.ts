@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useHass } from '@hakit/core'
+import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
+import { getRawEntityState, getResolvedEntity } from '../services/energyEntityFormatting'
 import {
+  getPeakRatePayloadFromAttributes,
   getPeakRateResult,
   getPeakRateUrl,
   normalizePeakRates,
@@ -13,10 +17,21 @@ const POLL_MS = 15 * 60 * 1000
 const TICK_MS = 60 * 1000
 
 export function usePeakRates(): PeakRateResult {
+  const entities = useHass((state) => state.entities)
   const [nowMs, setNowMs] = useState(() => Date.now())
   const [windows, setWindows] = useState<PeakRateWindow[]>([])
   const [error, setError] = useState(false)
   const peakRateUrl = getPeakRateUrl()
+  const resolved = useMemo(() => resolveEnergyEntities(entities), [entities])
+  const haWindows = useMemo(() => {
+    const entity = getResolvedEntity(resolved, 'peakRateFeed')
+    const payload = getPeakRatePayloadFromAttributes(
+      (entity?.attributes ?? {}) as Record<string, unknown>,
+      getRawEntityState(resolved, 'peakRateFeed'),
+    )
+
+    return normalizePeakRates(payload)
+  }, [resolved])
 
   useEffect(() => {
     const tickId = window.setInterval(() => setNowMs(Date.now()), TICK_MS)
@@ -68,7 +83,7 @@ export function usePeakRates(): PeakRateResult {
   }, [peakRateUrl])
 
   return useMemo(
-    () => getPeakRateResult(peakRateUrl ? windows : [], nowMs, peakRateUrl ? error : false),
-    [error, nowMs, peakRateUrl, windows],
+    () => getPeakRateResult(haWindows.length ? haWindows : peakRateUrl ? windows : [], nowMs, peakRateUrl ? error : false),
+    [error, haWindows, nowMs, peakRateUrl, windows],
   )
 }

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { mapEvccSessions } from '../src/services/evccChargeSessions'
+import { getEvccSessionsFromAttributes, getEvccSessionsUrl, mapEvccSessions } from '../src/services/evccChargeSessions'
 
 test.describe('EVCC charge sessions service', () => {
   test('maps EVCC sessions into display rows sorted newest first', () => {
@@ -37,5 +37,25 @@ test.describe('EVCC charge sessions service', () => {
       energyKwh: '---',
       vehicle: 'Carport',
     })
+  })
+
+  test('reads EVCC sessions from HA sensor attributes without a default browser LAN URL', () => {
+    const sessions = getEvccSessionsFromAttributes({
+      sessions: [
+        {
+          chargedEnergy: 4,
+          chargeDuration: 60 * 60 * 1_000_000_000,
+          created: '2026-06-12T20:00:00+02:00',
+          finished: '2026-06-12T21:00:00+02:00',
+          id: 3,
+          price: 6.5,
+          vehicle: 'Tesla',
+        },
+      ],
+    })
+
+    expect(sessions).toHaveLength(1)
+    expect(sessions[0].energyKwh).toBe('4.0')
+    expect(getEvccSessionsUrl()).toBe('')
   })
 })

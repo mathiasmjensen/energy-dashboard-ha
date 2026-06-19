@@ -3,6 +3,7 @@ import {
   formatBatteryStatus,
   formatGridStatus,
   formatState,
+  formatWeather,
   getEvccSchedulePlans,
   getNumericState,
 } from '../src/services/energyEntityFormatting'
@@ -38,6 +39,23 @@ test.describe('energy entity formatting service', () => {
     expect(formatBatteryStatus(-0.9)).toBe('Charging')
     expect(formatBatteryStatus(1.2)).toBe('Discharging')
     expect(formatBatteryStatus(0.01)).toBe('Idle')
+  })
+
+  test('formats weather entities for dashboard status chips', () => {
+    const resolved = {
+      weatherHome: {
+        entity: entity('partlycloudy', {
+          temperature: 12.36,
+          temperature_unit: '°C',
+        }),
+        entityId: 'weather.home',
+      },
+    } satisfies ResolvedEnergyEntities
+
+    expect(formatWeather(resolved, 'weatherHome')).toEqual({
+      condition: 'Partly cloudy',
+      temperature: '12.4 C',
+    })
   })
 
   test('normalizes EVCC schedule plans from HA sensor attributes', () => {

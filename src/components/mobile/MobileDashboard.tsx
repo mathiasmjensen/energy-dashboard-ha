@@ -18,6 +18,7 @@ export function MobileDashboard({
   prices,
   solarForecast,
   solarProduction,
+  weather,
 }: MobileDashboardProps) {
   const [activeTab, setActiveTab] = useState<MobileTab>('home')
   const [solarPeriod, setSolarPeriod] = useState<SolarPeriod>('Day')
@@ -37,6 +38,7 @@ export function MobileDashboard({
               overview={overview}
               prices={prices}
               solarForecast={solarForecast}
+              weather={weather}
             />
           ) : null}
 

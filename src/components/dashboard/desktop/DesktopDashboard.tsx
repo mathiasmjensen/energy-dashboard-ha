@@ -57,6 +57,10 @@ export type DesktopDashboardProps = {
   isEvChargerOpen: boolean
   onCloseEvCharger: () => void
   onOpenEvCharger: () => void
+  weather: {
+    condition: string
+    temperature: string
+  }
   sceneStyle: CSSProperties
   shellStyle: CSSProperties
   solar: {
@@ -87,6 +91,7 @@ export function DesktopDashboard({
   sceneStyle,
   shellStyle,
   solar,
+  weather,
 }: DesktopDashboardProps) {
   return (
     <main className="dashboard-shell" style={shellStyle}>
@@ -113,7 +118,7 @@ export function DesktopDashboard({
               <p>Live overview of your home energy system</p>
             </div>
             <div className="status-strip">
-              <StatusPill icon="sun" primary="12.4 C" secondary="Clear sky" tone="sun" />
+              <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
               <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />
               <StatusPill primary="All systems" secondary="Normal" tone="ok" />
             </div>

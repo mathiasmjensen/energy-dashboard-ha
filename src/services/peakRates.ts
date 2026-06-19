@@ -1,4 +1,3 @@
-const DEFAULT_PEAK_RATE_URL = 'http://YOUR_INTERNAL_HOST:1000/'
 const LOOKAHEAD_MS = 24 * 60 * 60 * 1000
 
 export type PeakRateWindow = {
@@ -36,24 +35,41 @@ export type PeakRateResult = {
 }
 
 export function getPeakRateUrl() {
-  const configured = import.meta.env.VITE_PEAK_RATE_URL?.trim()
+  const configured = getEnvValue('VITE_PEAK_RATE_URL')?.trim()
 
   if (configured?.toLowerCase() === 'disabled') {
     return ''
   }
 
-  return configured || DEFAULT_PEAK_RATE_URL
+  return configured || ''
+}
+
+function getEnvValue(key: string) {
+  return (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.[key]
 }
 
 export function normalizePeakRates(payload: unknown) {
-  if (!Array.isArray(payload)) {
+  const source = unwrapPeakRatePayload(payload)
+
+  if (!Array.isArray(source)) {
     return []
   }
 
-  return payload
+  return source
     .map(normalizePeakRateWindow)
     .filter((window): window is PeakRateWindow => Boolean(window))
     .sort((left, right) => left.startMs - right.startMs)
+}
+
+export function getPeakRatePayloadFromAttributes(attributes: Record<string, unknown>, state?: string | null) {
+  return getFirstArrayPayload([
+    attributes.prices,
+    attributes.windows,
+    attributes.rates,
+    attributes.data,
+    attributes.items,
+    state,
+  ])
 }
 
 export function getPeakRateResult(windows: PeakRateWindow[], nowMs: number, error: boolean): PeakRateResult {
@@ -92,6 +108,51 @@ export function getPeakRateResult(windows: PeakRateWindow[], nowMs: number, erro
 function getNumericPrice(value: unknown) {
   const price = typeof value === 'number' ? value : Number.parseFloat(String(value).replace(',', '.'))
   return Number.isFinite(price) ? price : null
+}
+
+function unwrapPeakRatePayload(payload: unknown): unknown {
+  if (typeof payload === 'string') {
+    try {
+      return unwrapPeakRatePayload(JSON.parse(payload))
+    } catch {
+      return payload
+    }
+  }
+
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    const record = payload as Record<string, unknown>
+    return getFirstArrayPayload([record.prices, record.windows, record.rates, record.data, record.items]) ?? payload
+  }
+
+  return payload
+}
+
+function getFirstArrayPayload(values: unknown[]) {
+  for (const value of values) {
+    const parsedValue = typeof value === 'string' ? parseJson(value) : value
+
+    if (Array.isArray(parsedValue)) {
+      return parsedValue
+    }
+
+    if (parsedValue && typeof parsedValue === 'object') {
+      const nested = unwrapPeakRatePayload(parsedValue)
+
+      if (Array.isArray(nested)) {
+        return nested
+      }
+    }
+  }
+
+  return null
+}
+
+function parseJson(value: string) {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
 }
 
 function normalizePriceToDkk(price: number) {

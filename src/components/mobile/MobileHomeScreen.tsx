@@ -10,7 +10,8 @@ export function MobileHomeScreen({
   overview,
   prices,
   solarForecast,
-}: Pick<MobileDashboardProps, 'battery' | 'displayDate' | 'displayTime' | 'overview' | 'prices' | 'solarForecast'>) {
+  weather,
+}: Pick<MobileDashboardProps, 'battery' | 'displayDate' | 'displayTime' | 'overview' | 'prices' | 'solarForecast' | 'weather'>) {
   const forecastStats = solarForecast.summaryItems.slice(0, 2)
   const priceStats = prices.summaryItems.slice(0, 2)
 
@@ -21,7 +22,7 @@ export function MobileHomeScreen({
           <StatusChip tone="green">Normal</StatusChip>
           <StatusChip tone="gold">
             <MobileIcon name="sun" />
-            12.4 C
+            {weather.temperature}
           </StatusChip>
         </div>
 

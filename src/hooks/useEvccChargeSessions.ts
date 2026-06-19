@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useHass } from '@hakit/core'
+import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
+import { getRawEntityState, getResolvedEntity } from '../services/energyEntityFormatting'
 import {
+  getEvccSessionsFromAttributes,
+  getEvccSessionsUrl,
   mapEvccSessions,
   readEvccChargeSessionCache,
   type EvccApiSession,
@@ -13,9 +18,25 @@ const CACHE_MS = 5 * 60 * 1000
 const POLL_MS = 5 * 60 * 1000
 
 export function useEvccChargeSessions() {
+  const entities = useHass((state) => state.entities)
   const [sessions, setSessions] = useState<EvccChargeSession[]>(() => readEvccChargeSessionCache()?.sessions ?? [])
+  const evccSessionsUrl = getEvccSessionsUrl()
+  const resolved = useMemo(() => resolveEnergyEntities(entities), [entities])
+  const haSessions = useMemo(() => {
+    const entity = getResolvedEntity(resolved, 'evccChargeSessions')
+
+    return getEvccSessionsFromAttributes(
+      (entity?.attributes ?? {}) as Record<string, unknown>,
+      getRawEntityState(resolved, 'evccChargeSessions'),
+    )
+  }, [resolved])
+  const hasHaSessions = haSessions.length > 0
 
   useEffect(() => {
+    if (!evccSessionsUrl || hasHaSessions) {
+      return
+    }
+
     const controller = new AbortController()
 
     async function fetchSessions() {
@@ -27,7 +48,7 @@ export function useEvccChargeSessions() {
       }
 
       try {
-        const response = await fetch('http://YOUR_INTERNAL_HOST:7070/api/sessions', {
+        const response = await fetch(evccSessionsUrl, {
           signal: controller.signal,
         })
 
@@ -57,7 +78,7 @@ export function useEvccChargeSessions() {
       controller.abort()
       window.clearInterval(pollId)
     }
-  }, [])
+  }, [evccSessionsUrl, hasHaSessions])
 
-  return useMemo(() => sessions, [sessions])
+  return useMemo(() => (hasHaSessions ? haSessions : sessions), [haSessions, hasHaSessions, sessions])
 }
