@@ -2591,8 +2591,8 @@
 
 .mobile-home-hero-stats {
   display: grid;
-  gap: 6px;
-  padding: 0 9px 9px;
+  gap: 7px;
+  padding: 0 10px 10px;
 }
 
 .mobile-home-hero-stats__top {
@@ -2604,7 +2604,7 @@
 .mobile-home-hero-stats__bottom {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 7px;
 }
 
 .mobile-home-metric {
@@ -2616,9 +2616,9 @@
 }
 
 .mobile-home-metric[data-compact='true'] {
-  gap: 8px;
-  min-height: 38px;
-  padding: 5px 8px;
+  gap: 7px;
+  min-height: 52px;
+  padding: 7px 8px;
   background: rgba(8, 12, 19, 0.64);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px;
@@ -2650,10 +2650,33 @@
 
 .mobile-home-metric__copy strong {
   display: block;
-  margin-top: 4px;
+  margin-top: 3px;
   color: #f5f8fd;
   font-size: 12px;
   line-height: 1;
+}
+
+.mobile-home-metric__copy small {
+  display: block;
+  margin-top: 4px;
+  color: currentColor;
+  opacity: 0.86;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 650;
+}
+
+.mobile-home-metric[data-compact='true'] .mobile-home-metric__copy span {
+  font-size: 9px;
+}
+
+.mobile-home-metric[data-compact='true'] .mobile-home-metric__copy strong {
+  font-size: 11px;
+}
+
+.mobile-home-metric[data-compact='true'] .mobile-home-metric__icon {
+  align-self: start;
+  margin-top: 1px;
 }
 
 .mobile-home-metric em {
@@ -3151,10 +3174,10 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   grid-template-rows: auto auto;
-  gap: 18px 16px;
+  gap: 14px 14px;
   align-items: center;
-  min-height: 242px;
-  padding: 14px 0 0;
+  min-height: 220px;
+  padding: 10px 0 0;
 }
 
 .mobile-solar-flow__node,
@@ -3162,20 +3185,20 @@
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 4px;
-  min-height: 72px;
+  gap: 3px;
+  min-height: 66px;
 }
 
 .mobile-solar-flow__node span,
 .mobile-solar-flow__hub span {
   color: #bcc5d1;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .mobile-solar-flow__node strong,
 .mobile-solar-flow__hub strong {
-  font-size: 28px;
-  line-height: 1.05;
+  font-size: 18px;
+  line-height: 1.08;
 }
 
 .mobile-solar-flow__node--solar {
@@ -3197,6 +3220,11 @@
   align-self: center;
   text-align: center;
   color: #f8fbff;
+  min-width: 108px;
+  padding: 8px 10px 6px;
+  background: rgba(9, 14, 22, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
 }
 
 .mobile-solar-flow__node--battery {
@@ -3218,16 +3246,16 @@
 .mobile-node-icon {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 50%;
   background: rgba(10, 14, 20, 0.65);
 }
 
 .mobile-node-icon .mobile-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .mobile-node-icon[data-tone='gold'] {
@@ -3255,9 +3283,9 @@
 
 .mobile-solar-flow__lines {
   position: absolute;
-  inset: 32px 0 0;
+  inset: 24px 0 0;
   width: 100%;
-  height: 160px;
+  height: 144px;
   overflow: visible;
 }
 
