@@ -28,8 +28,11 @@ export const ENERGY_ENTITIES = {
   batterySoc: 'sensor.evcc_battery_soc',
   batteryEnergy: 'sensor.evcc_battery_capacity',
   batteryPower: 'sensor.evcc_battery_power',
+  batteryChargeToday: 'sensor.foxess_battery_charge_energy_today',
+  batteryDischargeToday: 'sensor.foxess_battery_discharge_energy_today',
   batteryStatus: 'sensor.evcc_battery_power',
   solarProductionToday: 'sensor.evcc_pv_energy',
+  solarProductionFeed: 'sensor.energy_dashboard_solar_production_feed',
   solarForecastToday: 'sensor.evcc_pv_energy',
   selfPoweredPercent: 'sensor.evcc_stat_total_solar_percentage',
   energyIndependence: 'sensor.evcc_stat_total_charged_kwh',
@@ -54,6 +57,22 @@ export const ENERGY_ENTITY_CANDIDATES: Partial<Record<keyof typeof ENERGY_ENTITI
     'sensor.foxess_inverter_battery_power',
     'sensor.foxess_inverter_battery_charge_discharge_power',
   ],
+  batteryChargeToday: [
+    'sensor.energy_dashboard_battery_charge_today',
+    'sensor.foxess_battery_charge_energy_today',
+    'sensor.foxess_battery_charge_today',
+    'sensor.foxess_battery_charged_today',
+    'sensor.foxess_inverter_battery_charge_energy_today',
+    'sensor.foxess_inverter_battery_charge_today',
+  ],
+  batteryDischargeToday: [
+    'sensor.energy_dashboard_battery_discharge_today',
+    'sensor.foxess_battery_discharge_energy_today',
+    'sensor.foxess_battery_discharge_today',
+    'sensor.foxess_battery_discharged_today',
+    'sensor.foxess_inverter_battery_discharge_energy_today',
+    'sensor.foxess_inverter_battery_discharge_today',
+  ],
   batterySoc: [
     'sensor.foxess_battery_soc',
     'sensor.foxess_battery_state_of_charge',
@@ -61,6 +80,7 @@ export const ENERGY_ENTITY_CANDIDATES: Partial<Record<keyof typeof ENERGY_ENTITI
     'sensor.foxess_inverter_battery_state_of_charge',
   ],
   gridImportToday: [
+    'sensor.energy_dashboard_grid_import_today',
     'sensor.foxess_grid_consumption_energy_today',
     'sensor.foxess_grid_import_energy_today',
     'sensor.foxess_import_energy_today',
@@ -75,6 +95,7 @@ export const ENERGY_ENTITY_CANDIDATES: Partial<Record<keyof typeof ENERGY_ENTITI
     'sensor.foxess_inverter_import_export_power',
   ],
   homeEnergyToday: [
+    'sensor.energy_dashboard_home_consumption_today',
     'sensor.foxess_load_energy_today',
     'sensor.foxess_home_consumption_energy_today',
     'sensor.foxess_consumption_energy_today',
@@ -98,11 +119,15 @@ export const ENERGY_ENTITY_CANDIDATES: Partial<Record<keyof typeof ENERGY_ENTITI
     'sensor.foxess_inverter_generation_power',
   ],
   solarProductionToday: [
+    'sensor.energy_dashboard_solar_production_today',
     'sensor.foxess_generation_today',
     'sensor.foxess_solar_energy_today',
     'sensor.foxess_pv_energy_today',
     'sensor.foxess_generation_energy_today',
     'sensor.foxess_inverter_generation_today',
+  ],
+  solarProductionFeed: [
+    'sensor.energy_dashboard_solar_production_feed',
   ],
   weatherHome: [
     'weather.forecast_home',

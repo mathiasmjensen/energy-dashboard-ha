@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   formatBatteryKwh,
+  getBatteryDailyEnergyTotal,
   getBatteryTimeEstimate,
   inferBatteryEnergyRole,
   resolveBatteryEnergyMetrics,
@@ -50,5 +51,31 @@ test.describe('battery metrics service', () => {
         storedEnergyKwh: 7.6,
       }),
     ).toEqual({ label: 'Time to empty', value: '4h 0m' })
+  })
+
+  test('prefers Fox daily battery totals based on the active battery direction', () => {
+    expect(
+      getBatteryDailyEnergyTotal({
+        chargeTodayKwh: 4.2,
+        dischargeTodayKwh: 1.1,
+        status: 'Charging',
+      }),
+    ).toBe(4.2)
+
+    expect(
+      getBatteryDailyEnergyTotal({
+        chargeTodayKwh: 4.2,
+        dischargeTodayKwh: 1.1,
+        status: 'Discharging',
+      }),
+    ).toBe(1.1)
+
+    expect(
+      getBatteryDailyEnergyTotal({
+        chargeTodayKwh: 2.3,
+        dischargeTodayKwh: 3.4,
+        status: 'Idle',
+      }),
+    ).toBe(3.4)
   })
 })

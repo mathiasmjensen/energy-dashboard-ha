@@ -53,6 +53,198 @@ command_line:
         - sessions
       scan_interval: 300
 
+  - sensor:
+      name: Energy Dashboard Fox Cloud Daily Totals
+      unique_id: energy_dashboard_fox_cloud_daily_totals
+      command: |
+        python3 - <<'PY'
+        import datetime as dt
+        import hashlib
+        import json
+        import time
+        import urllib.request
+        from pathlib import Path
+
+        def load_secrets(path):
+            secrets = {}
+            for raw_line in Path(path).read_text().splitlines():
+                line = raw_line.strip()
+                if not line or line.startswith('#') or ':' not in line:
+                    continue
+                key, value = line.split(':', 1)
+                secrets[key.strip()] = value.strip().strip('"').strip("'")
+            return secrets
+
+        def sum_values(values):
+            total = 0.0
+            for value in values or []:
+                try:
+                    total += float(str(value).replace(',', '.'))
+                except (TypeError, ValueError):
+                    continue
+            return round(total, 4)
+
+        def get_bucket_value(payload, variable, index):
+            for item in payload.get('result') or []:
+                if not isinstance(item, dict):
+                    continue
+                if str(item.get('variable', '')) != variable:
+                    continue
+                values = item.get('values') or []
+                if 0 <= index < len(values):
+                    try:
+                        return round(float(str(values[index]).replace(',', '.')), 4)
+                    except (TypeError, ValueError):
+                        return 0.0
+            return 0.0
+
+        def post(path, body):
+            timestamp = str(int(time.time() * 1000))
+            signature = hashlib.md5(fr'{path}\r\n{api_key}\r\n{timestamp}'.encode('utf-8')).hexdigest()
+            request = urllib.request.Request(
+                f'{api_domain}{path}',
+                data=json.dumps(body).encode('utf-8'),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Lang': 'en',
+                    'Token': api_key,
+                    'Timestamp': timestamp,
+                    'Timezone': 'Europe/Copenhagen',
+                    'User-Agent': 'Mozilla/5.0',
+                    'Signature': signature,
+                },
+                method='POST',
+            )
+            return json.loads(urllib.request.urlopen(request, timeout=20).read().decode('utf-8'))
+
+        def extract_values(items):
+            series = []
+            for index, item in enumerate(items or []):
+                if isinstance(item, dict):
+                    label = str(item.get('time') or item.get('label') or item.get('hour') or f'{index:02d}:00')
+                    raw_value = item.get('value', item.get('kwh', item.get('energy', item.get('generation'))))
+                else:
+                    label = f'{index:02d}:00'
+                    raw_value = item
+                try:
+                    value = round(float(str(raw_value).replace(',', '.')), 4)
+                except (TypeError, ValueError):
+                    continue
+                series.append({'label': label[:5] if ':' in label else f'{index:02d}:00', 'value': value})
+            return series
+
+        def extract_hourly_generation(payload):
+            result = payload.get('result') or []
+            preferred_variables = ('PVEnergyTotal', 'generation', 'generationpower', 'pvpower', 'pv')
+            for variable_name in preferred_variables:
+                for item in result:
+                    if not isinstance(item, dict):
+                        continue
+                    variable = str(item.get('variable', ''))
+                    if variable != variable_name:
+                        continue
+                    values = item.get('values') or item.get('data') or item.get('value')
+                    if isinstance(values, list):
+                        normalized = extract_values(values)
+                        if normalized:
+                            return normalized
+            return []
+
+        try:
+            secrets = load_secrets('/config/secrets.yaml')
+            api_key = secrets.get('foxess_api_key', '')
+            device_sn = secrets.get('foxess_device_sn', '')
+            api_domain = str(secrets.get('foxess_api_domain', 'https://www.foxesscloud.com')).rstrip('/')
+
+            if not api_key or not device_sn:
+                raise RuntimeError('missing foxess_api_key or foxess_device_sn in /config/secrets.yaml')
+
+            now = dt.datetime.now()
+            path = '/op/v0/device/report/query'
+            month_payload = post(path, {
+                'sn': device_sn,
+                'variables': [
+                    'generation',
+                    'loads',
+                    'feedin',
+                    'gridConsumption',
+                    'chargeEnergyToTal',
+                    'dischargeEnergyToTal'
+                ],
+                'year': now.year,
+                'month': now.month,
+                'dimension': 'month'
+            })
+            daily_payload = post(path, {
+                'sn': device_sn,
+                'variables': ['PVEnergyTotal', 'generation'],
+                'year': now.year,
+                'month': now.month,
+                'day': now.day,
+                'dimension': 'day'
+            })
+
+            day_index = now.day - 1
+            raw_generation = get_bucket_value(month_payload, 'generation', day_index)
+            home = get_bucket_value(month_payload, 'loads', day_index)
+            feedin = get_bucket_value(month_payload, 'feedin', day_index)
+            grid = get_bucket_value(month_payload, 'gridConsumption', day_index)
+            battery_charge = get_bucket_value(month_payload, 'chargeEnergyToTal', day_index)
+            battery_discharge = get_bucket_value(month_payload, 'dischargeEnergyToTal', day_index)
+            # Mirror the Fox app's balance view rather than the raw public API fields.
+            solar_to_load_and_battery = max(0.0, round(home - grid + battery_charge, 4))
+            solar = round(solar_to_load_and_battery + feedin, 4)
+            home_from_pv_and_battery = max(0.0, round(home - grid + battery_discharge, 4))
+            hourly_solar_production = extract_hourly_generation(daily_payload)
+
+            print(json.dumps({
+                'ok': True,
+                'error': '',
+                'solar_production_today': solar,
+                'home_consumption_today': home,
+                'home_from_pv_and_battery_today': home_from_pv_and_battery,
+                'grid_import_today': grid,
+                'battery_charge_today': battery_charge,
+                'battery_discharge_today': battery_discharge,
+                'feed_in_today': feedin,
+                'raw_generation_today': raw_generation,
+                'solar_to_load_and_battery_today': solar_to_load_and_battery,
+                'hourly_solar_production': hourly_solar_production,
+                'source_date': now.strftime('%Y-%m-%d')
+            }))
+        except Exception as exc:
+            print(json.dumps({
+                'ok': False,
+                'error': str(exc),
+                'solar_production_today': None,
+                'home_consumption_today': None,
+                'home_from_pv_and_battery_today': None,
+                'grid_import_today': None,
+                'battery_charge_today': None,
+                'battery_discharge_today': None,
+                'feed_in_today': None,
+                'raw_generation_today': None,
+                'solar_to_load_and_battery_today': None,
+                'hourly_solar_production': [],
+                'source_date': ''
+            }))
+        PY
+      value_template: "{{ 1 if value_json.ok else 0 }}"
+      json_attributes:
+        - error
+        - solar_production_today
+        - home_consumption_today
+        - home_from_pv_and_battery_today
+        - grid_import_today
+        - battery_charge_today
+        - battery_discharge_today
+        - feed_in_today
+        - raw_generation_today
+        - solar_to_load_and_battery_today
+        - hourly_solar_production
+        - source_date
+      scan_interval: 300
+
 rest:
   - resource: "http://192.168.1.156:7070/api/tariff/solar"
     scan_interval: 900
@@ -62,6 +254,39 @@ rest:
         value_template: "{{ value_json.rates | default([]) | count }}"
         json_attributes:
           - rates
+
+template:
+  - sensor:
+      - name: Energy Dashboard Solar Production Today
+        unique_id: energy_dashboard_solar_production_today
+        unit_of_measurement: "kWh"
+        state: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'solar_production_today') }}"
+
+      - name: Energy Dashboard Solar Production Feed
+        unique_id: energy_dashboard_solar_production_feed
+        state: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'hourly_solar_production') | default([], true) | count }}"
+        attributes:
+          hourly_solar_production: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'hourly_solar_production') | default([], true) }}"
+
+      - name: Energy Dashboard Home Consumption Today
+        unique_id: energy_dashboard_home_consumption_today
+        unit_of_measurement: "kWh"
+        state: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'home_consumption_today') }}"
+
+      - name: Energy Dashboard Grid Import Today
+        unique_id: energy_dashboard_grid_import_today
+        unit_of_measurement: "kWh"
+        state: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'grid_import_today') }}"
+
+      - name: Energy Dashboard Battery Charge Today
+        unique_id: energy_dashboard_battery_charge_today
+        unit_of_measurement: "kWh"
+        state: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'battery_charge_today') }}"
+
+      - name: Energy Dashboard Battery Discharge Today
+        unique_id: energy_dashboard_battery_discharge_today
+        unit_of_measurement: "kWh"
+        state: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'battery_discharge_today') }}"
 
 script:
   evcc_set_charge_plan:

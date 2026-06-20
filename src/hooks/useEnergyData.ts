@@ -1,7 +1,12 @@
 import { useMemo } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
-import { formatBatteryKwh, inferBatteryEnergyRole, resolveBatteryEnergyMetrics } from '../services/batteryMetrics'
+import {
+  formatBatteryKwh,
+  getBatteryDailyEnergyTotal,
+  inferBatteryEnergyRole,
+  resolveBatteryEnergyMetrics,
+} from '../services/batteryMetrics'
 import {
   boundedPercent,
   formatBatteryStatus,
@@ -16,6 +21,7 @@ import {
   getNumericState,
   getResolvedEntity,
 } from '../services/energyEntityFormatting'
+import { getSolarProductionCurveFromAttributes } from '../services/solarProduction'
 
 export function useEnergyData() {
   const entities = useHass((state) => state.entities)
@@ -34,11 +40,24 @@ export function useEnergyData() {
       socPercent: batterySoc,
     })
     const batteryPowerValue = getNumericState(resolved, 'batteryPower')
+    const batteryChargeTodayValue = getNumericState(resolved, 'batteryChargeToday')
+    const batteryDischargeTodayValue = getNumericState(resolved, 'batteryDischargeToday')
     const evChargePowerValue = getNumericState(resolved, 'evChargePower')
     const gridPowerValue = getNumericState(resolved, 'gridPower')
     const selfPowered = getNumericState(resolved, 'selfPoweredPercent')
     const solarPowerValue = getNumericState(resolved, 'solarPower')
     const weather = formatWeather(resolved, 'weatherHome')
+    const solarProductionFeedEntity = getResolvedEntity(resolved, 'solarProductionFeed')
+    const solarProductionFeed = getSolarProductionCurveFromAttributes(
+      (solarProductionFeedEntity?.attributes ?? {}) as Record<string, unknown>,
+      solarProductionFeedEntity?.state ?? null,
+    )
+    const batteryStatus = formatBatteryStatus(batteryPowerValue)
+    const batteryDistributionTodayValue = getBatteryDailyEnergyTotal({
+      chargeTodayKwh: batteryChargeTodayValue,
+      dischargeTodayKwh: batteryDischargeTodayValue,
+      status: batteryStatus,
+    })
 
     return {
       weatherCondition: weather.condition,
@@ -74,10 +93,18 @@ export function useEnergyData() {
       batteryCapacityValue: batteryEnergyMetrics.capacityKwh,
       batteryEnergy: formatBatteryKwh(batteryEnergyMetrics.storedEnergyKwh),
       batteryStoredEnergyValue: batteryEnergyMetrics.storedEnergyKwh,
+      batteryChargeToday: formatBatteryKwh(batteryChargeTodayValue),
+      batteryChargeTodayValue,
+      batteryDischargeToday: formatBatteryKwh(batteryDischargeTodayValue),
+      batteryDischargeTodayValue,
+      batteryDistributionToday: formatBatteryKwh(batteryDistributionTodayValue),
+      batteryDistributionTodayValue,
       batteryPower: formatState(resolved, 'batteryPower', 'kW'),
       batteryPowerValue,
       solarProductionToday: formatState(resolved, 'solarProductionToday', 'kWh'),
-      batteryStatus: formatBatteryStatus(batteryPowerValue),
+      solarProductionCurve: solarProductionFeed.values,
+      solarProductionCurveAvailable: solarProductionFeed.available,
+      batteryStatus,
       solarForecastToday: formatState(resolved, 'solarForecastToday', 'kWh'),
       selfPoweredPercent: formatState(resolved, 'selfPoweredPercent', '%'),
       selfPoweredValue: boundedPercent(selfPowered),

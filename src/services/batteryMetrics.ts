@@ -62,6 +62,32 @@ export function formatBatteryKwh(value: number | null) {
   return value === null ? '---' : value.toFixed(1)
 }
 
+export function getBatteryDailyEnergyTotal({
+  chargeTodayKwh,
+  dischargeTodayKwh,
+  status,
+}: {
+  chargeTodayKwh: number | null
+  dischargeTodayKwh: number | null
+  status: string
+}) {
+  const normalizedStatus = status.toLowerCase()
+
+  if (normalizedStatus === 'charging') {
+    return chargeTodayKwh ?? dischargeTodayKwh
+  }
+
+  if (normalizedStatus === 'discharging') {
+    return dischargeTodayKwh ?? chargeTodayKwh
+  }
+
+  if (chargeTodayKwh === null && dischargeTodayKwh === null) {
+    return null
+  }
+
+  return Math.max(chargeTodayKwh ?? 0, dischargeTodayKwh ?? 0)
+}
+
 export function getBatteryTimeEstimate({
   capacityKwh,
   powerKw,
