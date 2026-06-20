@@ -19,11 +19,22 @@ const ENTITY_MATCHERS: Partial<Record<EnergyEntityKey, string[][]>> = {
     ['fox', 'battery', 'power'],
     ['fox', 'battery', 'charge', 'discharge'],
   ],
+  batteryChargeToday: [
+    ['energy', 'dashboard', 'battery', 'charge', 'today'],
+    ['fox', 'battery', 'charge', 'today'],
+    ['fox', 'battery', 'charged', 'today'],
+  ],
+  batteryDischargeToday: [
+    ['energy', 'dashboard', 'battery', 'discharge', 'today'],
+    ['fox', 'battery', 'discharge', 'today'],
+    ['fox', 'battery', 'discharged', 'today'],
+  ],
   batterySoc: [
     ['fox', 'battery', 'soc'],
     ['fox', 'battery', 'state', 'of', 'charge'],
   ],
   gridImportToday: [
+    ['energy', 'dashboard', 'grid', 'import', 'today'],
     ['fox', 'grid', 'consumption', 'today'],
     ['fox', 'grid', 'import', 'today'],
     ['fox', 'import', 'today'],
@@ -34,6 +45,7 @@ const ENTITY_MATCHERS: Partial<Record<EnergyEntityKey, string[][]>> = {
     ['fox', 'import', 'export', 'power'],
   ],
   homeEnergyToday: [
+    ['energy', 'dashboard', 'home', 'consumption', 'today'],
     ['fox', 'load', 'energy', 'today'],
     ['fox', 'home', 'consumption', 'today'],
     ['fox', 'consumption', 'today'],
@@ -49,6 +61,7 @@ const ENTITY_MATCHERS: Partial<Record<EnergyEntityKey, string[][]>> = {
     ['fox', 'generation', 'power'],
   ],
   solarProductionToday: [
+    ['energy', 'dashboard', 'solar', 'production', 'today'],
     ['fox', 'generation', 'today'],
     ['fox', 'solar', 'today'],
     ['fox', 'pv', 'today'],

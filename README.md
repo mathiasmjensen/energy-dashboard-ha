@@ -114,6 +114,27 @@ The package creates the helper entities, endpoint-backed sensors, EVCC REST
 commands, charge-plan script, and start/stop automations expected by the
 dashboard.
 
+It also creates normalized Fox Cloud day-total sensors for the energy
+distribution cards by polling the official Fox Cloud API from Home Assistant:
+`sensor.energy_dashboard_solar_production_today`,
+`sensor.energy_dashboard_solar_production_feed`,
+`sensor.energy_dashboard_home_consumption_today`,
+`sensor.energy_dashboard_grid_import_today`,
+`sensor.energy_dashboard_battery_charge_today`, and
+`sensor.energy_dashboard_battery_discharge_today`.
+
+Add these secrets in `/config/secrets.yaml` before reloading Home Assistant:
+
+```yaml
+foxess_api_key: your_fox_cloud_api_key
+foxess_device_sn: your_fox_inverter_serial_number
+foxess_api_domain: https://www.foxesscloud.com
+```
+
+`foxess_api_domain` is optional and defaults to `https://www.foxesscloud.com`.
+A placeholder template is included at
+`home-assistant/secrets.yaml`.
+
 ## Peak Rates
 
 For phone/mobile-internet access, Home Assistant should fetch the price endpoint

@@ -50,11 +50,12 @@ export function EnergyDashboard() {
     transform: `scale(${scale})`,
   } satisfies CSSProperties
 
-  const solarForecastKwh = solarForecast.todayKwh ?? data.solarForecastToday
-  const solarProductionEnergyKwh = data.solarProductionToday === '---' ? solarForecastKwh : data.solarProductionToday
-  const solarPowerCurve = solarForecast.hourlyPowerKw.some((value) => value > 0)
-    ? solarForecast.hourlyPowerKw
-    : FALLBACK_SOLAR_CURVE
+  const solarProductionEnergyKwh = data.solarProductionToday
+  const solarPowerCurve = data.solarProductionCurveAvailable
+    ? data.solarProductionCurve
+    : solarForecast.hourlyPowerKw.some((value) => value > 0)
+      ? solarForecast.hourlyPowerKw
+      : FALLBACK_SOLAR_CURVE
   const fallbackPriceDay = createFallbackPriceDay(now)
   const priceDays = peakRates.days.length ? peakRates.days : [fallbackPriceDay]
   const priceCurve = peakRates.hourlyPrices.length ? peakRates.hourlyPrices : FALLBACK_PRICE_CURVE
@@ -129,7 +130,7 @@ export function EnergyDashboard() {
         displayDate={displayDate}
         displayTime={displayTime}
         distribution={{
-          battery: data.batteryEnergy,
+          battery: data.batteryDistributionToday,
           ev: todayTotals.evKwh,
           grid: todayTotals.gridKwh,
           home: todayTotals.homeKwh,
@@ -184,7 +185,7 @@ export function EnergyDashboard() {
       displayDate={displayDate}
       displayTime={displayTime}
       distribution={{
-        battery: data.batteryEnergy,
+        battery: data.batteryDistributionToday,
         ev: todayTotals.evKwh,
         grid: todayTotals.gridKwh,
         home: todayTotals.homeKwh,
