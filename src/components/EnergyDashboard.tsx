@@ -132,6 +132,7 @@ export function EnergyDashboard() {
         controller={evController}
         displayDate={displayDate}
         displayTime={displayTime}
+        insightControls={insightControls}
         distribution={{
           battery: data.batteryDistributionToday,
           ev: todayTotals.evKwh,

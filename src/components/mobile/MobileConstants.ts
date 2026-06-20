@@ -3,6 +3,8 @@ import type { BatteryPeriod, MobileTab, SolarPeriod } from './MobileTypes'
 export type MobileIconName =
   | 'battery'
   | 'bell'
+  | 'chevronLeft'
+  | 'chevronRight'
   | 'car'
   | 'chevronDown'
   | 'grid'

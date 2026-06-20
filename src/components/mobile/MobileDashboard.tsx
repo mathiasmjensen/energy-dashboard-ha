@@ -13,6 +13,7 @@ export function MobileDashboard({
   controller,
   displayDate,
   displayTime,
+  insightControls,
   distribution,
   overview,
   prices,
@@ -35,6 +36,7 @@ export function MobileDashboard({
               battery={battery}
               displayDate={displayDate}
               displayTime={displayTime}
+              insightControls={insightControls}
               overview={overview}
               prices={prices}
               solarForecast={solarForecast}
@@ -45,6 +47,7 @@ export function MobileDashboard({
           {activeTab === 'solar' ? (
             <MobileSolarScreen
               distribution={distribution}
+              insightControls={insightControls}
               overview={overview}
               period={solarPeriod}
               prices={prices}
