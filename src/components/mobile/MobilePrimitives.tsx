@@ -1,5 +1,7 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { formatChartValue, getBarChartGeometry, getMobileLineChartGeometry } from '../../services/chartGeometry'
+import type { InsightHeaderControls } from '../../services/dashboardInsights'
 import type { MobileTab } from './MobileTypes'
 import { MOBILE_TABS } from './MobileConstants'
 import type { MobileIconName } from './MobileConstants'
@@ -66,28 +68,31 @@ export function AnalyticsCard({
   accent,
   actionLabel,
   children,
+  controls,
   metric,
   summary,
   title,
   unit,
+  windowLabel,
 }: {
   accent: 'blue' | 'solar'
   actionLabel: string
   children: ReactNode
+  controls?: InsightHeaderControls
   metric: string
   summary?: Array<{ label: string; value: string }>
   title: string
   unit: string
+  windowLabel?: string
 }) {
   return (
     <GlassCard className="mobile-analytics-card" data-accent={accent}>
       <div className="mobile-card-header">
         <h2>{title}</h2>
-        <button className="mobile-card-action" type="button">
-          {actionLabel}
-          <MobileIcon name="chevronDown" />
-        </button>
+        {controls ? <MobileInsightControls controls={controls} /> : <MobileCardAction label={actionLabel} />}
       </div>
+
+      {windowLabel ? <div className="mobile-window-chip">{windowLabel}</div> : null}
 
       <div className="mobile-card-metric">
         <strong>
@@ -109,6 +114,83 @@ export function AnalyticsCard({
 
       <div className="mobile-chart-shell">{children}</div>
     </GlassCard>
+  )
+}
+
+export function MobileInsightControls({ controls }: { controls: InsightHeaderControls }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const activeLabel = useMemo(() => (controls.mode === 'today' ? 'Today overview' : 'Timeline'), [controls.mode])
+
+  return (
+    <div className="mobile-insight-controls">
+      <button
+        aria-label="Show previous insight window"
+        className="mobile-insight-controls__arrow"
+        disabled={!controls.canGoPrevious}
+        type="button"
+        onClick={controls.onPrevious}
+      >
+        <MobileIcon name="chevronLeft" />
+      </button>
+
+      <div className="mobile-insight-controls__menu">
+        <button
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+          className="mobile-card-action"
+          type="button"
+          onClick={() => setIsOpen((current) => !current)}
+        >
+          {activeLabel}
+          <MobileIcon name="chevronDown" />
+        </button>
+
+        {isOpen ? (
+          <div className="mobile-insight-controls__dropdown" role="menu">
+            {[
+              { label: 'Today overview', mode: 'today' },
+              { label: 'Timeline', mode: 'timeline' },
+            ].map((option) => (
+              <button
+                key={option.mode}
+                aria-pressed={controls.mode === option.mode}
+                className="mobile-insight-controls__option"
+                data-active={controls.mode === option.mode}
+                role="menuitem"
+                type="button"
+                onClick={() => {
+                  if (controls.mode !== option.mode) {
+                    controls.onToggleMode()
+                  }
+                  setIsOpen(false)
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <button
+        aria-label="Show next insight window"
+        className="mobile-insight-controls__arrow"
+        disabled={!controls.canGoNext}
+        type="button"
+        onClick={controls.onNext}
+      >
+        <MobileIcon name="chevronRight" />
+      </button>
+    </div>
+  )
+}
+
+function MobileCardAction({ label }: { label: string }) {
+  return (
+    <button className="mobile-card-action" type="button">
+      {label}
+      <MobileIcon name="chevronDown" />
+    </button>
   )
 }
 
@@ -382,8 +464,12 @@ function renderMobileIcon(name: MobileIconName) {
           <circle cx="15.75" cy="15.5" r="1.25" fill="currentColor" stroke="none" />
         </>
       )
+    case 'chevronLeft':
+      return <path d="m14.5 6-5 6 5 6" />
     case 'chevronDown':
       return <path d="m7 10 5 5 5-5" />
+    case 'chevronRight':
+      return <path d="m9.5 6 5 6-5 6" />
     case 'grid':
       return <path d="M12 3 8 9h8L12 3Zm0 0v18M6 13h12M7.5 18h9M9 9l-3 9M15 9l3 9" />
     case 'home':

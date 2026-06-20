@@ -1,3 +1,4 @@
+import type { InsightHeaderControls } from '../../services/dashboardInsights'
 import type { EvChargerController } from '../../hooks/useEvChargerController'
 
 export type InsightItem = {
@@ -37,6 +38,7 @@ export type MobileDashboardProps = {
   controller: EvChargerController
   displayDate: string
   displayTime: string
+  insightControls: InsightHeaderControls
   distribution: {
     battery: string
     ev: string

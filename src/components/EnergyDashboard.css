@@ -2906,6 +2906,68 @@
   gap: 12px;
 }
 
+.mobile-insight-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mobile-insight-controls__menu {
+  position: relative;
+}
+
+.mobile-insight-controls__arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: #cfd7e4;
+  background: rgba(12, 17, 26, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.mobile-insight-controls__arrow:disabled {
+  opacity: 0.42;
+}
+
+.mobile-insight-controls__arrow .mobile-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.mobile-insight-controls__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 6;
+  display: grid;
+  min-width: 156px;
+  padding: 6px;
+  background: rgba(10, 15, 23, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px);
+}
+
+.mobile-insight-controls__option {
+  padding: 10px 12px;
+  color: #d7deea;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.mobile-insight-controls__option[data-active='true'] {
+  color: #f7fbff;
+  background: rgba(47, 134, 255, 0.18);
+}
+
 .mobile-card-action {
   display: inline-flex;
   align-items: center;
@@ -2923,6 +2985,20 @@
 .mobile-card-action .mobile-icon {
   width: 14px;
   height: 14px;
+}
+
+.mobile-window-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 24px;
+  padding: 0 10px;
+  color: #97a3b5;
+  background: rgba(9, 14, 21, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 620;
 }
 
 .mobile-card-metric strong {

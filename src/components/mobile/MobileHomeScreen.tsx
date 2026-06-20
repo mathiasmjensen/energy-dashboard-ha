@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react'
 import type { MobileDashboardProps } from './MobileTypes'
 import { assetPath } from '../../utils/assetPath'
-import { GlassCard, MobileBarChart, MobileIcon, StatusChip } from './MobilePrimitives'
+import { GlassCard, MobileBarChart, MobileIcon, MobileInsightControls, StatusChip } from './MobilePrimitives'
 
 export function MobileHomeScreen({
   battery,
   displayDate,
   displayTime,
+  insightControls,
   overview,
   prices,
   solarForecast,
   weather,
-}: Pick<MobileDashboardProps, 'battery' | 'displayDate' | 'displayTime' | 'overview' | 'prices' | 'solarForecast' | 'weather'>) {
+}: Pick<MobileDashboardProps, 'battery' | 'displayDate' | 'displayTime' | 'insightControls' | 'overview' | 'prices' | 'solarForecast' | 'weather'>) {
   const forecastStats = solarForecast.summaryItems.slice(0, 2)
   const priceStats = prices.summaryItems.slice(0, 2)
 
@@ -35,23 +36,25 @@ export function MobileHomeScreen({
       <HomeHeroCard battery={battery} overview={overview} />
 
       <HomeInsightCard
-        actionLabel="Tomorrow"
+        controls={insightControls}
         metric={solarForecast.totalKwh}
         metricLabel="Total forecast"
         stats={forecastStats}
         title="Solar forecast"
         unit="kWh"
+        windowLabel={solarForecast.windowLabel}
       >
         <MobileBarChart color="#f7b62f" labels={solarForecast.pointLabels} unit="kWh" values={solarForecast.points} />
       </HomeInsightCard>
 
       <HomeInsightCard
-        actionLabel="Today"
+        controls={insightControls}
         metric={prices.primaryValue}
         metricLabel="Average price"
         stats={priceStats}
         title="Energy prices"
         unit="DKK/kWh"
+        windowLabel={prices.windowLabel}
       >
         <MobileBarChart color="#3b82ff" labels={prices.pointLabels} unit="DKK/kWh" values={prices.points} />
       </HomeInsightCard>
@@ -134,35 +137,36 @@ function HeroMetric({
 }
 
 function HomeInsightCard({
-  actionLabel,
   children,
+  controls,
   metric,
   metricLabel,
   stats,
   title,
   unit,
+  windowLabel,
 }: {
-  actionLabel: string
   children: ReactNode
+  controls: MobileDashboardProps['insightControls']
   metric: string
   metricLabel: string
   stats: Array<{ label: string; value: string }>
   title: string
   unit: string
+  windowLabel: string
 }) {
   return (
     <GlassCard className="mobile-home-insight-card">
       <div className="mobile-card-header">
         <h2>{title}</h2>
-        <button className="mobile-card-action" type="button">
-          {actionLabel}
-          <MobileIcon name="chevronDown" />
-        </button>
+        <MobileInsightControls controls={controls} />
       </div>
+
+      <div className="mobile-window-chip">{windowLabel}</div>
 
       <div className="mobile-home-insight-card__body">
         <div className="mobile-home-insight-card__headline">
-          <span>{actionLabel}</span>
+          <span>{controls.mode === 'today' ? 'Today overview' : 'Timeline'}</span>
           <strong>
             {metric}
             <small>{unit}</small>

@@ -13,13 +13,14 @@ import { SOLAR_PERIODS } from './MobileConstants'
 
 export function MobileSolarScreen({
   distribution,
+  insightControls,
   overview,
   period,
   prices,
   solarForecast,
   solarProduction,
   onPeriodChange,
-}: Pick<MobileDashboardProps, 'distribution' | 'overview' | 'prices' | 'solarForecast' | 'solarProduction'> & {
+}: Pick<MobileDashboardProps, 'distribution' | 'insightControls' | 'overview' | 'prices' | 'solarForecast' | 'solarProduction'> & {
   period: SolarPeriod
   onPeriodChange: (period: SolarPeriod) => void
 }) {
@@ -47,11 +48,13 @@ export function MobileSolarScreen({
 
       <AnalyticsCard
         accent="solar"
-        actionLabel="Tomorrow"
+        actionLabel="Today"
+        controls={insightControls}
         metric={solarForecast.totalKwh}
         summary={solarForecast.summaryItems}
         title="Solar forecast"
         unit="kWh"
+        windowLabel={solarForecast.windowLabel}
       >
         <MobileBarChart color="#f7b62f" labels={solarForecast.pointLabels} unit="kWh" values={solarForecast.points} />
       </AnalyticsCard>
@@ -59,10 +62,12 @@ export function MobileSolarScreen({
       <AnalyticsCard
         accent="blue"
         actionLabel="Today"
+        controls={insightControls}
         metric={prices.primaryValue}
         summary={prices.summaryItems}
         title="Energy prices"
         unit="DKK/kWh"
+        windowLabel={prices.windowLabel}
       >
         <MobileBarChart color="#3b82ff" labels={prices.pointLabels} unit="DKK/kWh" values={prices.points} />
       </AnalyticsCard>
