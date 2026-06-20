@@ -25,6 +25,7 @@ export function FlowNode({
   className,
   label,
   meta,
+  onClick,
   tone,
   unit,
   value,
@@ -32,12 +33,13 @@ export function FlowNode({
   className: string
   label: string
   meta?: string
+  onClick?: () => void
   tone: 'blue' | 'green' | 'muted' | 'purple' | 'sun'
   unit: string
   value: string
 }) {
-  return (
-    <div className={`flow-node-card ${className}`} data-tone={tone}>
+  const content = (
+    <>
       <span className="flow-node-dot" aria-hidden="true" />
       <div className="flow-node-label">
         <span>{label}</span>
@@ -47,6 +49,26 @@ export function FlowNode({
         </strong>
         {meta ? <em>{meta}</em> : null}
       </div>
+    </>
+  )
+
+  if (onClick) {
+    return (
+      <button
+        aria-label={`Open ${label} details`}
+        className={`flow-node-card flow-node-card--interactive ${className}`}
+        data-tone={tone}
+        type="button"
+        onClick={onClick}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <div className={`flow-node-card ${className}`} data-tone={tone}>
+      {content}
     </div>
   )
 }

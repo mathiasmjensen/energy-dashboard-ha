@@ -819,6 +819,17 @@
   padding: 17px 18px 14px;
 }
 
+.battery-status-trigger {
+  width: 100%;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 18px;
+}
+
 .battery-status-grid {
   display: grid;
   grid-template-columns: 1fr 112px 1fr;
@@ -889,6 +900,23 @@
 .battery-power-column[data-status='idle'] span:first-child {
   color: var(--text);
   font-weight: 680;
+}
+
+.flow-node-card--interactive {
+  width: auto;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+}
+
+.battery-status-trigger:hover,
+.battery-status-trigger:focus-visible,
+.flow-node-card--interactive:hover,
+.flow-node-card--interactive:focus-visible {
+  filter: brightness(1.04);
 }
 
 .vehicle-panel {
@@ -1134,7 +1162,10 @@
 .ev-overview-card:focus-visible,
 .ev-modal button:focus-visible,
 .ev-modal select:focus-visible,
-.ev-modal input:focus-visible {
+.ev-modal input:focus-visible,
+.battery-modal button:focus-visible,
+.battery-status-trigger:focus-visible,
+.flow-node-card--interactive:focus-visible {
   outline: 2px solid var(--accent-blue);
   outline-offset: 2px;
 }
@@ -1145,6 +1176,7 @@
   }
 }
 
+.battery-modal-overlay,
 .ev-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1155,6 +1187,7 @@
   backdrop-filter: blur(4px);
 }
 
+.battery-modal,
 .ev-modal {
   width: 720px;
   max-height: 90vh;
@@ -1167,6 +1200,7 @@
   box-shadow: 0 35px 110px rgba(0, 0, 0, 0.55);
 }
 
+.battery-modal__header,
 .ev-modal__header,
 .ev-modal__overview,
 .ev-settings__list,
@@ -1183,6 +1217,9 @@
   margin-bottom: 18px;
 }
 
+.battery-modal h2,
+.battery-modal h3,
+.battery-modal p,
 .ev-modal h2,
 .ev-modal h3,
 .ev-modal p {
@@ -1198,6 +1235,7 @@
   font-size: 16px;
 }
 
+.battery-modal button,
 .ev-modal button,
 .ev-modal select,
 .ev-modal input {
@@ -1205,13 +1243,233 @@
   font: inherit;
 }
 
+.battery-modal__close,
 .ev-modal__close {
   display: grid;
   place-items: center;
   width: 34px;
   height: 34px;
+  cursor: pointer;
   background: transparent;
+  border: 0;
   border-radius: 50%;
+}
+
+.battery-modal__close:hover,
+.battery-modal__close:focus-visible,
+.ev-modal__close:hover,
+.ev-modal__close:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.battery-modal {
+  width: min(1360px, calc(100vw - 64px));
+  padding: 24px 32px 24px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top center, rgba(67, 125, 255, 0.08), transparent 52%),
+    linear-gradient(180deg, rgba(9, 16, 27, 0.985), rgba(9, 14, 23, 0.985));
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.battery-modal__header {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.battery-modal__header h2 {
+  font-size: 32px;
+}
+
+.battery-modal__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px minmax(0, 1fr);
+  gap: 36px;
+  align-items: center;
+  margin-top: 22px;
+}
+
+.battery-modal__metric-column {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.battery-modal__metric-column > span {
+  color: #afbac8;
+  font-size: 18px;
+}
+
+.battery-modal__metric-column > strong {
+  color: #f7f9fd;
+  font-size: 42px;
+  line-height: 1;
+}
+
+.battery-modal__metric-column hr {
+  width: 100%;
+  height: 1px;
+  margin: 6px 0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 0;
+}
+
+.battery-modal__soc {
+  font-size: 74px !important;
+}
+
+.battery-modal__visual {
+  display: grid;
+  place-items: center;
+  min-height: 260px;
+}
+
+.battery-modal__status {
+  color: #f6f8fd;
+}
+
+.battery-modal__metric-column--status[data-status='charging'] .battery-modal__status {
+  color: #57ea67;
+}
+
+.battery-modal__metric-column--status[data-status='discharging'] .battery-modal__status {
+  color: #ff6972;
+}
+
+.large-battery--modal {
+  width: 116px;
+  height: 198px;
+  border-width: 6px;
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.42), 0 0 32px rgba(51, 214, 107, 0.2);
+}
+
+.large-battery--modal::before {
+  top: -14px;
+  width: 34px;
+  height: 12px;
+  border-width: 4px;
+}
+
+.large-battery--modal i {
+  left: 13px;
+  right: 13px;
+  bottom: 13px;
+  max-height: calc(100% - 26px);
+  border-radius: 10px;
+  box-shadow: 0 0 24px rgba(70, 239, 120, 0.28);
+}
+
+.battery-modal__chart-card {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 24px 26px 18px;
+  background: radial-gradient(circle at top center, rgba(73, 120, 255, 0.05), transparent 60%), rgba(9, 16, 27, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+}
+
+.battery-modal__chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.battery-modal__chart-header h3 {
+  font-size: 22px;
+}
+
+.battery-modal__periods {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 6px;
+  padding: 5px;
+  background: rgba(8, 14, 24, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.battery-modal__period {
+  min-width: 72px;
+  height: 48px;
+  padding: 0 18px;
+  color: #aab4c4;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.battery-modal__period[data-active='true'] {
+  color: #deffe3;
+  background: linear-gradient(180deg, rgba(72, 232, 100, 0.34), rgba(31, 132, 54, 0.52));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 0 18px rgba(72, 232, 100, 0.14);
+}
+
+.battery-modal__chart {
+  position: relative;
+  height: 248px;
+  padding: 6px 8px 0;
+  background: linear-gradient(180deg, rgba(12, 20, 32, 0.18), rgba(12, 20, 32, 0));
+  border-radius: 18px;
+}
+
+.battery-modal__chart .chart-hit-grid {
+  inset: 14px 16px 34px;
+}
+
+.battery-modal__chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.battery-modal__chart-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #97a2b4;
+  font-size: 15px;
+}
+
+.battery-modal__info {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: #c5cddb;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+@media (max-width: 1180px) {
+  .battery-modal__summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .battery-modal__metric-column,
+  .battery-modal__metric-column--status {
+    justify-items: center;
+  }
+
+  .battery-modal__chart-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .battery-modal__periods {
+    justify-content: center;
+  }
 }
 
 .ev-modal__overview {
@@ -2929,16 +3187,16 @@
 
 .mobile-battery-hero-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 124px;
+  grid-template-columns: minmax(0, 1fr) 118px minmax(0, 1fr);
   gap: 16px;
   align-items: center;
-  min-height: 220px;
+  min-height: 228px;
 }
 
 .mobile-battery-hero-copy {
   display: grid;
   align-content: start;
-  gap: 10px;
+  gap: 8px;
 }
 
 .mobile-battery-hero-copy > span {
@@ -2949,6 +3207,21 @@
 .mobile-battery-hero-copy > strong {
   font-size: 42px;
   line-height: 0.92;
+}
+
+.mobile-battery-hero-copy > small {
+  color: #8d97a6;
+  font-size: 13px;
+}
+
+.mobile-battery-hero-copy--right {
+  justify-items: end;
+  text-align: right;
+}
+
+.mobile-battery-hero-subvalue {
+  font-size: 24px !important;
+  line-height: 1.05 !important;
 }
 
 .mobile-battery-hero-metric small {

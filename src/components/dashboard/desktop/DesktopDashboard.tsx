@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { BatteryStatusModal } from '../../BatteryStatusModal'
 import type { EvChargerController } from '../../../hooks/useEvChargerController'
 import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../services/dashboardInsights'
 import { assetPath } from '../../../utils/assetPath'
@@ -54,8 +55,11 @@ export type DesktopDashboardProps = {
   }
   homePower: string
   insightControls: InsightHeaderControls
+  isBatteryOpen: boolean
   isEvChargerOpen: boolean
+  onCloseBattery: () => void
   onCloseEvCharger: () => void
+  onOpenBattery: () => void
   onOpenEvCharger: () => void
   weather: {
     condition: string
@@ -84,8 +88,11 @@ export function DesktopDashboard({
   grid,
   homePower,
   insightControls,
+  isBatteryOpen,
   isEvChargerOpen,
+  onCloseBattery,
   onCloseEvCharger,
+  onOpenBattery,
   onOpenEvCharger,
   prices,
   sceneStyle,
@@ -138,7 +145,15 @@ export function DesktopDashboard({
             <FlowNode className="flow-solar" label="Solar" tone="sun" unit="kW" value={solar.power} />
             <FlowNode className="flow-grid" label="Grid" meta={grid.status} tone="purple" unit="kW" value={grid.power} />
             <FlowNode className="flow-home" label="Home" tone="blue" unit="kW" value={homePower} />
-            <FlowNode className="flow-battery" label="Battery" meta={battery.meta} tone="green" unit="kW" value={battery.power} />
+            <FlowNode
+              className="flow-battery"
+              label="Battery"
+              meta={battery.meta}
+              tone="green"
+              unit="kW"
+              value={battery.power}
+              onClick={onOpenBattery}
+            />
             <FlowNode className="flow-ev" label="EV" meta={charger.status} tone="muted" unit="kW" value={charger.chargeRate} />
           </section>
 
@@ -167,6 +182,7 @@ export function DesktopDashboard({
           <BatteryStatusPanel
             capacity={battery.capacity}
             energy={battery.energy}
+            onOpen={onOpenBattery}
             power={battery.power}
             soc={battery.soc}
             socValue={battery.socValue}
@@ -174,6 +190,18 @@ export function DesktopDashboard({
           />
           <VehiclePanel battery={charger.battery} range={charger.range} />
         </aside>
+
+        {isBatteryOpen ? (
+          <BatteryStatusModal
+            capacity={battery.capacity}
+            energy={battery.energy}
+            onClose={onCloseBattery}
+            power={battery.power}
+            soc={battery.soc}
+            socValue={battery.socValue}
+            status={battery.status}
+          />
+        ) : null}
 
         {isEvChargerOpen ? (
           <EvChargerModal
