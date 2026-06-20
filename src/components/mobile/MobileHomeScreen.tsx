@@ -77,8 +77,8 @@ function HomeHeroCard({
   ]
 
   const bottomStats = [
-    { icon: 'grid' as const, label: overview.gridMeta, tone: 'blue' as const, value: `${overview.gridPower} kW` },
-    { icon: 'battery' as const, label: battery.status, meta: battery.soc, tone: 'green' as const, value: `${overview.batteryPower} kW` },
+    { icon: 'grid' as const, label: 'Grid', meta: overview.gridMeta, tone: 'blue' as const, value: `${overview.gridPower} kW` },
+    { icon: 'battery' as const, label: 'Battery', meta: battery.soc, tone: 'green' as const, value: `${overview.batteryPower} kW` },
     { icon: 'home' as const, label: 'Home', tone: 'purple' as const, value: `${overview.homePower} kW` },
   ]
 
@@ -129,9 +129,10 @@ function HeroMetric({
       <div className="mobile-home-metric__copy">
         <span>{label}</span>
         <strong>{value}</strong>
+        {compact && meta ? <small>{meta}</small> : null}
       </div>
 
-      {meta ? <em>{meta}</em> : null}
+      {!compact && meta ? <em>{meta}</em> : null}
     </div>
   )
 }
