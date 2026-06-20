@@ -186,7 +186,7 @@ export function LineChart({
   label: string
   labels?: string[]
   points: number[]
-  unit: 'DKK/kWh' | 'kW' | 'kWh'
+  unit: '%' | 'DKK/kWh' | 'kW' | 'kWh'
 }) {
   const geometry = getDesktopLineChartGeometry(points)
 

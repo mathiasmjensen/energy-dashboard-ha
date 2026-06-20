@@ -86,6 +86,7 @@ export function SolarProductionPanel({ curve, value }: { curve: number[]; value:
 export function BatteryStatusPanel({
   capacity,
   energy,
+  onOpen,
   power,
   soc,
   socValue,
@@ -93,6 +94,7 @@ export function BatteryStatusPanel({
 }: {
   capacity: string
   energy: string
+  onOpen?: () => void
   power: string
   soc: string
   socValue: number
@@ -109,23 +111,25 @@ export function BatteryStatusPanel({
   return (
     <Panel className="battery-status-panel">
       <h2>Battery status</h2>
-      <div className="battery-status-grid">
-        <div>
-          <strong className="battery-soc">{soc}</strong>
-          <span>State of charge</span>
-          <strong>{energy} kWh</strong>
-          <span>Stored energy</span>
+      <button aria-label="Open battery details" className="battery-status-trigger" type="button" onClick={onOpen}>
+        <div className="battery-status-grid">
+          <div>
+            <strong className="battery-soc">{soc}</strong>
+            <span>State of charge</span>
+            <strong>{energy} kWh</strong>
+            <span>Stored energy</span>
+          </div>
+          <div className="large-battery" style={{ '--battery-level': `${socValue}%` } as CSSProperties}>
+            <i />
+          </div>
+          <div className="battery-power-column" data-status={status.toLowerCase()}>
+            <span>{status}</span>
+            <strong>{power} kW</strong>
+            <span>{timeEstimate.label}</span>
+            <strong>{timeEstimate.value}</strong>
+          </div>
         </div>
-        <div className="large-battery" style={{ '--battery-level': `${socValue}%` } as CSSProperties}>
-          <i />
-        </div>
-        <div className="battery-power-column" data-status={status.toLowerCase()}>
-          <span>{status}</span>
-          <strong>{power} kW</strong>
-          <span>{timeEstimate.label}</span>
-          <strong>{timeEstimate.value}</strong>
-        </div>
-      </div>
+      </button>
     </Panel>
   )
 }
