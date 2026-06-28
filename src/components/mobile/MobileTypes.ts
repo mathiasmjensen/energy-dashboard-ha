@@ -1,5 +1,6 @@
 import type { InsightHeaderControls } from '../../services/dashboardInsights'
 import type { EvChargerController } from '../../hooks/useEvChargerController'
+import type { BatteryOptimizerState } from '../../hooks/useBatteryOptimizer'
 
 export type InsightItem = {
   label: string
@@ -38,7 +39,22 @@ export type MobileDashboardProps = {
   controller: EvChargerController
   displayDate: string
   displayTime: string
+  batteryOptimizer: BatteryOptimizerState
+  energyDayControls: {
+    canGoNext: boolean
+    canGoPrevious: boolean
+    label: string
+    onNext: () => void
+    onPrevious: () => void
+  }
   insightControls: InsightHeaderControls
+  batteryHistory: {
+    day: { labels: string[]; points: number[] }
+    month: { labels: string[]; points: number[] }
+    quarter: { labels: string[]; points: number[] }
+    source: 'fallback' | 'ha'
+    week: { labels: string[]; points: number[] }
+  }
   distribution: {
     battery: string
     ev: string
@@ -60,6 +76,7 @@ export type MobileDashboardProps = {
   solarForecast: InsightChart & { totalKwh: string }
   solarProduction: {
     curve: number[]
+    labels: string[]
     value: string
   }
   weather: {

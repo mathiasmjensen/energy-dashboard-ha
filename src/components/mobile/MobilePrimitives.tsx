@@ -69,6 +69,7 @@ export function AnalyticsCard({
   actionLabel,
   children,
   controls,
+  controlsNode,
   metric,
   summary,
   title,
@@ -76,9 +77,10 @@ export function AnalyticsCard({
   windowLabel,
 }: {
   accent: 'blue' | 'solar'
-  actionLabel: string
+  actionLabel?: string
   children: ReactNode
   controls?: InsightHeaderControls
+  controlsNode?: ReactNode
   metric: string
   summary?: Array<{ label: string; value: string }>
   title: string
@@ -89,7 +91,7 @@ export function AnalyticsCard({
     <GlassCard className="mobile-analytics-card" data-accent={accent}>
       <div className="mobile-card-header">
         <h2>{title}</h2>
-        {controls ? <MobileInsightControls controls={controls} /> : <MobileCardAction label={actionLabel} />}
+        {controlsNode ? controlsNode : controls ? <MobileInsightControls controls={controls} /> : <MobileCardAction label={actionLabel ?? 'Today'} />}
       </div>
 
       {windowLabel ? <div className="mobile-window-chip">{windowLabel}</div> : null}

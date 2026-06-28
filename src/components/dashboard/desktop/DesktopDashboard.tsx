@@ -1,10 +1,12 @@
 import type { CSSProperties } from 'react'
 import { BatteryStatusModal } from '../../BatteryStatusModal'
+import type { BatteryOptimizerState } from '../../../hooks/useBatteryOptimizer'
 import type { EvChargerController } from '../../../hooks/useEvChargerController'
 import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../services/dashboardInsights'
 import { assetPath } from '../../../utils/assetPath'
 import { EvChargerModal } from '../../EvChargerModal'
 import { EnergyFlowMap, FlowNode } from './DesktopFlow'
+import type { DayHeaderControls } from './DesktopShared'
 import {
   BatteryStatusPanel,
   EnergyDistributionPanel,
@@ -29,6 +31,13 @@ export type DesktopDashboardProps = {
     socValue: number
     status: string
   }
+  batteryHistory: {
+    day: { labels: string[]; points: number[] }
+    month: { labels: string[]; points: number[] }
+    quarter: { labels: string[]; points: number[] }
+    week: { labels: string[]; points: number[] }
+  }
+  batteryOptimizer: BatteryOptimizerState
   charger: {
     battery: string
     chargeRate: string
@@ -41,6 +50,7 @@ export type DesktopDashboardProps = {
   controller: EvChargerController
   displayDate: string
   displayTime: string
+  energyDayControls: DayHeaderControls
   distribution: {
     battery: string
     ev: string
@@ -72,6 +82,7 @@ export type DesktopDashboardProps = {
     power: string
     production: {
       curve: number[]
+      labels: string[]
       value: string
     }
   }
@@ -80,10 +91,13 @@ export type DesktopDashboardProps = {
 
 export function DesktopDashboard({
   battery,
+  batteryHistory,
+  batteryOptimizer,
   charger,
   controller,
   displayDate,
   displayTime,
+  energyDayControls,
   distribution,
   grid,
   homePower,
@@ -173,12 +187,13 @@ export function DesktopDashboard({
         <aside className="overview-right-rail" aria-label="Energy details">
           <EnergyDistributionPanel
             battery={distribution.battery}
+            controls={energyDayControls}
             ev={distribution.ev}
             grid={distribution.grid}
             home={distribution.home}
             solar={distribution.solar}
           />
-          <SolarProductionPanel curve={solar.production.curve} value={solar.production.value} />
+          <SolarProductionPanel controls={energyDayControls} curve={solar.production.curve} labels={solar.production.labels} value={solar.production.value} />
           <BatteryStatusPanel
             capacity={battery.capacity}
             energy={battery.energy}
@@ -195,7 +210,9 @@ export function DesktopDashboard({
           <BatteryStatusModal
             capacity={battery.capacity}
             energy={battery.energy}
+            history={batteryHistory}
             onClose={onCloseBattery}
+            optimizer={batteryOptimizer}
             power={battery.power}
             soc={battery.soc}
             socValue={battery.socValue}

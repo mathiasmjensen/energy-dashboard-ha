@@ -1,17 +1,19 @@
 import type { CSSProperties } from 'react'
 import { assetPath } from '../../../utils/assetPath'
 import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../services/dashboardInsights'
-import { BarChart, InsightToolbar, Panel, PanelHeader } from './DesktopShared'
+import { BarChart, DayWindowControls, type DayHeaderControls, InsightToolbar, Panel, PanelHeader } from './DesktopShared'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/batteryMetrics'
 
 export function EnergyDistributionPanel({
   battery,
+  controls,
   ev,
   grid,
   home,
   solar,
 }: {
   battery: string
+  controls: DayHeaderControls
   ev: string
   grid: string
   home: string
@@ -19,7 +21,7 @@ export function EnergyDistributionPanel({
 }) {
   return (
     <Panel className="distribution-panel">
-      <PanelHeader title="Energy distribution" />
+      <PanelHeader controls={<DayWindowControls {...controls} />} showPeriod={false} title="Energy distribution" />
       <div className="distribution-map">
         <div className="dist-node dist-source dist-solar">
           <span className="dist-dot" aria-hidden="true" />
@@ -67,10 +69,20 @@ export function EnergyDistributionPanel({
   )
 }
 
-export function SolarProductionPanel({ curve, value }: { curve: number[]; value: string }) {
+export function SolarProductionPanel({
+  controls,
+  curve,
+  labels,
+  value,
+}: {
+  controls: DayHeaderControls
+  curve: number[]
+  labels: string[]
+  value: string
+}) {
   return (
     <Panel className="solar-production-panel">
-      <PanelHeader title="Solar production" />
+      <PanelHeader controls={<DayWindowControls {...controls} />} showPeriod={false} title="Solar production" />
       <div className="panel-metric">
         <strong>{value}</strong>
         <span>kWh</span>
@@ -78,7 +90,7 @@ export function SolarProductionPanel({ curve, value }: { curve: number[]; value:
       <p>Total production</p>
       <span className="delta-positive">^ 12%</span>
       <small className="delta-caption">vs yesterday</small>
-      <BarChart className="production-bars" label="Solar production by hour" unit="kW" values={curve} />
+      <BarChart className="production-bars" label="Solar production by hour" labels={labels} unit="kWh" values={curve} />
     </Panel>
   )
 }

@@ -117,9 +117,10 @@ export function formatGridStatus(value: number | null) {
 
 export function formatWeather(resolved: ResolvedEnergyEntities, key: EnergyEntityKey) {
   const entity = getResolvedEntity(resolved, key)
-  const temperature = getWeatherTemperature(entity?.attributes ?? {})
+  const attributes = (entity?.attributes ?? {}) as Record<string, unknown>
+  const temperature = getWeatherTemperature(attributes)
   const unit = normalizeTemperatureUnit(entity?.attributes?.temperature_unit)
-  const condition = getEntityState(resolved, key)
+  const condition = getEntityState(resolved, key) ?? getWeatherConditionFromAttributes(attributes)
 
   return {
     condition: condition ? formatWeatherCondition(condition) : 'Weather',
@@ -159,6 +160,47 @@ function formatWeatherCondition(value: string) {
   }
 
   return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase()
+}
+
+function getWeatherConditionFromAttributes(attributes: Record<string, unknown>) {
+  const cloudCoverage = parseWeatherNumber(attributes.cloud_coverage)
+  const humidity = parseWeatherNumber(attributes.humidity)
+  const windSpeed = parseWeatherNumber(attributes.wind_speed)
+
+  if (cloudCoverage !== null) {
+    if (cloudCoverage >= 85) {
+      return 'Overcast'
+    }
+
+    if (cloudCoverage >= 55) {
+      return 'Cloudy'
+    }
+
+    if (cloudCoverage >= 25) {
+      return 'Partly cloudy'
+    }
+
+    return 'Clear sky'
+  }
+
+  if (humidity !== null && humidity >= 90) {
+    return 'Humid'
+  }
+
+  if (windSpeed !== null && windSpeed >= 30) {
+    return 'Windy'
+  }
+
+  return null
+}
+
+function parseWeatherNumber(value: unknown) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+
+  const parsed = Number.parseFloat(String(value ?? '').replace(',', '.'))
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 export function getEvccSchedulePlans(resolved: ResolvedEnergyEntities) {

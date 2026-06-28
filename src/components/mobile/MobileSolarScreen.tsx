@@ -6,13 +6,13 @@ import {
   MobileBarChart,
   MobileIcon,
   NodeIcon,
-  SectionHeading,
   SegmentedControl,
 } from './MobilePrimitives'
 import { SOLAR_PERIODS } from './MobileConstants'
 
 export function MobileSolarScreen({
   distribution,
+  energyDayControls,
   insightControls,
   overview,
   period,
@@ -20,7 +20,10 @@ export function MobileSolarScreen({
   solarForecast,
   solarProduction,
   onPeriodChange,
-}: Pick<MobileDashboardProps, 'distribution' | 'insightControls' | 'overview' | 'prices' | 'solarForecast' | 'solarProduction'> & {
+}: Pick<
+  MobileDashboardProps,
+  'distribution' | 'energyDayControls' | 'insightControls' | 'overview' | 'prices' | 'solarForecast' | 'solarProduction'
+> & {
   period: SolarPeriod
   onPeriodChange: (period: SolarPeriod) => void
 }) {
@@ -34,14 +37,24 @@ export function MobileSolarScreen({
       />
 
       <GlassCard className="mobile-section-card">
-        <SectionHeading title="Energy flow" />
+        <div className="mobile-card-header">
+          <h2>Energy flow</h2>
+          <MobileDayControls controls={energyDayControls} />
+        </div>
         <SolarFlowDiagram distribution={distribution} overview={overview} />
       </GlassCard>
 
-      <AnalyticsCard accent="solar" actionLabel={period} metric={solarProduction.value} title="Solar production" unit="kWh">
+      <AnalyticsCard
+        accent="solar"
+        controlsNode={<MobileDayControls controls={energyDayControls} />}
+        metric={solarProduction.value}
+        title="Solar production"
+        unit="kWh"
+        windowLabel={energyDayControls.label}
+      >
         <MobileBarChart
-          labels={Array.from({ length: solarProduction.curve.length }, (_, index) => `${index.toString().padStart(2, '0')}:00`)}
-          unit="kW"
+          labels={solarProduction.labels}
+          unit="kWh"
           values={solarProduction.curve}
         />
       </AnalyticsCard>
@@ -71,6 +84,32 @@ export function MobileSolarScreen({
       >
         <MobileBarChart color="#3b82ff" labels={prices.pointLabels} unit="DKK/kWh" values={prices.points} />
       </AnalyticsCard>
+    </div>
+  )
+}
+
+function MobileDayControls({ controls }: { controls: MobileDashboardProps['energyDayControls'] }) {
+  return (
+    <div className="mobile-insight-controls mobile-insight-controls--day">
+      <button
+        aria-label="Show previous energy day"
+        className="mobile-insight-controls__arrow"
+        disabled={!controls.canGoPrevious}
+        type="button"
+        onClick={controls.onPrevious}
+      >
+        <MobileIcon name="chevronLeft" />
+      </button>
+      <div className="mobile-card-action mobile-card-action--static">{controls.label}</div>
+      <button
+        aria-label="Show next energy day"
+        className="mobile-insight-controls__arrow"
+        disabled={!controls.canGoNext}
+        type="button"
+        onClick={controls.onNext}
+      >
+        <MobileIcon name="chevronRight" />
+      </button>
     </div>
   )
 }

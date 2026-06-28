@@ -20,6 +20,14 @@ export type IconName =
   | 'sun'
   | 'zap'
 
+export type DayHeaderControls = {
+  canGoNext: boolean
+  canGoPrevious: boolean
+  label: string
+  onNext: () => void
+  onPrevious: () => void
+}
+
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <section className={`overview-panel ${className}`}>{children}</section>
 }
@@ -114,6 +122,38 @@ export function InsightWindowControls({
       </button>
       <button
         aria-label="Show next insight window"
+        className="insight-window-arrow"
+        disabled={!canGoNext}
+        type="button"
+        onClick={onNext}
+      >
+        ›
+      </button>
+    </div>
+  )
+}
+
+export function DayWindowControls({
+  canGoNext,
+  canGoPrevious,
+  label,
+  onNext,
+  onPrevious,
+}: DayHeaderControls) {
+  return (
+    <div className="insight-window-controls" role="group" aria-label="Historical energy day controls">
+      <button
+        aria-label="Show previous energy day"
+        className="insight-window-arrow"
+        disabled={!canGoPrevious}
+        type="button"
+        onClick={onPrevious}
+      >
+        ‹
+      </button>
+      <div className="insight-window-toggle insight-window-toggle--static">{label}</div>
+      <button
+        aria-label="Show next energy day"
         className="insight-window-arrow"
         disabled={!canGoNext}
         type="button"

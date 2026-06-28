@@ -5,14 +5,17 @@ import { MobileHomeScreen } from './MobileHomeScreen'
 import { MobileBottomNav } from './MobilePrimitives'
 import { MobileSolarScreen } from './MobileSolarScreen'
 import type { BatteryPeriod, MobileDashboardProps, MobileTab, SolarPeriod } from './MobileTypes'
-import { getBatteryHistorySeries, getBatteryInsights } from './MobileUtils'
+import { getBatteryInsights } from './MobileUtils'
 
 export function MobileDashboard({
   battery,
+  batteryOptimizer,
+  batteryHistory,
   charger,
   controller,
   displayDate,
   displayTime,
+  energyDayControls,
   insightControls,
   distribution,
   overview,
@@ -25,7 +28,10 @@ export function MobileDashboard({
   const [solarPeriod, setSolarPeriod] = useState<SolarPeriod>('Day')
   const [batteryPeriod, setBatteryPeriod] = useState<BatteryPeriod>('Day')
   const batteryInsights = useMemo(() => getBatteryInsights(battery), [battery])
-  const batteryHistory = useMemo(() => getBatteryHistorySeries(battery.socValue, batteryPeriod), [battery.socValue, batteryPeriod])
+  const activeBatteryHistory = useMemo(
+    () => (batteryPeriod === 'Day' ? batteryHistory.day : batteryPeriod === 'Week' ? batteryHistory.week : batteryHistory.month),
+    [batteryHistory.day, batteryHistory.month, batteryHistory.week, batteryPeriod],
+  )
 
   return (
     <main className="mobile-dashboard" data-testid="mobile-dashboard">
@@ -47,6 +53,7 @@ export function MobileDashboard({
           {activeTab === 'solar' ? (
             <MobileSolarScreen
               distribution={distribution}
+              energyDayControls={energyDayControls}
               insightControls={insightControls}
               overview={overview}
               period={solarPeriod}
@@ -60,8 +67,9 @@ export function MobileDashboard({
           {activeTab === 'battery' ? (
             <MobileBatteryScreen
               battery={battery}
-              history={batteryHistory}
+              history={activeBatteryHistory}
               insights={batteryInsights}
+              optimizer={batteryOptimizer}
               period={batteryPeriod}
               onPeriodChange={setBatteryPeriod}
             />

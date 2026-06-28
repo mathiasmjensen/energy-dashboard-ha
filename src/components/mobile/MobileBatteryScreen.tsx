@@ -1,4 +1,13 @@
 import type { CSSProperties } from 'react'
+import type { BatteryOptimizerState } from '../../hooks/useBatteryOptimizer'
+import {
+  BatteryOptimizerCharts,
+  BatteryOptimizerControlsCard,
+  BatteryOptimizerDecisionSummary,
+  BatteryOptimizerPlanTable,
+  BatteryOptimizerStatusCard,
+  OptimizerStateBanner,
+} from '../battery/BatteryOptimizerSections'
 import type { BatteryPeriod, MobileDashboardProps } from './MobileTypes'
 import { BATTERY_PERIODS } from './MobileConstants'
 import { GlassCard, MobileLineChart, SmallMetricCard, SectionHeading, SegmentedControl, StatusChip } from './MobilePrimitives'
@@ -7,6 +16,7 @@ export function MobileBatteryScreen({
   battery,
   history,
   insights,
+  optimizer,
   period,
   onPeriodChange,
 }: {
@@ -18,6 +28,7 @@ export function MobileBatteryScreen({
     runtimeLabel: string
     runtimeValue: string
   }
+  optimizer: BatteryOptimizerState
   period: BatteryPeriod
   onPeriodChange: (period: BatteryPeriod) => void
 }) {
@@ -72,6 +83,13 @@ export function MobileBatteryScreen({
 
         <MobileLineChart color="#4fd55f" labels={history.labels} points={history.points} unit="%" />
       </GlassCard>
+
+      <OptimizerStateBanner optimizer={optimizer} variant="mobile" />
+      <BatteryOptimizerStatusCard optimizer={optimizer} variant="mobile" />
+      <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="mobile" />
+      <BatteryOptimizerControlsCard optimizer={optimizer} variant="mobile" />
+      <BatteryOptimizerPlanTable optimizer={optimizer} planHours={24} variant="mobile" />
+      <BatteryOptimizerCharts optimizer={optimizer} variant="mobile" />
     </div>
   )
 }

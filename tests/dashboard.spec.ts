@@ -50,6 +50,22 @@ test.describe('energy dashboard', () => {
     await expect(page.locator('body')).not.toContainText('unavailable')
   })
 
+  test('lets desktop energy distribution and solar production step back to previous days together', async ({ page }) => {
+    await page.setViewportSize({ width: 1672, height: 941 })
+    await page.goto('/')
+
+    const distributionPanel = page.locator('.distribution-panel')
+    const productionPanel = page.locator('.solar-production-panel')
+
+    await expect(distributionPanel).toContainText('Today')
+    await expect(productionPanel).toContainText('Today')
+
+    await distributionPanel.getByRole('button', { name: 'Show previous energy day' }).click()
+
+    await expect(distributionPanel).not.toContainText('Today')
+    await expect(productionPanel).not.toContainText('Today')
+  })
+
   test('opens and closes the EV charger popup on desktop', async ({ page }) => {
     await page.setViewportSize({ width: 1672, height: 941 })
     await page.clock.install({ time: new Date('2026-06-18T19:37:00+02:00') })
@@ -94,6 +110,24 @@ test.describe('energy dashboard', () => {
     await expect(dialog).not.toBeVisible()
   })
 
+  test('opens the desktop battery modal and renders optimizer sections', async ({ page }) => {
+    await page.setViewportSize({ width: 1672, height: 941 })
+    await page.goto('/')
+
+    await page.getByRole('button', { name: 'Open battery details', exact: true }).click()
+
+    const dialog = page.getByRole('dialog', { name: 'Battery status' })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByRole('heading', { name: 'Battery optimizer status' })).toBeVisible()
+    await expect(dialog.getByRole('heading', { name: 'Decision summary' })).toBeVisible()
+    await expect(dialog.getByRole('heading', { name: 'Optimizer controls' })).toBeVisible()
+    await expect(dialog.getByRole('heading', { name: 'Optimization plan' })).toBeVisible()
+    await expect(dialog.getByRole('heading', { name: 'DK1 price curve' })).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Apply optimized plan' })).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Refresh prices / forecast' })).toBeVisible()
+    await expect(dialog.getByText(/live optimizer unavailable|optimizer ready/i)).toBeVisible()
+  })
+
   test('uses the same rolling price feed for desktop and mobile EV planning', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-06-18T19:37:00+02:00') })
 
@@ -109,7 +143,7 @@ test.describe('energy dashboard', () => {
 
     await page.setViewportSize({ width: 390, height: 844 })
     await page.reload()
-    await page.getByRole('button', { name: 'EV' }).click()
+    await page.getByRole('button', { name: 'EV', exact: true }).click()
     await page.getByRole('tab', { name: 'Plan' }).click()
 
     await expect(page.getByLabel('Energy price day')).toContainText('Next 24 hours')
@@ -144,6 +178,13 @@ test.describe('energy dashboard', () => {
     await expect(page.getByRole('heading', { name: 'Solar production' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Solar forecast' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Energy prices' })).toBeVisible()
+    const mobileDayLabels = page.getByTestId('mobile-tab-solar').locator('.mobile-insight-controls--day .mobile-card-action--static')
+    await expect(mobileDayLabels).toHaveCount(2)
+    await expect(mobileDayLabels.first()).toHaveText('Today')
+    await expect(mobileDayLabels.nth(1)).toHaveText('Today')
+    await page.getByTestId('mobile-tab-solar').getByRole('button', { name: 'Show previous energy day' }).first().click()
+    await expect(mobileDayLabels.first()).not.toHaveText('Today')
+    await expect(mobileDayLabels.nth(1)).not.toHaveText('Today')
     await expectPageCanScroll(page)
     await page.mouse.wheel(0, 3000)
     await expectFixedMobileNav(page)
@@ -152,6 +193,12 @@ test.describe('energy dashboard', () => {
     await expect(page.getByTestId('mobile-tab-battery')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Battery history' })).toBeVisible()
     await expect(page.locator('.mobile-battery-hero-card')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Battery optimizer status' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Decision summary' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Optimizer controls' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Optimization plan' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'DK1 price curve' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Apply optimized plan' })).toBeVisible()
     await expectPageCanScroll(page)
     await page.mouse.wheel(0, 3000)
     await expectFixedMobileNav(page)
