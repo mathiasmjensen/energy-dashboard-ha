@@ -12,6 +12,10 @@ The current Overview redesign uses the assets in
 `public/new-energy-dashboard/` inside a 1672x941 dark-mode canvas with a left
 sidebar, central energy-flow scene, right detail rail, and bottom analytics row.
 
+The Battery surfaces now include a battery optimizer layer:
+- mobile Battery tab: summary + history + optimizer stack
+- desktop Battery modal: summary + history + optimizer workspace
+
 ## Setup
 
 ```bash
@@ -269,6 +273,107 @@ Optional browser fallback:
 ```bash
 VITE_EVCC_SESSIONS_URL=http://YOUR_SERVICE_HOST:7070/api/sessions
 ```
+
+## Battery Optimizer
+
+The battery optimizer UI is intentionally separated from the existing live
+entity mapping so we can swap the backend later without rewriting the screens.
+
+### Frontend modes
+
+```bash
+VITE_BATTERY_OPTIMIZER_MODE=mock
+VITE_BATTERY_OPTIMIZER_BASE_URL=
+```
+
+Supported modes:
+
+- `ha-proxy` (default): calls same-origin Home Assistant hosted endpoints
+- `mock`: renders deterministic optimizer data without any backend
+- `direct-api`: calls `VITE_BATTERY_OPTIMIZER_BASE_URL` directly
+
+For the new standalone Node backend in this repo, use:
+
+```bash
+VITE_BATTERY_OPTIMIZER_MODE=direct-api
+VITE_BATTERY_OPTIMIZER_BASE_URL=http://YOUR_SERVER:8090
+```
+
+### Built-in backend service
+
+This repo now includes a lightweight Node service:
+
+```bash
+npm run optimizer:start
+```
+
+It serves:
+
+```text
+GET  /api/battery/status
+GET  /api/battery/plan
+GET  /api/battery/settings
+POST /api/battery/refresh
+POST /api/battery/apply-plan
+POST /api/battery/settings
+POST /api/battery/pause
+GET  /health
+```
+
+Example environment is included at:
+
+```text
+server/battery-optimizer.env.example
+```
+
+The service persists its state in:
+
+```text
+server-data/battery-optimizer-state.json
+```
+
+unless you override `BATTERY_OPTIMIZER_STATE_PATH`.
+
+### Expected optimizer endpoints
+
+The UI expects these routes:
+
+```text
+GET  /api/battery/status
+GET  /api/battery/plan
+GET  /api/battery/settings
+POST /api/battery/refresh
+POST /api/battery/apply-plan
+POST /api/battery/settings
+POST /api/battery/pause
+```
+
+Recommended HA setup is to expose those through a Home Assistant proxy or small
+same-origin backend so phones do not need direct access to private LAN services.
+
+If you do not proxy it through Home Assistant, point the frontend at the service
+with `VITE_BATTERY_OPTIMIZER_MODE=direct-api`.
+
+### Source-of-truth wiring
+
+- FoxESS live battery SoC / battery power / grid now:
+  existing Home Assistant entity mapping in `src/hooks/useEnergyData.ts`
+- EVCC charger status / sessions / charge modes:
+  existing EV controller and EVCC history pipeline
+- DK1 optimizer economics:
+  optimizer API payload first, existing peak-rate hook as fallback
+- Solar surplus forecast:
+  existing solar forecast hook first, optimizer payload can override
+- EMHASS / FoxESS control:
+  keep behind the optimizer backend or HA proxy, not in browser-side React
+
+The new optimizer frontend files are:
+
+- `src/services/batteryOptimizer.ts`
+- `src/services/batteryOptimizerClient.ts`
+- `src/services/batteryOptimizerFormatting.ts`
+- `src/hooks/useBatteryOptimizer.ts`
+- `src/components/battery/BatteryOptimizerSections.tsx`
 
 ## EVCC Controls
 

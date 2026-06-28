@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { DesktopDashboard } from './dashboard/desktop/DesktopDashboard'
 import {
   appendUnit,
@@ -11,8 +11,11 @@ import {
   type InsightViewMode,
 } from '../services/dashboardInsights'
 import { MobileDashboard } from './mobile/MobileDashboard'
+import { useBatteryHistory } from '../hooks/useBatteryHistory'
+import { useBatteryOptimizer } from '../hooks/useBatteryOptimizer'
 import { useEnergyData } from '../hooks/useEnergyData'
 import { useEvChargerController } from '../hooks/useEvChargerController'
+import { useHistoricalEnergyDay } from '../hooks/useHistoricalEnergyDay'
 import { useIsMobileView } from '../hooks/useIsMobileView'
 import { usePeakRates } from '../hooks/usePeakRates'
 import { useSceneScale } from '../hooks/useSceneScale'
@@ -27,6 +30,7 @@ export function EnergyDashboard() {
   const scale = useSceneScale()
   const isMobileView = useIsMobileView()
   const data = useEnergyData()
+  const batteryHistory = useBatteryHistory(data.batterySocValue)
   const peakRates = usePeakRates()
   const solarForecast = useSolarForecast()
   const todayTotals = useTodayEnergyTotals()
@@ -60,7 +64,10 @@ export function EnergyDashboard() {
       ? solarForecast.hourlyPowerKw
       : FALLBACK_SOLAR_CURVE
   const fallbackPriceDay = createFallbackPriceDay(now)
-  const priceDays = peakRates.days.length ? peakRates.days : [fallbackPriceDay]
+  const priceDays = useMemo(
+    () => (peakRates.days.length ? peakRates.days : [fallbackPriceDay]),
+    [fallbackPriceDay, peakRates.days],
+  )
   const priceCurve = peakRates.hourlyPrices.length ? peakRates.hourlyPrices : FALLBACK_PRICE_CURVE
   const hasPeakRateWindows = peakRates.windows.length > 0
   const fallbackCurrentPrice = fallbackPriceDay.prices[now.getHours()]?.price.toFixed(2) ?? data.peakRateNow
@@ -72,6 +79,41 @@ export function EnergyDashboard() {
   const batterySoc = appendUnit(data.batterySoc, '%')
   const evSoc = appendUnit(data.evChargePercent, '%')
   const batteryFlowMeta = [data.batteryStatus, batterySoc !== '---' ? batterySoc : null].filter(Boolean).join(' · ')
+  const batteryOptimizerInputs = useMemo(
+    () => ({
+      batteryPowerKw: data.batteryPowerValue,
+      batterySocPercent: data.batterySocValue,
+      batteryStatus: data.batteryStatus,
+      currentPriceDkkPerKwh: currentPrice === '---' ? null : Number.parseFloat(currentPrice),
+      gridPowerKw: data.gridPowerValue,
+      peakRateDays: priceDays,
+      solarForecastWindows: solarForecast.windows,
+    }),
+    [
+      currentPrice,
+      data.batteryPowerValue,
+      data.batterySocValue,
+      data.batteryStatus,
+      data.gridPowerValue,
+      priceDays,
+      solarForecast.windows,
+    ],
+  )
+  const batteryOptimizer = useBatteryOptimizer(batteryOptimizerInputs)
+  const historicalEnergyDay = useHistoricalEnergyDay({
+    currentDistribution: {
+      battery: data.batteryDistributionToday,
+      ev: todayTotals.evKwh,
+      grid: todayTotals.gridKwh,
+      home: todayTotals.homeKwh,
+      solar: solarProductionEnergyKwh,
+    },
+    currentSolarProduction: {
+      curve: solarPowerCurve,
+      labels: Array.from({ length: solarPowerCurve.length }, (_, index) => `${String(index).padStart(2, '0')}:00`),
+      value: solarProductionEnergyKwh,
+    },
+  })
   const insightControls = {
     canGoNext: true,
     canGoPrevious: true,
@@ -123,6 +165,8 @@ export function EnergyDashboard() {
           socValue: data.batterySocValue,
           status: data.batteryStatus,
         }}
+        batteryOptimizer={batteryOptimizer}
+        batteryHistory={batteryHistory}
         charger={{
           chargeRate: data.evChargePower,
           sessionDuration: data.evChargeSessionDuration,
@@ -132,14 +176,9 @@ export function EnergyDashboard() {
         controller={evController}
         displayDate={displayDate}
         displayTime={displayTime}
+        energyDayControls={historicalEnergyDay.controls}
         insightControls={insightControls}
-        distribution={{
-          battery: data.batteryDistributionToday,
-          ev: todayTotals.evKwh,
-          grid: todayTotals.gridKwh,
-          home: todayTotals.homeKwh,
-          solar: solarProductionEnergyKwh,
-        }}
+        distribution={historicalEnergyDay.distribution}
         overview={{
           batteryMeta: batteryFlowMeta,
           batteryPower: data.batteryPower,
@@ -153,8 +192,9 @@ export function EnergyDashboard() {
         prices={energyPriceInsight}
         solarForecast={solarForecastInsight}
         solarProduction={{
-          curve: solarPowerCurve,
-          value: solarProductionEnergyKwh,
+          curve: historicalEnergyDay.solarProduction.curve,
+          labels: historicalEnergyDay.solarProduction.labels,
+          value: historicalEnergyDay.solarProduction.value,
         }}
         weather={{
           condition: data.weatherCondition,
@@ -176,6 +216,8 @@ export function EnergyDashboard() {
         socValue: data.batterySocValue,
         status: data.batteryStatus,
       }}
+      batteryOptimizer={batteryOptimizer}
+      batteryHistory={batteryHistory}
       charger={{
         battery: evSoc,
         chargeRate: data.evChargePower,
@@ -188,19 +230,14 @@ export function EnergyDashboard() {
       controller={evController}
       displayDate={displayDate}
       displayTime={displayTime}
-      distribution={{
-        battery: data.batteryDistributionToday,
-        ev: todayTotals.evKwh,
-        grid: todayTotals.gridKwh,
-        home: todayTotals.homeKwh,
-        solar: solarProductionEnergyKwh,
-      }}
+      distribution={historicalEnergyDay.distribution}
       grid={{
         power: data.gridPower,
         powerValue: data.gridPowerValue,
         status: data.gridStatus,
       }}
       homePower={data.homePower}
+      energyDayControls={historicalEnergyDay.controls}
       insightControls={insightControls}
       isBatteryOpen={isBatteryOpen}
       isEvChargerOpen={isEvChargerOpen}
@@ -218,10 +255,7 @@ export function EnergyDashboard() {
       solar={{
         forecast: solarForecastInsight,
         power: data.solarPower,
-        production: {
-          curve: solarPowerCurve,
-          value: solarProductionEnergyKwh,
-        },
+        production: historicalEnergyDay.solarProduction,
       }}
     />
   )

@@ -1,16 +1,32 @@
 import type { CSSProperties, PointerEvent } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { getBatteryHistorySeries, type BatteryHistoryPeriod } from '../services/batteryHistory'
+import type { BatteryOptimizerState } from '../hooks/useBatteryOptimizer'
+import { useCallback, useEffect, useState } from 'react'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../services/batteryMetrics'
+import {
+  BatteryOptimizerCharts,
+  BatteryOptimizerControlsCard,
+  BatteryOptimizerDecisionSummary,
+  BatteryOptimizerPlanTable,
+  BatteryOptimizerStatusCard,
+  OptimizerStateBanner,
+} from './battery/BatteryOptimizerSections'
 import { LineChart } from './dashboard/desktop/DesktopShared'
 import { EvUiIcon } from './ev/EvChargerContent'
 
-const PERIODS: BatteryHistoryPeriod[] = ['24h', '7d', '30d', '90d']
+const PERIODS = ['24h', '7d', '30d', '90d'] as const
+type BatteryHistoryPeriod = (typeof PERIODS)[number]
 
 type BatteryStatusModalProps = {
   capacity: string
   energy: string
+  history: {
+    day: { labels: string[]; points: number[] }
+    month: { labels: string[]; points: number[] }
+    quarter: { labels: string[]; points: number[] }
+    week: { labels: string[]; points: number[] }
+  }
   onClose: () => void
+  optimizer: BatteryOptimizerState
   power: string
   soc: string
   socValue: number
@@ -20,7 +36,9 @@ type BatteryStatusModalProps = {
 export function BatteryStatusModal({
   capacity,
   energy,
+  history,
   onClose,
+  optimizer,
   power,
   soc,
   socValue,
@@ -55,7 +73,7 @@ export function BatteryStatusModal({
     status,
     storedEnergyKwh: parseDisplayNumber(energy),
   })
-  const history = useMemo(() => getBatteryHistorySeries(socValue, period), [period, socValue])
+  const activeHistory = period === '24h' ? history.day : period === '7d' ? history.week : period === '30d' ? history.month : history.quarter
 
   return (
     <div className="battery-modal-overlay" onPointerDown={handleBackdropPointerDown}>
@@ -115,8 +133,8 @@ export function BatteryStatusModal({
             className="battery-modal__chart"
             color="#60ea5d"
             label="Battery percentage over time"
-            labels={history.labels}
-            points={history.points}
+            labels={activeHistory.labels}
+            points={activeHistory.points}
             unit="%"
           />
 
@@ -125,6 +143,15 @@ export function BatteryStatusModal({
             <p>The graph shows the battery state of charge over the selected time period.</p>
           </div>
         </div>
+
+        <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
+        <div className="battery-modal__optimizer-grid">
+          <BatteryOptimizerStatusCard optimizer={optimizer} variant="desktop" />
+          <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="desktop" />
+          <BatteryOptimizerControlsCard optimizer={optimizer} variant="desktop" />
+        </div>
+        <BatteryOptimizerPlanTable optimizer={optimizer} planHours={48} variant="desktop" />
+        <BatteryOptimizerCharts optimizer={optimizer} variant="desktop" />
       </section>
     </div>
   )

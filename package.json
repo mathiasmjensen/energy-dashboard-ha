@@ -10,7 +10,8 @@
     "build:ha": "VITE_BASE_PATH=/local/energy-dashboard-hakit/ npm run build",
     "lint": "eslint .",
     "test:e2e": "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} playwright test",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "optimizer:start": "node server/battery-optimizer-server.mjs"
   },
   "dependencies": {
     "@hakit/components": "^6.0.2",

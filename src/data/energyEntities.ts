@@ -41,7 +41,7 @@ export const ENERGY_ENTITIES = {
   peakRateFeed: 'sensor.energy_dashboard_peak_rates',
   solarForecastFeed: 'sensor.energy_dashboard_solar_forecast',
   evccChargeSessions: 'sensor.energy_dashboard_evcc_charge_sessions',
-  weatherHome: 'weather.home',
+  weatherHome: 'weather.forecast_hjem',
 } as const
 
 export const ENERGY_ENTITY_CANDIDATES: Partial<Record<keyof typeof ENERGY_ENTITIES, string[]>> = {
@@ -130,6 +130,7 @@ export const ENERGY_ENTITY_CANDIDATES: Partial<Record<keyof typeof ENERGY_ENTITI
     'sensor.energy_dashboard_solar_production_feed',
   ],
   weatherHome: [
+    'weather.forecast_hjem',
     'weather.forecast_home',
     'weather.home',
   ],
