@@ -1,8 +1,7 @@
 import { ENERGY_ENTITY_NUMERIC_SCALE, type EnergyEntityKey } from '../data/energyEntities'
-import type { EvccSchedulePlan } from '../data/evcc'
-import type { ResolvedEnergyEntities } from '../data/resolveEnergyEntities'
-
-export type EnergyDisplayUnit = 'A' | 'kW' | 'kWh' | '%' | 'kg' | 'price' | 'text' | 'KM'
+import type { EvccSchedulePlan } from '../models/evcc'
+import type { EnergyDisplayUnit } from '../models/energyEntityFormatting'
+import type { ResolvedEnergyEntities } from '../models/resolveEnergyEntities'
 
 const DASH = '---'
 const UNKNOWN_STATES = new Set(['unknown', 'unavailable', 'none', 'null', ''])

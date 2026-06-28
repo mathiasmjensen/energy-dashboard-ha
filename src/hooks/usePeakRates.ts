@@ -1,17 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
+import type { PeakRateResult, PeakRateWindow } from '../models/peakRates'
 import { getRawEntityState, getResolvedEntity } from '../services/energyEntityFormatting'
 import {
   getPeakRatePayloadFromAttributes,
   getPeakRateResult,
   getPeakRateUrl,
   normalizePeakRates,
-  type PeakRateResult,
-  type PeakRateWindow,
 } from '../services/peakRates'
-
-export type { PeakRateDay, PeakRateHour, PeakRateResult, PeakRateWindow } from '../services/peakRates'
 
 const POLL_MS = 15 * 60 * 1000
 const TICK_MS = 60 * 1000

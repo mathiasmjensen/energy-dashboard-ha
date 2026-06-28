@@ -1,29 +1,25 @@
 import {
   getBatteryOptimizerBaseUrl,
   getBatteryOptimizerMode,
-  type BatteryOptimizerApiPlanPayload,
-  type BatteryOptimizerApiSettingsPayload,
-  type BatteryOptimizerApiStatusPayload,
-  type BatteryOptimizerPlanRow,
-  type BatteryOptimizerSettings,
 } from './batteryOptimizer'
+import type {
+  BatteryOptimizerApiPlanPayload,
+  BatteryOptimizerApiSettingsPayload,
+  BatteryOptimizerApiStatusPayload,
+  BatteryOptimizerClient,
+  BatteryOptimizerPath,
+  BatteryOptimizerPlanRow,
+  BatteryOptimizerSettings,
+} from '../models/batteryOptimizer'
 
-type BatteryOptimizerPath =
-  | '/api/battery/apply-plan'
-  | '/api/battery/pause'
-  | '/api/battery/plan'
-  | '/api/battery/refresh'
-  | '/api/battery/settings'
-  | '/api/battery/status'
+export class BatteryOptimizerRequestError extends Error {
+  status: number
 
-export type BatteryOptimizerClient = {
-  applyPlan: (payload: { planRows: BatteryOptimizerPlanRow[]; settings: BatteryOptimizerSettings }) => Promise<void>
-  getPlan: () => Promise<BatteryOptimizerApiPlanPayload>
-  getSettings: () => Promise<BatteryOptimizerApiSettingsPayload>
-  getStatus: () => Promise<BatteryOptimizerApiStatusPayload>
-  pauseUntilTomorrow: (payload: { untilIso: string }) => Promise<void>
-  refresh: () => Promise<void>
-  saveSettings: (payload: BatteryOptimizerSettings) => Promise<void>
+  constructor(status: number, message?: string) {
+    super(message ?? `Battery optimizer request failed with ${status}`)
+    this.name = 'BatteryOptimizerRequestError'
+    this.status = status
+  }
 }
 
 export function createBatteryOptimizerClient(): BatteryOptimizerClient | null {
@@ -59,7 +55,7 @@ async function requestJson<TResult>(
   })
 
   if (!response.ok) {
-    throw new Error(`Battery optimizer request failed with ${response.status}`)
+    throw new BatteryOptimizerRequestError(response.status)
   }
 
   const contentType = response.headers.get('content-type') ?? ''

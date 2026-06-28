@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { BatteryOptimizerState } from '../../hooks/useBatteryOptimizer'
+import { cn } from '../../lib/cn'
 import {
   formatOptimizerCurrency,
   formatOptimizerEnergy,
@@ -23,19 +24,34 @@ export function OptimizerStateBanner({ optimizer, variant }: { optimizer: Batter
     return null
   }
 
-  const className = variant === 'desktop' ? 'optimizer-banner optimizer-banner--desktop' : 'optimizer-banner optimizer-banner--mobile'
+  const isWarning = optimizer.hasLiveError
 
   return (
-    <div className={className} data-tone={optimizer.hasLiveError ? 'warning' : 'neutral'}>
-      <div>
-        <strong>{optimizer.hasLiveError ? 'Live optimizer unavailable' : 'Optimizer ready'}</strong>
-        <span>
+    <div
+      className={cn(
+        'flex items-start justify-between gap-4 rounded-[18px] border px-4 py-3 shadow-glass backdrop-blur-xl',
+        variant === 'desktop'
+          ? 'border-white/10 bg-white/6'
+          : 'dashboard-glass-card border-white/8 bg-white/6 px-4 py-3',
+        isWarning ? 'border-amber-400/35 bg-amber-400/10' : 'border-white/10 bg-white/5',
+      )}
+    >
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <strong className="text-sm font-semibold text-dashboard-text">
+          {optimizer.hasLiveError ? 'Live optimizer unavailable' : 'Optimizer ready'}
+        </strong>
+        <span className="text-sm leading-5 text-dashboard-soft">
           {optimizer.hasLiveError && optimizer.snapshot
             ? `Showing ${getOptimizerSourceLabel(optimizer.snapshot.source).toLowerCase()} while the backend reconnects.`
             : optimizer.errorMessage ?? 'No optimizer data yet.'}
         </span>
       </div>
-      <button type="button" onClick={optimizer.retry} disabled={optimizer.isLoading || optimizer.isRefreshing}>
+      <button
+        className="shrink-0 rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-xs font-semibold text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+        type="button"
+        onClick={optimizer.retry}
+        disabled={optimizer.isLoading || optimizer.isRefreshing}
+      >
         Retry
       </button>
     </div>
@@ -64,7 +80,12 @@ export function BatteryOptimizerStatusCard({
     variant,
     'Battery optimizer status',
     <>
-      <div className={`optimizer-status-grid optimizer-status-grid--${variant}`}>
+      <div
+        className={cn(
+          'grid gap-3',
+          variant === 'desktop' ? 'grid-cols-2 xl:grid-cols-4' : 'grid-cols-2',
+        )}
+      >
         <StatusMetric label="Battery SoC" value={formatOptimizerPercent(status.socPercent)} />
         <StatusMetric label="Battery mode" value={getOptimizerModeLabel(status.mode)} />
         <StatusMetric label="Battery power" value={formatOptimizerPower(status.batteryPowerKw)} />
@@ -75,10 +96,10 @@ export function BatteryOptimizerStatusCard({
         <StatusMetric label="Profit today" value={formatOptimizerCurrency(status.estimatedProfitTodayDkk)} />
       </div>
 
-      <div className={`optimizer-status-foot optimizer-status-foot--${variant}`}>
+      <div className={cn('flex items-center gap-3', variant === 'desktop' ? 'justify-between' : 'flex-wrap')}>
         <RecommendationBadge recommendation={status.recommendation} tone={recommendationTone} variant={variant} />
-        <div className="optimizer-status-meta">
-          <small>Updated {formatOptimizerUpdatedAt(status.updatedAt)}</small>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-dashboard-soft">
+          <small className="text-xs text-dashboard-soft">Updated {formatOptimizerUpdatedAt(status.updatedAt)}</small>
           {optimizer.isStale ? <StaleDataBadge variant={variant} /> : null}
           {optimizer.snapshot.source === 'mock' ? <MockDataBadge variant={variant} /> : null}
         </div>
@@ -107,7 +128,7 @@ export function BatteryOptimizerDecisionSummary({
   return wrapVariantCard(
     variant,
     'Decision summary',
-    <div className={`optimizer-summary-grid optimizer-summary-grid--${variant}`}>
+    <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-2 xl:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2')}>
       <SummaryBlock label="Best hours to sell" value={joinWindowLabels(summary.bestSellHours)} />
       <SummaryBlock label="Best hours to buy" value={joinWindowLabels(summary.bestBuyHours)} />
       <SummaryBlock label="Avoid buying" value={joinWindowLabels(summary.avoidBuyHours)} />
@@ -145,7 +166,7 @@ export function BatteryOptimizerControlsCard({
     variant,
     'Optimizer controls',
     <>
-      <div className={`optimizer-controls-grid optimizer-controls-grid--${variant}`}>
+      <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-2 xl:grid-cols-3' : 'grid-cols-1')}>
         <ToggleRow
           checked={settings.autoMode}
           disabled={isBusy}
@@ -175,10 +196,11 @@ export function BatteryOptimizerControlsCard({
           variant={variant}
         />
 
-        <label className={`optimizer-field optimizer-field--${variant}`}>
-          <span>Minimum reserve</span>
-          <div className="optimizer-slider-field">
+        <label className={fieldClassName(variant)}>
+          <span className="text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">Minimum reserve</span>
+          <div className="flex items-center gap-3">
             <input
+              className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-dashboard-green"
               type="range"
               min="0"
               max="100"
@@ -188,14 +210,15 @@ export function BatteryOptimizerControlsCard({
               aria-label="Minimum reserve percent"
               onChange={(event) => optimizer.updateSetting('minReservePercent', Number(event.target.value))}
             />
-            <strong>{formatOptimizerPercent(settings.minReservePercent)}</strong>
+            <strong className="whitespace-nowrap text-sm font-semibold text-dashboard-text">{formatOptimizerPercent(settings.minReservePercent)}</strong>
           </div>
         </label>
 
-        <label className={`optimizer-field optimizer-field--${variant}`}>
-          <span>Max grid charge</span>
-          <div className="optimizer-number-field">
+        <label className={fieldClassName(variant)}>
+          <span className="text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">Max grid charge</span>
+          <div className="flex items-center gap-3">
             <input
+              className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#0c121f] px-3 py-2 text-sm text-dashboard-text outline-none transition focus:border-dashboard-blue/55"
               type="number"
               min="0"
               max="50"
@@ -205,19 +228,19 @@ export function BatteryOptimizerControlsCard({
               aria-label="Maximum grid charge kWh"
               onChange={(event) => optimizer.updateSetting('maxGridChargeKwh', Number(event.target.value))}
             />
-            <strong>kWh</strong>
+            <strong className="whitespace-nowrap text-sm font-semibold text-dashboard-text">kWh</strong>
           </div>
         </label>
       </div>
 
-      <div className={`optimizer-action-row optimizer-action-row--${variant}`}>
-        <button type="button" className="optimizer-secondary-button" disabled={isBusy} onClick={optimizer.refresh}>
+      <div className={cn('flex gap-3', variant === 'desktop' ? 'flex-wrap' : 'flex-col')}>
+        <button type="button" className={secondaryButtonClassName()} disabled={isBusy} onClick={optimizer.refresh}>
           {optimizer.isRefreshing ? 'Refreshing...' : 'Refresh prices / forecast'}
         </button>
-        <button type="button" className="optimizer-secondary-button" disabled={isBusy} onClick={optimizer.pauseUntilTomorrow}>
+        <button type="button" className={secondaryButtonClassName()} disabled={isBusy} onClick={optimizer.pauseUntilTomorrow}>
           {optimizer.isPausing ? 'Pausing...' : 'Pause until tomorrow'}
         </button>
-        <button type="button" className="optimizer-primary-button" disabled={isBusy} onClick={optimizer.applyPlan}>
+        <button type="button" className={primaryButtonClassName()} disabled={isBusy} onClick={optimizer.applyPlan}>
           {optimizer.isApplyingPlan ? 'Applying plan...' : 'Apply optimized plan'}
         </button>
       </div>
@@ -246,20 +269,20 @@ export function BatteryOptimizerPlanTable({
 
   if (variant === 'mobile') {
     return (
-      <GlassCard className="mobile-section-card optimizer-mobile-plan-card">
-        <div className="mobile-card-stack">
+      <GlassCard className="dashboard-glass-card flex flex-col gap-4 rounded-panel p-4">
+        <div className="flex items-center justify-between gap-3">
           <SectionHeading title="Optimization plan" />
-          <div className="optimizer-plan-pill">{planHours}h horizon</div>
+          <div className={planPillClassName()}>{planHours}h horizon</div>
         </div>
 
-        <div className="optimizer-mobile-plan-list" aria-label="Battery optimization plan">
+        <div className="flex flex-col gap-3" aria-label="Battery optimization plan">
           {rows.map((row) => (
-            <article className="optimizer-mobile-plan-item" key={row.startIso}>
-              <div className="optimizer-mobile-plan-item__row">
-                <strong>{formatOptimizerHourRange(row)}</strong>
+            <article className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]" key={row.startIso}>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <strong className="text-sm font-semibold text-dashboard-text">{formatOptimizerHourRange(row)}</strong>
                 <OptimizerPlanActionChip action={row.action} />
               </div>
-              <div className="optimizer-mobile-plan-item__metrics">
+              <div className="grid grid-cols-2 gap-2">
                 <PlanMiniStat label="Spot" value={formatOptimizerPrice(row.spotPriceDkkPerKwh)} />
                 <PlanMiniStat label="Buy" value={formatOptimizerPrice(row.fullBuyPriceDkkPerKwh)} />
                 <PlanMiniStat label="Sell" value={formatOptimizerPrice(row.sellPriceDkkPerKwh)} />
@@ -276,41 +299,40 @@ export function BatteryOptimizerPlanTable({
   }
 
   return (
-    <section className="battery-modal__optimizer-card battery-modal__optimizer-card--wide">
-      <div className="battery-modal__optimizer-header">
-        <h3>Optimization plan</h3>
-        <div className="optimizer-plan-pill">{planHours}h horizon</div>
+    <section className="rounded-[22px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-lg font-semibold text-dashboard-text">Optimization plan</h3>
+        <div className={planPillClassName()}>{planHours}h horizon</div>
       </div>
 
-      <div className="optimizer-plan-table-wrap">
-        <table className="optimizer-plan-table">
+      <div className="overflow-x-auto rounded-[18px] border border-white/8 bg-[#0b111d]/88">
+        <table className="min-w-full border-separate border-spacing-0 text-left">
           <thead>
             <tr>
-              <th>Hour</th>
-              <th>Spot</th>
-              <th>Full buy</th>
-              <th>Sell</th>
-              <th>Solar surplus</th>
-              <th>House usage</th>
-              <th>Target SoC</th>
-              <th>Action</th>
-              <th>Profit / loss</th>
+              {['Hour', 'Spot', 'Full buy', 'Sell', 'Solar surplus', 'House usage', 'Target SoC', 'Action', 'Profit / loss'].map((heading) => (
+                <th
+                  className="border-b border-white/8 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-dashboard-muted"
+                  key={heading}
+                >
+                  {heading}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.startIso}>
-                <td>{formatOptimizerHourRange(row)}</td>
-                <td>{formatOptimizerPrice(row.spotPriceDkkPerKwh)}</td>
-                <td>{formatOptimizerPrice(row.fullBuyPriceDkkPerKwh)}</td>
-                <td>{formatOptimizerPrice(row.sellPriceDkkPerKwh)}</td>
-                <td>{formatOptimizerEnergy(row.expectedSolarSurplusKwh)}</td>
-                <td>{formatOptimizerEnergy(row.expectedHouseUsageKwh)}</td>
-                <td>{formatOptimizerPercent(row.targetSocPercent)}</td>
-                <td>
+              <tr className="even:bg-white/[0.02]" key={row.startIso}>
+                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-text">{formatOptimizerHourRange(row)}</td>
+                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerPrice(row.spotPriceDkkPerKwh)}</td>
+                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerPrice(row.fullBuyPriceDkkPerKwh)}</td>
+                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerPrice(row.sellPriceDkkPerKwh)}</td>
+                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerEnergy(row.expectedSolarSurplusKwh)}</td>
+                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerEnergy(row.expectedHouseUsageKwh)}</td>
+                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerPercent(row.targetSocPercent)}</td>
+                <td className="border-b border-white/6 px-4 py-3">
                   <OptimizerPlanActionChip action={row.action} />
                 </td>
-                <td>{formatOptimizerCurrency(row.expectedProfitDkk)}</td>
+                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerCurrency(row.expectedProfitDkk)}</td>
               </tr>
             ))}
           </tbody>
@@ -339,7 +361,7 @@ export function BatteryOptimizerCharts({
 
   if (variant === 'mobile') {
     return (
-      <div className="optimizer-mobile-charts">
+      <div className="flex flex-col gap-4">
         <OptimizerMobileChartCard color="#3d86ff" labels={charts.priceCurve.labels} points={charts.priceCurve.points} title="DK1 price curve" unit="DKK/kWh" />
         <OptimizerMobileChartCard color="#60ea5d" labels={charts.socForecast.labels} points={charts.socForecast.points} title="Battery SoC forecast" unit="%" />
         <OptimizerMobileChartCard color="#f0b339" labels={charts.plannedBatteryPower.labels} points={charts.plannedBatteryPower.points} title="Planned charge / discharge" unit="kWh" />
@@ -349,7 +371,7 @@ export function BatteryOptimizerCharts({
   }
 
   return (
-    <section className="battery-modal__optimizer-charts">
+    <section className="grid grid-cols-2 gap-4">
       <OptimizerDesktopChartCard color="#3d86ff" labels={charts.priceCurve.labels} points={charts.priceCurve.points} title="DK1 price curve" unit="DKK/kWh" />
       <OptimizerDesktopChartCard color="#60ea5d" labels={charts.socForecast.labels} points={charts.socForecast.points} title="Battery SoC forecast" unit="%" />
       <OptimizerDesktopChartCard color="#f0b339" labels={charts.plannedBatteryPower.labels} points={charts.plannedBatteryPower.points} title="Planned charge / discharge" unit="kW" />
@@ -372,16 +394,16 @@ function OptimizerDesktopChartCard({
   unit: '%' | 'DKK/kWh' | 'kW'
 }) {
   return (
-    <section className="battery-modal__optimizer-card">
-      <div className="battery-modal__optimizer-header">
-        <h3>{title}</h3>
+    <section className="rounded-[22px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-lg font-semibold text-dashboard-text">{title}</h3>
       </div>
-      <div className="insight-chart-shell optimizer-chart-shell">
+      <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3">
         {unit === 'kW' ? (
-          <BarChart className="optimizer-desktop-chart insight-bar-chart" label={title} labels={labels} unit="kW" values={points} />
+          <BarChart className="min-h-[188px] insight-bar-chart" label={title} labels={labels} unit="kW" values={points} />
         ) : unit === '%' ? (
           <LineChart
-            className="optimizer-desktop-line-chart insight-line-chart"
+            className="min-h-[188px] insight-line-chart"
             color={color}
             label={title}
             labels={labels}
@@ -390,7 +412,7 @@ function OptimizerDesktopChartCard({
           />
         ) : (
           <BarChart
-            className="optimizer-desktop-chart insight-bar-chart insight-bar-chart--prices"
+            className="min-h-[188px] insight-bar-chart insight-bar-chart--prices"
             label={title}
             labels={labels}
             unit="DKK/kWh"
@@ -416,7 +438,7 @@ function OptimizerMobileChartCard({
   unit: '%' | 'DKK/kWh' | 'kWh'
 }) {
   return (
-    <GlassCard className="mobile-section-card optimizer-mobile-chart-card">
+    <GlassCard className="dashboard-glass-card flex flex-col gap-4 rounded-panel p-4">
       <SectionHeading title={title} />
       {unit === '%' ? (
         <MobileLineChart color={color} labels={labels} points={points} unit="%" />
@@ -429,27 +451,27 @@ function OptimizerMobileChartCard({
 
 function SummaryBlock({ label, value }: { label: string; value: string }) {
   return (
-    <div className="optimizer-summary-block">
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+      <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
+      <strong className="mt-2 block text-sm font-semibold leading-5 text-dashboard-text">{value}</strong>
     </div>
   )
 }
 
 function StatusMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="optimizer-status-metric">
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+      <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
+      <strong className="mt-2 block text-base font-semibold text-dashboard-text">{value}</strong>
     </div>
   )
 }
 
 function PlanMiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="optimizer-plan-mini-stat">
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div className="rounded-2xl border border-white/6 bg-white/[0.02] px-3 py-2">
+      <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-dashboard-muted">{label}</span>
+      <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{value}</strong>
     </div>
   )
 }
@@ -468,9 +490,15 @@ function ToggleRow({
   variant: Variant
 }) {
   return (
-    <label className={`optimizer-toggle-row optimizer-toggle-row--${variant}`}>
-      <span>{label}</span>
-      <input type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} />
+    <label className={fieldClassName(variant)}>
+      <span className="text-sm font-medium text-dashboard-text">{label}</span>
+      <input
+        className="h-5 w-5 rounded border-white/15 bg-[#0c121f] text-dashboard-blue accent-dashboard-blue"
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.checked)}
+      />
     </label>
   )
 }
@@ -488,26 +516,22 @@ function RecommendationBadge({
     return <StatusChip tone={mapToneToMobile(tone)}>{recommendation}</StatusChip>
   }
 
-  return <div className="optimizer-recommendation-badge" data-tone={tone}>{recommendation}</div>
+  return <div className={badgeClassName(tone)}>{recommendation}</div>
 }
 
 function OptimizerPlanActionChip({ action }: { action: string }) {
-  return <div className="optimizer-plan-action-chip" data-tone={getOptimizerRecommendationTone(action as never)}>{action}</div>
+  return <div className={badgeClassName(getOptimizerRecommendationTone(action as never))}>{action}</div>
 }
 
 function StaleDataBadge({ variant }: { variant: Variant }) {
   return (
-    <div className={`optimizer-data-badge optimizer-data-badge--stale optimizer-data-badge--${variant}`}>
-      Stale
-    </div>
+    <div className={dataBadgeClassName(variant, 'stale')}>Stale</div>
   )
 }
 
 function MockDataBadge({ variant }: { variant: Variant }) {
   return (
-    <div className={`optimizer-data-badge optimizer-data-badge--mock optimizer-data-badge--${variant}`}>
-      Mock
-    </div>
+    <div className={dataBadgeClassName(variant, 'mock')}>Mock</div>
   )
 }
 
@@ -515,10 +539,10 @@ function OptimizerLoadingCard({ title, variant }: { title: string; variant: Vari
   return wrapVariantCard(
     variant,
     title,
-    <div className="optimizer-placeholder">
+    <div className="flex min-h-[164px] flex-col items-center justify-center gap-3 rounded-[18px] border border-dashed border-white/10 bg-[#0b111d]/88 px-6 py-8 text-center">
       <OverviewIcon name="history" />
-      <strong>Loading optimizer...</strong>
-      <span>Fetching status, plan, and settings.</span>
+      <strong className="text-base font-semibold text-dashboard-text">Loading optimizer...</strong>
+      <span className="max-w-[26rem] text-sm leading-5 text-dashboard-soft">Fetching status, plan, and settings.</span>
     </div>,
   )
 }
@@ -527,10 +551,10 @@ function OptimizerEmptyCard({ title, variant }: { title: string; variant: Varian
   return wrapVariantCard(
     variant,
     title,
-    <div className="optimizer-placeholder">
+    <div className="flex min-h-[164px] flex-col items-center justify-center gap-3 rounded-[18px] border border-dashed border-white/10 bg-[#0b111d]/88 px-6 py-8 text-center">
       <OverviewIcon name="battery" />
-      <strong>No optimizer data</strong>
-      <span>Plan and settings will appear here once the optimizer responds.</span>
+      <strong className="text-base font-semibold text-dashboard-text">No optimizer data</strong>
+      <span className="max-w-[26rem] text-sm leading-5 text-dashboard-soft">Plan and settings will appear here once the optimizer responds.</span>
     </div>,
   )
 }
@@ -538,7 +562,7 @@ function OptimizerEmptyCard({ title, variant }: { title: string; variant: Varian
 function wrapVariantCard(variant: Variant, title: string, body: ReactNode) {
   if (variant === 'mobile') {
     return (
-      <GlassCard className="mobile-section-card optimizer-mobile-card">
+      <GlassCard className="dashboard-glass-card flex flex-col gap-4 rounded-panel p-4">
         <SectionHeading title={title} />
         {body}
       </GlassCard>
@@ -546,9 +570,9 @@ function wrapVariantCard(variant: Variant, title: string, body: ReactNode) {
   }
 
   return (
-    <section className="battery-modal__optimizer-card">
-      <div className="battery-modal__optimizer-header">
-        <h3>{title}</h3>
+    <section className="rounded-[22px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-lg font-semibold text-dashboard-text">{title}</h3>
       </div>
       {body}
     </section>
@@ -570,4 +594,51 @@ function mapToneToMobile(tone: 'blue' | 'gold' | 'green' | 'neutral' | 'purple')
     return 'neutral' as const
   }
   return 'danger' as const
+}
+
+function fieldClassName(variant: Variant) {
+  return cn(
+    'flex rounded-[18px] border border-white/8 bg-[#0b111d]/88 shadow-[0_12px_28px_rgba(0,0,0,0.18)]',
+    variant === 'desktop' ? 'items-center justify-between gap-4 p-3' : 'flex-col gap-3 p-3',
+  )
+}
+
+function secondaryButtonClassName() {
+  return 'inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50'
+}
+
+function primaryButtonClassName() {
+  return 'inline-flex min-h-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,rgba(77,122,255,0.98),rgba(86,231,112,0.88))] px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_18px_40px_rgba(77,122,255,0.28)] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50'
+}
+
+function planPillClassName() {
+  return 'inline-flex items-center rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-dashboard-soft'
+}
+
+function badgeClassName(tone: 'blue' | 'gold' | 'green' | 'neutral' | 'purple') {
+  const toneClass =
+    tone === 'green'
+      ? 'border-emerald-400/30 bg-emerald-400/12 text-emerald-200'
+      : tone === 'gold'
+        ? 'border-amber-400/30 bg-amber-400/12 text-amber-200'
+        : tone === 'blue'
+          ? 'border-sky-400/30 bg-sky-400/12 text-sky-200'
+          : tone === 'purple'
+            ? 'border-violet-400/30 bg-violet-400/12 text-violet-200'
+            : 'border-white/15 bg-white/8 text-dashboard-soft'
+
+  return cn(
+    'inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]',
+    toneClass,
+  )
+}
+
+function dataBadgeClassName(variant: Variant, type: 'stale' | 'mock') {
+  return cn(
+    'inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]',
+    variant === 'desktop' ? '' : '',
+    type === 'stale'
+      ? 'border-amber-400/30 bg-amber-400/12 text-amber-200'
+      : 'border-sky-400/30 bg-sky-400/12 text-sky-200',
+  )
 }

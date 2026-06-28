@@ -34,9 +34,24 @@ export function MobileDashboard({
   )
 
   return (
-    <main className="mobile-dashboard" data-testid="mobile-dashboard">
-      <div className="mobile-app-shell">
-        <section className="mobile-tab-panel" data-tab={activeTab} data-testid={`mobile-tab-${activeTab}`} key={activeTab}>
+    <main
+      className="min-h-screen min-h-dvh w-full overflow-visible bg-[radial-gradient(circle_at_18%_0%,rgba(38,102,222,0.22),transparent_28%),radial-gradient(circle_at_82%_12%,rgba(78,117,219,0.14),transparent_24%),linear-gradient(180deg,#060a11,#05070d_52%,#04060c)] text-dashboard-text"
+      data-testid="mobile-dashboard"
+      style={
+        {
+          ['--mobile-nav-height' as string]: '76px',
+          ['--mobile-nav-gap' as string]: '12px',
+          ['--mobile-bottom-space' as string]: 'calc(var(--mobile-nav-height) + var(--mobile-nav-gap) + env(safe-area-inset-bottom))',
+        }
+      }
+    >
+      <div className="relative mx-auto block min-h-screen min-h-dvh w-full max-w-[430px] overflow-visible px-[max(14px,env(safe-area-inset-right))] pb-0 pl-[max(14px,env(safe-area-inset-left))] pr-[max(14px,env(safe-area-inset-right))] pt-[max(10px,env(safe-area-inset-top))]">
+        <section
+          className="min-h-screen min-h-dvh overflow-visible pb-[var(--mobile-bottom-space)] pr-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          data-tab={activeTab}
+          data-testid={`mobile-tab-${activeTab}`}
+          key={activeTab}
+        >
           {activeTab === 'home' ? (
             <MobileHomeScreen
               battery={battery}

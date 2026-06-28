@@ -1,18 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
+import type { EvccApiSession, EvccChargeSession } from '../models/evccChargeSessions'
 import { getRawEntityState, getResolvedEntity } from '../services/energyEntityFormatting'
 import {
   getEvccSessionsFromAttributes,
   getEvccSessionsUrl,
   mapEvccSessions,
   readEvccChargeSessionCache,
-  type EvccApiSession,
-  type EvccChargeSession,
   writeEvccChargeSessionCache,
 } from '../services/evccChargeSessions'
-
-export type { EvccChargeSession } from '../services/evccChargeSessions'
 
 const CACHE_MS = 5 * 60 * 1000
 const POLL_MS = 5 * 60 * 1000

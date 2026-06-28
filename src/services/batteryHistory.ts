@@ -1,14 +1,4 @@
-export type BatteryHistoryPeriod = '24h' | '30d' | '7d' | '90d'
-
-export type BatteryHistorySeries = {
-  labels: string[]
-  points: number[]
-}
-
-export type BatteryHistoryState = {
-  changedMs: number
-  value: number
-}
+import type { BatteryHistoryPeriod, BatteryHistorySeries, BatteryHistoryState } from '../models/batteryHistory'
 
 const HOUR_MS = 60 * 60 * 1000
 const DAY_MS = 24 * HOUR_MS

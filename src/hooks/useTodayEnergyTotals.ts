@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
+import type { TodayEnergyTotals } from '../models/todayEnergyTotals'
 import { getNumericState } from '../services/energyEntityFormatting'
 import {
   formatKwh,
   getInitialTodayEnergyTotals,
   readTodayEnergyTotalsCache,
-  type TodayEnergyTotals,
   writeTodayEnergyTotalsCache,
 } from '../services/todayEnergyTotals'
 
@@ -23,12 +23,14 @@ export function useTodayEnergyTotals() {
       const now = new Date()
       const cached = readTodayEnergyTotalsCache(now)
       const directHomeKwh = getNumericState(resolved, 'homeEnergyToday')
+      const directGridExportKwh = getNumericState(resolved, 'gridExportedToday')
       const directGridKwh = getNumericState(resolved, 'gridImportToday')
       const directEvKwh = getNumericState(resolved, 'evChargeSessionEnergy')
 
       if (cached && Date.now() - cached.createdAt < CACHE_MS) {
         setTotals({
           evKwh: directEvKwh !== null ? formatKwh(directEvKwh) : cached.totals.evKwh,
+          gridExportKwh: directGridExportKwh !== null ? formatKwh(directGridExportKwh) : cached.totals.gridExportKwh,
           gridKwh: directGridKwh !== null ? formatKwh(directGridKwh) : cached.totals.gridKwh,
           homeKwh: directHomeKwh !== null ? formatKwh(directHomeKwh) : cached.totals.homeKwh,
         })
@@ -37,6 +39,7 @@ export function useTodayEnergyTotals() {
 
       const nextTotals = {
         evKwh: directEvKwh !== null ? formatKwh(directEvKwh) : cached?.totals.evKwh ?? '---',
+        gridExportKwh: directGridExportKwh !== null ? formatKwh(directGridExportKwh) : cached?.totals.gridExportKwh ?? '---',
         gridKwh: directGridKwh !== null ? formatKwh(directGridKwh) : cached?.totals.gridKwh ?? '---',
         homeKwh: directHomeKwh !== null ? formatKwh(directHomeKwh) : cached?.totals.homeKwh ?? '---',
       }

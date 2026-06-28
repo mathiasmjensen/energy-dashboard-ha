@@ -1,5 +1,6 @@
-import type { PeakRateDay, PeakRateWindow } from '../hooks/usePeakRates'
-import type { SolarForecastWindow } from '../hooks/useSolarForecast'
+import type { EnergyPriceInsight, InsightViewMode, SolarForecastInsight } from '../models/dashboardInsights'
+import type { PeakRateDay, PeakRateWindow } from '../models/peakRates'
+import type { SolarForecastWindow } from '../models/solarForecast'
 
 export const DAY_MS = 24 * 60 * 60 * 1000
 export const FALLBACK_SOLAR_CURVE = [0, 0, 0, 0, 0.2, 0.8, 1.6, 3, 4.8, 6.5, 7.6, 8, 7.8, 7, 6, 4.5, 2.8, 1.3, 0.4, 0, 0, 0, 0, 0]
@@ -7,40 +8,6 @@ export const FALLBACK_PRICE_CURVE = [
   1.92, 1.84, 1.66, 1.47, 1.28, 1.13, 1.08, 1.16, 1.34, 1.58, 1.82, 2.24, 2.52, 2.68, 2.61, 2.42, 2.06,
   1.72, 1.52, 1.48, 1.42, 1.39, 1.44, 1.58,
 ]
-
-export type InsightViewMode = 'timeline' | 'today'
-
-export type InsightHeaderControls = {
-  canGoNext: boolean
-  canGoPrevious: boolean
-  mode: InsightViewMode
-  onNext: () => void
-  onPrevious: () => void
-  onToggleMode: () => void
-}
-
-export type InsightMetricItem = {
-  label: string
-  value: string
-}
-
-export type SolarForecastInsight = {
-  pointLabels: string[]
-  points: number[]
-  primaryLabel: string
-  summaryItems: InsightMetricItem[]
-  totalKwh: string
-  windowLabel: string
-}
-
-export type EnergyPriceInsight = {
-  pointLabels: string[]
-  points: number[]
-  primaryLabel: string
-  primaryValue: string
-  summaryItems: InsightMetricItem[]
-  windowLabel: string
-}
 
 export function createFallbackPriceDay(date: Date): PeakRateDay {
   const dateKey = formatLocalDateKey(date)

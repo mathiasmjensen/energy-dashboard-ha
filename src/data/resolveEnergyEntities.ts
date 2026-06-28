@@ -1,14 +1,5 @@
-import type { HassEntities } from 'home-assistant-js-websocket'
 import { ENERGY_ENTITIES, ENERGY_ENTITY_CANDIDATES, type EnergyEntityKey } from './energyEntities'
-
-type HassEntity = HassEntities[string]
-
-export type ResolvedEnergyEntity = {
-  entity: HassEntity
-  entityId: string
-}
-
-export type ResolvedEnergyEntities = Partial<Record<EnergyEntityKey, ResolvedEnergyEntity>>
+import type { HassEntity, ResolvedEnergyEntities, ResolvedEnergyEntity } from '../models/resolveEnergyEntities'
 
 const ENTITY_MATCHERS: Partial<Record<EnergyEntityKey, string[][]>> = {
   batteryEnergy: [
@@ -38,6 +29,12 @@ const ENTITY_MATCHERS: Partial<Record<EnergyEntityKey, string[][]>> = {
     ['fox', 'grid', 'consumption', 'today'],
     ['fox', 'grid', 'import', 'today'],
     ['fox', 'import', 'today'],
+  ],
+  gridExportedToday: [
+    ['energy', 'dashboard', 'feed', 'in', 'today'],
+    ['fox', 'feed', 'in', 'today'],
+    ['fox', 'grid', 'export', 'today'],
+    ['fox', 'export', 'today'],
   ],
   gridPower: [
     ['fox', 'grid', 'power'],

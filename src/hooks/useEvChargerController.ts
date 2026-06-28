@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { ENERGY_ENTITIES } from '../data/energyEntities'
-import { EVCC_CHARGE_MODES, getEvccModeServiceOption, normalizeEvccMode, type EvccChargeMode } from '../data/evcc'
+import { EVCC_CHARGE_MODES, getEvccModeServiceOption, normalizeEvccMode } from '../data/evcc'
+import type { EvChargerBottomMode, EvChargerController, EvPlanPriceHour, UseEvChargerControllerProps } from '../models/evChargePlan'
+import type { EvccChargeMode } from '../models/evcc'
+import type { PeakRateDay } from '../models/peakRates'
 import {
   createRollingPriceDay,
   createRollingPriceHours,
@@ -13,63 +16,8 @@ import {
   normalizeClockValue,
   resolvePlanEndAfterStart,
   resolvePlanRange,
-  type EvPlanPriceHour,
 } from '../services/evChargePlan'
 import { useEvccChargeSessions } from './useEvccChargeSessions'
-import type { PeakRateDay } from './usePeakRates'
-
-export type { EvPlanPriceHour } from '../services/evChargePlan'
-
-export type EvChargerBottomMode = 'history' | 'plan'
-
-export type UseEvChargerControllerProps = {
-  chargeMode: string
-  chargeModeOptions: string[]
-  chargePlanEnabled: boolean
-  chargePlanFrom: string
-  chargePlanTo: string
-  priceAverage: string
-  priceCurrent: string
-  priceDays: PeakRateDay[]
-  pricePeak: string
-  priceSeries: number[]
-}
-
-export type EvChargerController = {
-  bottomMode: EvChargerBottomMode
-  isPlanEnabled: boolean
-  modeOptions: typeof EVCC_CHARGE_MODES
-  planFrom: string
-  planEndMs: number
-  planStatus: string
-  planStartMs: number
-  planTo: string
-  planWindowLabel: string
-  priceDayCount: number
-  priceHours: EvPlanPriceHour[]
-  priceSummary: {
-    average: string
-    current: string
-    peak: string
-  }
-  safePriceDayIndex: number
-  selectedMode: EvccChargeMode
-  selectedPriceDay: PeakRateDay
-  sessionHistory: ReturnType<typeof useEvccChargeSessions>
-  setBottomMode: (mode: EvChargerBottomMode) => void
-  handleModeChange: (mode: EvccChargeMode) => void
-  handleNextPriceDay: () => void
-  handlePlanEnabledChange: (enabled: boolean) => void
-  handlePlanFromChange: (value: string) => void
-  handlePlanToChange: (value: string) => void
-  handlePreviousPriceDay: () => void
-  handlePriceHourClick: (window: EvPlanPriceHour) => void
-  handlePriceHourPointerDown: (window: EvPlanPriceHour) => void
-  handlePriceHourPointerEnter: (window: EvPlanPriceHour) => void
-  handlePriceHourPointerLeave: () => void
-  handlePriceHourPointerUp: () => void
-  handleSavePlan: () => void
-}
 
 export function useEvChargerController({
   chargeMode,

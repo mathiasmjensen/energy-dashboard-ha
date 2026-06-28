@@ -1,33 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { createBatteryOptimizerClient } from '../services/batteryOptimizerClient'
+import { BatteryOptimizerRequestError, createBatteryOptimizerClient } from '../services/batteryOptimizerClient'
 import {
   createMockBatteryOptimizerSnapshot,
   getBatteryOptimizerMode,
   isBatteryOptimizerStale,
   normalizeBatteryOptimizerSnapshot,
-  type BatteryOptimizerLiveInputs,
-  type BatteryOptimizerSettings,
-  type BatteryOptimizerSnapshot,
 } from '../services/batteryOptimizer'
-
-export type BatteryOptimizerState = {
-  errorMessage: string | null
-  hasLiveError: boolean
-  isApplyingPlan: boolean
-  isEmpty: boolean
-  isLoading: boolean
-  isPausing: boolean
-  isRefreshing: boolean
-  isSavingSettings: boolean
-  isStale: boolean
-  mode: 'direct-api' | 'ha-proxy' | 'mock'
-  retry: () => void
-  snapshot: BatteryOptimizerSnapshot | null
-  updateSetting: <TKey extends keyof BatteryOptimizerSettings>(key: TKey, value: BatteryOptimizerSettings[TKey]) => void
-  applyPlan: () => void
-  pauseUntilTomorrow: () => void
-  refresh: () => void
-}
+import type { BatteryOptimizerLiveInputs, BatteryOptimizerSettings, BatteryOptimizerSnapshot, BatteryOptimizerState } from '../models/batteryOptimizer'
 
 export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): BatteryOptimizerState {
   const mode = getBatteryOptimizerMode()
@@ -79,12 +58,13 @@ export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): Battery
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [isPausing, setIsPausing] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
+  const [backendMissing, setBackendMissing] = useState(false)
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
-      if (mode === 'mock' || !client) {
+      if (mode === 'mock' || !client || backendMissing) {
         setSnapshot(createMockBatteryOptimizerSnapshot(stableInputs))
         setErrorMessage(null)
         setHasLiveError(false)
@@ -116,14 +96,21 @@ export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): Battery
         )
         setErrorMessage(null)
         setHasLiveError(false)
+        setBackendMissing(false)
       } catch (error) {
         if (cancelled) {
           return
         }
 
         setSnapshot(createMockBatteryOptimizerSnapshot(stableInputs))
-        setErrorMessage(error instanceof Error ? error.message : 'Battery optimizer backend unavailable')
-        setHasLiveError(true)
+        if (error instanceof BatteryOptimizerRequestError && error.status === 404) {
+          setBackendMissing(true)
+          setErrorMessage(null)
+          setHasLiveError(false)
+        } else {
+          setErrorMessage(error instanceof Error ? error.message : 'Battery optimizer backend unavailable')
+          setHasLiveError(true)
+        }
       } finally {
         if (!cancelled) {
           setIsLoading(false)
@@ -135,10 +122,10 @@ export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): Battery
     return () => {
       cancelled = true
     }
-  }, [client, mode, reloadToken, stableInputs])
+  }, [backendMissing, client, mode, reloadToken, stableInputs])
 
   const refresh = useCallback(async () => {
-    if (mode === 'mock' || !client) {
+    if (mode === 'mock' || !client || backendMissing) {
       setSnapshot(createMockBatteryOptimizerSnapshot(stableInputs))
       setErrorMessage(null)
       setHasLiveError(false)
@@ -148,23 +135,31 @@ export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): Battery
     setIsRefreshing(true)
     try {
       await client.refresh()
+      setBackendMissing(false)
       setReloadToken((current) => current + 1)
       setErrorMessage(null)
       setHasLiveError(false)
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Could not refresh optimizer')
-      setHasLiveError(true)
+      if (error instanceof BatteryOptimizerRequestError && error.status === 404) {
+        setBackendMissing(true)
+        setSnapshot(createMockBatteryOptimizerSnapshot(stableInputs))
+        setErrorMessage(null)
+        setHasLiveError(false)
+      } else {
+        setErrorMessage(error instanceof Error ? error.message : 'Could not refresh optimizer')
+        setHasLiveError(true)
+      }
     } finally {
       setIsRefreshing(false)
     }
-  }, [client, mode, stableInputs])
+  }, [backendMissing, client, mode, stableInputs])
 
   const applyPlan = useCallback(async () => {
     if (!snapshot) {
       return
     }
 
-    if (mode === 'mock' || !client) {
+    if (mode === 'mock' || !client || backendMissing) {
       setSnapshot((current) =>
         current
           ? {
@@ -185,23 +180,30 @@ export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): Battery
         planRows: snapshot.planRows,
         settings: snapshot.settings,
       })
+      setBackendMissing(false)
       setReloadToken((current) => current + 1)
       setErrorMessage(null)
       setHasLiveError(false)
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Could not apply optimized plan')
-      setHasLiveError(true)
+      if (error instanceof BatteryOptimizerRequestError && error.status === 404) {
+        setBackendMissing(true)
+        setErrorMessage(null)
+        setHasLiveError(false)
+      } else {
+        setErrorMessage(error instanceof Error ? error.message : 'Could not apply optimized plan')
+        setHasLiveError(true)
+      }
     } finally {
       setIsApplyingPlan(false)
     }
-  }, [client, mode, snapshot])
+  }, [backendMissing, client, mode, snapshot])
 
   const pauseUntilTomorrow = useCallback(async () => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
     tomorrow.setHours(0, 0, 0, 0)
 
-    if (mode === 'mock' || !client) {
+    if (mode === 'mock' || !client || backendMissing) {
       setSnapshot((current) =>
         current
           ? {
@@ -219,16 +221,23 @@ export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): Battery
     setIsPausing(true)
     try {
       await client.pauseUntilTomorrow({ untilIso: tomorrow.toISOString() })
+      setBackendMissing(false)
       setReloadToken((current) => current + 1)
       setErrorMessage(null)
       setHasLiveError(false)
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Could not pause optimizer')
-      setHasLiveError(true)
+      if (error instanceof BatteryOptimizerRequestError && error.status === 404) {
+        setBackendMissing(true)
+        setErrorMessage(null)
+        setHasLiveError(false)
+      } else {
+        setErrorMessage(error instanceof Error ? error.message : 'Could not pause optimizer')
+        setHasLiveError(true)
+      }
     } finally {
       setIsPausing(false)
     }
-  }, [client, mode])
+  }, [backendMissing, client, mode])
 
   const updateSetting = useCallback(
     <TKey extends keyof BatteryOptimizerSettings>(key: TKey, value: BatteryOptimizerSettings[TKey]) => {
@@ -251,7 +260,7 @@ export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): Battery
           : current,
       )
 
-      if (mode === 'mock' || !client || !snapshot) {
+      if (mode === 'mock' || !client || !snapshot || backendMissing) {
         return
       }
 
@@ -266,16 +275,23 @@ export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): Battery
         .then(() => {
           setErrorMessage(null)
           setHasLiveError(false)
+          setBackendMissing(false)
         })
         .catch((error) => {
-          setErrorMessage(error instanceof Error ? error.message : 'Could not save optimizer settings')
-          setHasLiveError(true)
+          if (error instanceof BatteryOptimizerRequestError && error.status === 404) {
+            setBackendMissing(true)
+            setErrorMessage(null)
+            setHasLiveError(false)
+          } else {
+            setErrorMessage(error instanceof Error ? error.message : 'Could not save optimizer settings')
+            setHasLiveError(true)
+          }
         })
         .finally(() => {
           setIsSavingSettings(false)
         })
     },
-    [client, mode, snapshot],
+    [backendMissing, client, mode, snapshot],
   )
 
   return {
@@ -292,7 +308,10 @@ export function useBatteryOptimizer(inputs: BatteryOptimizerLiveInputs): Battery
     mode,
     pauseUntilTomorrow,
     refresh,
-    retry: () => setReloadToken((current) => current + 1),
+    retry: () => {
+      setBackendMissing(false)
+      setReloadToken((current) => current + 1)
+    },
     snapshot,
     updateSetting,
   }

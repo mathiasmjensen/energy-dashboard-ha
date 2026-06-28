@@ -34,13 +34,10 @@ export function EnergyDashboard() {
   const peakRates = usePeakRates()
   const solarForecast = useSolarForecast()
   const todayTotals = useTodayEnergyTotals()
-  const [isBatteryOpen, setIsBatteryOpen] = useState(false)
   const [isEvChargerOpen, setIsEvChargerOpen] = useState(false)
   const [insightDayOffset, setInsightDayOffset] = useState(0)
   const [insightViewMode, setInsightViewMode] = useState<InsightViewMode>('today')
   const [now, setNow] = useState(() => new Date())
-  const openBattery = useCallback(() => setIsBatteryOpen(true), [])
-  const closeBattery = useCallback(() => setIsBatteryOpen(false), [])
   const openEvCharger = useCallback(() => setIsEvChargerOpen(true), [])
   const closeEvCharger = useCallback(() => setIsEvChargerOpen(false), [])
 
@@ -103,7 +100,11 @@ export function EnergyDashboard() {
   const historicalEnergyDay = useHistoricalEnergyDay({
     currentDistribution: {
       battery: data.batteryDistributionToday,
+      batteryCharge: data.batteryChargeToday,
+      batteryDischarge: data.batteryDischargeToday,
       ev: todayTotals.evKwh,
+      gridExport: todayTotals.gridExportKwh,
+      gridImport: todayTotals.gridKwh,
       grid: todayTotals.gridKwh,
       home: todayTotals.homeKwh,
       solar: solarProductionEnergyKwh,
@@ -239,11 +240,8 @@ export function EnergyDashboard() {
       homePower={data.homePower}
       energyDayControls={historicalEnergyDay.controls}
       insightControls={insightControls}
-      isBatteryOpen={isBatteryOpen}
       isEvChargerOpen={isEvChargerOpen}
-      onCloseBattery={closeBattery}
       onCloseEvCharger={closeEvCharger}
-      onOpenBattery={openBattery}
       onOpenEvCharger={openEvCharger}
       prices={energyPriceInsight}
       sceneStyle={sceneStyle}

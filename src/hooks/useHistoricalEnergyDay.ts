@@ -8,6 +8,14 @@ const MAX_DAY_OFFSET = 30
 const HOUR_MS = 60 * 60 * 1000
 
 type PowerHistoryKey = 'batteryPower' | 'evChargePower' | 'gridPower' | 'homePower' | 'solarPower'
+type TotalHistoryKey =
+  | 'batteryChargeToday'
+  | 'batteryDischargeToday'
+  | 'gridExportedToday'
+  | 'gridImportToday'
+  | 'homeEnergyToday'
+  | 'solarProductionToday'
+type HistoryKey = PowerHistoryKey | TotalHistoryKey
 
 type NormalizedHistoryRow = {
   changedMs: number
@@ -24,7 +32,11 @@ type HistoricalEnergyDayResult = {
   }
   distribution: {
     battery: string
+    batteryCharge: string
+    batteryDischarge: string
     ev: string
+    gridExport: string
+    gridImport: string
     grid: string
     home: string
     solar: string
@@ -49,7 +61,11 @@ type HistoricalEnergyDayCacheEntry = {
 
 const EMPTY_DISTRIBUTION = {
   battery: '---',
+  batteryCharge: '---',
+  batteryDischarge: '---',
   ev: '---',
+  gridExport: '---',
+  gridImport: '---',
   grid: '---',
   home: '---',
   solar: '---',
@@ -74,12 +90,30 @@ export function useHistoricalEnergyDay({
     () =>
       ({
         batteryPower: resolved.batteryPower?.entityId ?? null,
+        batteryChargeToday: resolved.batteryChargeToday?.entityId ?? null,
+        batteryDischargeToday: resolved.batteryDischargeToday?.entityId ?? null,
         evChargePower: resolved.evChargePower?.entityId ?? null,
+        gridExportedToday: resolved.gridExportedToday?.entityId ?? null,
+        gridImportToday: resolved.gridImportToday?.entityId ?? null,
         gridPower: resolved.gridPower?.entityId ?? null,
+        homeEnergyToday: resolved.homeEnergyToday?.entityId ?? null,
         homePower: resolved.homePower?.entityId ?? null,
+        solarProductionToday: resolved.solarProductionToday?.entityId ?? null,
         solarPower: resolved.solarPower?.entityId ?? null,
-      }) satisfies Record<PowerHistoryKey, string | null>,
-    [resolved.batteryPower?.entityId, resolved.evChargePower?.entityId, resolved.gridPower?.entityId, resolved.homePower?.entityId, resolved.solarPower?.entityId],
+      }) satisfies Record<HistoryKey, string | null>,
+    [
+      resolved.batteryPower?.entityId,
+      resolved.batteryChargeToday?.entityId,
+      resolved.batteryDischargeToday?.entityId,
+      resolved.evChargePower?.entityId,
+      resolved.gridExportedToday?.entityId,
+      resolved.gridImportToday?.entityId,
+      resolved.gridPower?.entityId,
+      resolved.homeEnergyToday?.entityId,
+      resolved.homePower?.entityId,
+      resolved.solarProductionToday?.entityId,
+      resolved.solarPower?.entityId,
+    ],
   )
   const sourceKey = useMemo(() => JSON.stringify(entityIds), [entityIds])
 
@@ -88,8 +122,8 @@ export function useHistoricalEnergyDay({
       return
     }
 
-    const activeRequestEntries = (Object.entries(entityIds) as Array<[PowerHistoryKey, string | null]>).filter(
-      (entry): entry is [PowerHistoryKey, string] => Boolean(entry[1]),
+    const activeRequestEntries = (Object.entries(entityIds) as Array<[HistoryKey, string | null]>).filter(
+      (entry): entry is [HistoryKey, string] => Boolean(entry[1]),
     )
     const activeEntityIds = activeRequestEntries.map(([, entityId]) => entityId)
 
@@ -105,24 +139,18 @@ export function useHistoricalEnergyDay({
     const accessToken = import.meta.env.VITE_HA_TOKEN?.trim() || getConnectionAccessToken(connection)
     const apiBase = resolveHaApiBase()
     const { end, start } = getDayWindow(dayOffset)
-    const url = `${apiBase}/api/history/period/${encodeURIComponent(start.toISOString())}?filter_entity_id=${encodeURIComponent(activeEntityIds.join(','))}&end_time=${encodeURIComponent(end.toISOString())}&no_attributes`
     const cacheKey = getCacheKey(sourceKey, dayOffset)
 
     async function fetchHistory() {
       try {
-        const response = await fetch(url, {
-          cache: 'no-store',
-          credentials: 'include',
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-          signal: controller.signal,
+        const rowsByKey = await fetchHistoryRowsByKey({
+          abortSignal: controller.signal,
+          accessToken,
+          activeRequestEntries,
+          apiBase,
+          end,
+          start,
         })
-
-        if (!response.ok) {
-          throw new Error(`Historical energy day request failed with ${response.status}`)
-        }
-
-        const payload: unknown = await response.json()
-        const rowsByKey = normalizeHistoryPayload(payload, activeRequestEntries)
         const nextEntry = buildHistoricalDayEntry(rowsByKey, start, end)
 
         if (!controller.signal.aborted) {
@@ -151,6 +179,7 @@ export function useHistoricalEnergyDay({
 
   const activeEntry = dayOffset === 0 ? null : cache[getCacheKey(sourceKey, dayOffset)] ?? null
   const hasActiveHistory = dayOffset > 0 && activeEntry?.available
+  const isHistoricalSelection = dayOffset > 0
 
   return useMemo(
     () => ({
@@ -161,32 +190,85 @@ export function useHistoricalEnergyDay({
         onNext: () => setDayOffset((current) => Math.max(0, current - 1)),
         onPrevious: () => setDayOffset((current) => Math.min(MAX_DAY_OFFSET, current + 1)),
       },
-      distribution: hasActiveHistory ? activeEntry.distribution : currentDistribution,
-      solarProduction: hasActiveHistory ? activeEntry.solarProduction : currentSolarProduction,
+      solarProduction: hasActiveHistory
+        ? activeEntry.solarProduction
+        : isHistoricalSelection && activeEntry
+          ? EMPTY_SOLAR_PRODUCTION
+          : currentSolarProduction,
+      distribution:
+        hasActiveHistory
+          ? activeEntry.distribution
+          : isHistoricalSelection && activeEntry
+            ? EMPTY_DISTRIBUTION
+            : currentDistribution,
     }),
-    [activeEntry, currentDistribution, currentSolarProduction, dayOffset, hasActiveHistory],
+    [activeEntry, currentDistribution, currentSolarProduction, dayOffset, hasActiveHistory, isHistoricalSelection],
   )
 }
 
-function normalizeHistoryPayload(
-  payload: unknown,
-  activeRequestEntries: Array<[PowerHistoryKey, string]>,
-): Record<PowerHistoryKey, NormalizedHistoryRow[]> {
-  const series = Array.isArray(payload) ? payload : []
-  const accumulator: Record<PowerHistoryKey, NormalizedHistoryRow[]> = {
+async function fetchHistoryRowsByKey({
+  abortSignal,
+  accessToken,
+  activeRequestEntries,
+  apiBase,
+  end,
+  start,
+}: {
+  abortSignal: AbortSignal
+  accessToken?: string
+  activeRequestEntries: Array<[HistoryKey, string]>
+  apiBase: string
+  end: Date
+  start: Date
+}) {
+  const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+  const rowsByKey = createEmptyHistoryRowsByKey()
+
+  await Promise.all(
+    activeRequestEntries.map(async ([key, entityId]) => {
+      const url = `${apiBase}/api/history/period/${encodeURIComponent(start.toISOString())}?filter_entity_id=${encodeURIComponent(entityId)}&end_time=${encodeURIComponent(end.toISOString())}&no_attributes`
+      const response = await fetch(url, {
+        cache: 'no-store',
+        credentials: 'include',
+        headers,
+        signal: abortSignal,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Historical energy day request failed for ${entityId} with ${response.status}`)
+      }
+
+      const payload: unknown = await response.json()
+      const scale = ENERGY_ENTITY_NUMERIC_SCALE[key] ?? 1
+      rowsByKey[key] = normalizeHistoryRows(extractSingleHistorySeries(payload), scale)
+    }),
+  )
+
+  return rowsByKey
+}
+
+function createEmptyHistoryRowsByKey(): Record<HistoryKey, NormalizedHistoryRow[]> {
+  return {
     batteryPower: [],
+    batteryChargeToday: [],
+    batteryDischargeToday: [],
     evChargePower: [],
+    gridExportedToday: [],
+    gridImportToday: [],
     gridPower: [],
+    homeEnergyToday: [],
     homePower: [],
+    solarProductionToday: [],
     solarPower: [],
-  } satisfies Record<PowerHistoryKey, NormalizedHistoryRow[]>
+  } satisfies Record<HistoryKey, NormalizedHistoryRow[]>
+}
 
-  activeRequestEntries.forEach(([key], index) => {
-    const scale = ENERGY_ENTITY_NUMERIC_SCALE[key] ?? 1
-    accumulator[key] = normalizeHistoryRows(series[index], scale)
-  })
+function extractSingleHistorySeries(payload: unknown) {
+  if (!Array.isArray(payload) || !Array.isArray(payload[0])) {
+    return []
+  }
 
-  return accumulator
+  return payload[0]
 }
 
 function normalizeHistoryRows(payload: unknown, scale: number) {
@@ -219,7 +301,7 @@ function normalizeHistoryRows(payload: unknown, scale: number) {
 }
 
 function buildHistoricalDayEntry(
-  rowsByKey: Record<PowerHistoryKey, NormalizedHistoryRow[]>,
+  rowsByKey: Record<HistoryKey, NormalizedHistoryRow[]>,
   start: Date,
   end: Date,
 ): HistoricalEnergyDayCacheEntry {
@@ -230,30 +312,73 @@ function buildHistoricalDayEntry(
   const gridRows = rowsByKey.gridPower
   const batteryRows = rowsByKey.batteryPower
   const evRows = rowsByKey.evChargePower
+  const gridExportTotalRows = rowsByKey.gridExportedToday
+  const solarTotalRows = rowsByKey.solarProductionToday
+  const homeTotalRows = rowsByKey.homeEnergyToday
+  const gridTotalRows = rowsByKey.gridImportToday
+  const batteryChargeTotalRows = rowsByKey.batteryChargeToday
+  const batteryDischargeTotalRows = rowsByKey.batteryDischargeToday
   const solarTotal = integrateEnergy(rowsByKey.solarPower, startMs, endMs, (value) => Math.max(value, 0))
   const homeTotal = integrateEnergy(homeRows, startMs, endMs, (value) => Math.max(value, 0))
   const gridImportTotal = integrateEnergy(gridRows, startMs, endMs, (value) => Math.max(value, 0))
+  const gridExportTotal = integrateEnergy(gridRows, startMs, endMs, (value) => Math.max(-value, 0))
   const batteryChargeTotal = integrateEnergy(batteryRows, startMs, endMs, (value) => Math.max(-value, 0))
   const batteryDischargeTotal = integrateEnergy(batteryRows, startMs, endMs, (value) => Math.max(value, 0))
   const evTotal = integrateEnergy(evRows, startMs, endMs, (value) => Math.max(value, 0))
   const hourlySolarCurve = buildHourlySolarCurve(solarRows, startMs)
-  const hasData = [solarRows, homeRows, gridRows, batteryRows, evRows].some((rows) => rows.length > 0)
+  const solarDistributionTotal = getDailyTotalFromRows(solarTotalRows) ?? solarTotal
+  const homeDistributionTotal = getDailyTotalFromRows(homeTotalRows) ?? homeTotal
+  const gridExportDistributionTotal = getDailyTotalFromRows(gridExportTotalRows) ?? gridExportTotal
+  const gridDistributionTotal = getDailyTotalFromRows(gridTotalRows) ?? gridImportTotal
+  const batteryChargeDistributionTotal = getDailyTotalFromRows(batteryChargeTotalRows) ?? batteryChargeTotal
+  const batteryDischargeDistributionTotal = getDailyTotalFromRows(batteryDischargeTotalRows) ?? batteryDischargeTotal
+  const hasData = [
+    solarRows,
+    homeRows,
+    gridRows,
+    batteryRows,
+    evRows,
+    solarTotalRows,
+    homeTotalRows,
+    gridExportTotalRows,
+    gridTotalRows,
+    batteryChargeTotalRows,
+    batteryDischargeTotalRows,
+  ].some((rows) => rows.length > 0)
 
   return {
     available: hasData,
     distribution: {
-      battery: formatKwh(Math.max(batteryChargeTotal, batteryDischargeTotal)),
+      battery: formatKwh(Math.max(batteryChargeDistributionTotal, batteryDischargeDistributionTotal)),
+      batteryCharge: formatKwh(batteryChargeDistributionTotal),
+      batteryDischarge: formatKwh(batteryDischargeDistributionTotal),
       ev: formatKwh(evTotal),
-      grid: formatKwh(gridImportTotal),
-      home: formatKwh(homeTotal),
-      solar: formatKwh(solarTotal),
+      gridExport: formatKwh(gridExportDistributionTotal),
+      gridImport: formatKwh(gridDistributionTotal),
+      grid: formatKwh(gridDistributionTotal),
+      home: formatKwh(homeDistributionTotal),
+      solar: formatKwh(solarDistributionTotal),
     },
     solarProduction: {
       curve: hourlySolarCurve,
       labels: Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, '0')}:00`),
-      value: formatKwh(solarTotal),
+      value: formatKwh(solarDistributionTotal),
     },
   }
+}
+
+function getDailyTotalFromRows(rows: NormalizedHistoryRow[]) {
+  if (!rows.length) {
+    return null
+  }
+
+  let maxValue = 0
+
+  for (const row of rows) {
+    maxValue = Math.max(maxValue, row.value)
+  }
+
+  return Number(maxValue.toFixed(2))
 }
 
 function integrateEnergy(

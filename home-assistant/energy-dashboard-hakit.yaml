@@ -278,6 +278,11 @@ template:
         unit_of_measurement: "kWh"
         state: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'grid_import_today') }}"
 
+      - name: Energy Dashboard Feed In Today
+        unique_id: energy_dashboard_feed_in_today
+        unit_of_measurement: "kWh"
+        state: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'feed_in_today') }}"
+
       - name: Energy Dashboard Battery Charge Today
         unique_id: energy_dashboard_battery_charge_today
         unit_of_measurement: "kWh"

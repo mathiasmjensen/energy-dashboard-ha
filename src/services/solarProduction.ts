@@ -1,8 +1,4 @@
-export type SolarProductionPoint = {
-  hour: number
-  label: string
-  value: number
-}
+import type { SolarProductionPoint } from '../models/solarProduction'
 
 export function getSolarProductionCurveFromAttributes(attributes: Record<string, unknown>, state?: string | null) {
   const payload = getSolarProductionPayload(attributes, state)
