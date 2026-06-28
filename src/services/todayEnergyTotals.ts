@@ -1,24 +1,6 @@
+import type { HistoryRow, TodayEnergyTotals, TodayEnergyTotalsCache } from '../models/todayEnergyTotals'
+
 const CACHE_KEY_PREFIX = 'energy-dashboard:today-energy-totals:'
-
-export type HistoryRow = {
-  attributes?: {
-    unit_of_measurement?: string
-  }
-  entity_id?: string
-  last_changed: string
-  state: string
-}
-
-export type TodayEnergyTotals = {
-  evKwh: string
-  gridKwh: string
-  homeKwh: string
-}
-
-type TodayEnergyTotalsCache = {
-  createdAt: number
-  totals: TodayEnergyTotals
-}
 
 export function getInitialTodayEnergyTotals() {
   const cache = readTodayEnergyTotalsCache(new Date())
@@ -29,6 +11,7 @@ export function getInitialTodayEnergyTotals() {
 export function getEmptyTodayEnergyTotals(): TodayEnergyTotals {
   return {
     evKwh: '---',
+    gridExportKwh: '---',
     gridKwh: '---',
     homeKwh: '---',
   }

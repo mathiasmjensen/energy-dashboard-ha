@@ -1,4 +1,5 @@
 import type { MobileDashboardProps, SolarPeriod } from './MobileTypes'
+import { cn } from '../../lib/cn'
 import {
   AnalyticsCard,
   FlowPath,
@@ -28,7 +29,7 @@ export function MobileSolarScreen({
   onPeriodChange: (period: SolarPeriod) => void
 }) {
   return (
-    <div className="mobile-screen mobile-screen--solar">
+    <div className="flex flex-col gap-4">
       <SegmentedControl
         active={period}
         ariaLabel="Solar analytics period"
@@ -36,9 +37,9 @@ export function MobileSolarScreen({
         onChange={(value) => onPeriodChange(value as SolarPeriod)}
       />
 
-      <GlassCard className="mobile-section-card">
-        <div className="mobile-card-header">
-          <h2>Energy flow</h2>
+      <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-[clamp(18px,4.8vw,22px)] font-semibold tracking-[-0.02em] text-white">Energy flow</h2>
           <MobileDayControls controls={energyDayControls} />
         </div>
         <SolarFlowDiagram distribution={distribution} overview={overview} />
@@ -90,20 +91,22 @@ export function MobileSolarScreen({
 
 function MobileDayControls({ controls }: { controls: MobileDashboardProps['energyDayControls'] }) {
   return (
-    <div className="mobile-insight-controls mobile-insight-controls--day">
+    <div className="flex items-center gap-2">
       <button
         aria-label="Show previous energy day"
-        className="mobile-insight-controls__arrow"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!controls.canGoPrevious}
         type="button"
         onClick={controls.onPrevious}
       >
         <MobileIcon name="chevronLeft" />
       </button>
-      <div className="mobile-card-action mobile-card-action--static">{controls.label}</div>
+      <div className="inline-flex min-h-10 items-center rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-medium text-dashboard-text">
+        {controls.label}
+      </div>
       <button
         aria-label="Show next energy day"
-        className="mobile-insight-controls__arrow"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!controls.canGoNext}
         type="button"
         onClick={controls.onNext}
@@ -126,53 +129,71 @@ function SolarFlowDiagram({
   const evDirection = overview.evMeta.toLowerCase().includes('charg') ? 'forward' : 'reverse'
 
   return (
-    <div className="mobile-solar-flow">
-      <div className="mobile-solar-flow__node mobile-solar-flow__node--solar">
+    <div className="relative grid min-h-[272px] grid-cols-[96px_1fr_96px] grid-rows-[auto_1fr_auto] gap-y-5">
+      <div className={flowNodeClassName('solar')}>
         <NodeIcon tone="gold">
           <MobileIcon name="solar" />
         </NodeIcon>
-        <span>Solar</span>
-        <strong>{distribution.solar} kWh</strong>
+        <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Solar</span>
+        <strong className="text-sm font-semibold text-dashboard-text">{distribution.solar} kWh</strong>
       </div>
 
-      <div className="mobile-solar-flow__node mobile-solar-flow__node--grid">
+      <div className={flowNodeClassName('grid')}>
         <NodeIcon tone="blue">
           <MobileIcon name="grid" />
         </NodeIcon>
-        <span>Grid</span>
-        <strong>{distribution.grid} kWh</strong>
+        <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Grid</span>
+        <strong className="text-sm font-semibold text-dashboard-text">{distribution.gridImport} kWh</strong>
+        <div className="mt-1 grid gap-0.5 border-t border-white/8 pt-1">
+          <span className="text-[10px] text-dashboard-soft">From {distribution.gridImport} kWh</span>
+          <span className="text-[10px] text-dashboard-soft">To {distribution.gridExport} kWh</span>
+        </div>
       </div>
 
-      <div className="mobile-solar-flow__hub">
+      <div className="col-start-2 row-start-2 grid place-self-center rounded-[22px] border border-white/12 bg-[#0a111b]/92 px-4 py-3 text-center shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
         <NodeIcon tone="white">
           <MobileIcon name="home" />
         </NodeIcon>
-        <span>Home</span>
-        <strong>{distribution.home} kWh</strong>
+        <span className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Home</span>
+        <strong className="mt-1 text-sm font-semibold text-dashboard-text">{distribution.home} kWh</strong>
       </div>
 
-      <div className="mobile-solar-flow__node mobile-solar-flow__node--battery">
+      <div className={flowNodeClassName('battery')}>
         <NodeIcon tone="green">
           <MobileIcon name="battery" />
         </NodeIcon>
-        <span>Battery</span>
-        <strong>{distribution.battery} kWh</strong>
+        <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Battery</span>
+        <strong className="text-sm font-semibold text-dashboard-text">{distribution.battery} kWh</strong>
+        <div className="mt-1 grid gap-0.5 border-t border-white/8 pt-1">
+          <span className="text-[10px] text-dashboard-soft">To {distribution.batteryCharge} kWh</span>
+          <span className="text-[10px] text-dashboard-soft">From {distribution.batteryDischarge} kWh</span>
+        </div>
       </div>
 
-      <div className="mobile-solar-flow__node mobile-solar-flow__node--ev">
+      <div className={flowNodeClassName('ev')}>
         <NodeIcon tone="neutral">
           <MobileIcon name="car" />
         </NodeIcon>
-        <span>EV Charger</span>
-        <strong>{distribution.ev} kWh</strong>
+        <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">EV Charger</span>
+        <strong className="text-sm font-semibold text-dashboard-text">{distribution.ev} kWh</strong>
       </div>
 
-      <svg className="mobile-solar-flow__lines" viewBox="0 0 320 170" aria-hidden="true">
+      <svg className="pointer-events-none absolute inset-x-0 top-6 h-[160px] w-full overflow-visible" viewBox="0 0 320 170" aria-hidden="true">
         <FlowPath color="#f7b62f" direction="forward" path="M74 38 H122 C144 38 150 52 150 72" />
         <FlowPath color="#9a5cff" direction={gridDirection} path="M74 118 H126 C146 118 150 104 150 88" />
         <FlowPath color="#57dd70" direction={batteryDirection} path="M170 72 C174 54 184 40 206 40 H252" />
         <FlowPath color="#707788" direction={evDirection} path="M170 88 C174 108 184 122 206 122 H252" />
       </svg>
     </div>
+  )
+}
+
+function flowNodeClassName(tone: 'battery' | 'ev' | 'grid' | 'solar') {
+  return cn(
+    'grid w-[92px] gap-1 rounded-[20px] border bg-[#0a111b]/92 px-3 py-3 shadow-[0_18px_44px_rgba(0,0,0,0.22)]',
+    tone === 'solar' && 'col-start-1 row-start-1 place-self-start border-dashboard-orange/25',
+    tone === 'grid' && 'col-start-1 row-start-3 place-self-start border-dashboard-purple/25',
+    tone === 'battery' && 'col-start-3 row-start-1 place-self-end border-dashboard-green/25',
+    tone === 'ev' && 'col-start-3 row-start-3 place-self-end border-white/15',
   )
 }

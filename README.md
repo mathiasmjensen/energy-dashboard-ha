@@ -16,6 +16,11 @@ The Battery surfaces now include a battery optimizer layer:
 - mobile Battery tab: summary + history + optimizer stack
 - desktop Battery modal: summary + history + optimizer workspace
 
+The UI is currently being migrated away from a monolithic stylesheet toward
+Tailwind utility classes and shared presentational primitives. The design should
+stay visually the same during this refactor, but new work should prefer
+Tailwind-first components over adding more one-off CSS rules.
+
 ## Setup
 
 ```bash
@@ -36,6 +41,79 @@ npm run build
 npm run build:ha
 npm run test:e2e
 ```
+
+## Frontend Styling
+
+Tailwind CSS is configured through:
+
+- `tailwind.config.ts`
+- `postcss.config.js`
+- `src/index.css`
+
+Shared primitives already moved to Tailwind live in:
+
+- `src/components/dashboard/desktop/DesktopShared.tsx`
+- `src/components/dashboard/desktop/DesktopFlow.tsx`
+- `src/components/dashboard/desktop/DesktopDashboard.tsx`
+- `src/components/dashboard/desktop/DesktopPanels.tsx`
+- `src/components/mobile/MobilePrimitives.tsx`
+- `src/components/mobile/MobileHomeScreen.tsx`
+- `src/components/mobile/MobileSolarScreen.tsx`
+- `src/components/mobile/MobileDashboard.tsx`
+- `src/components/battery/BatteryOptimizerSections.tsx`
+- `src/components/BatteryStatusModal.tsx`
+- `src/components/ev/EvChargerContent.tsx`
+- `src/components/mobile/MobileEvScreen.tsx`
+- `src/components/shared/BatteryVisual.tsx`
+
+The remaining `src/components/EnergyDashboard.css` file still contains layout
+and specialty styles that have not been fully migrated yet. After the current
+pass it is effectively limited to the desktop/mobile SVG flow pulse animation
+rules and their reduced-motion fallback. The shared battery illustration has
+been moved into a React component so it no longer depends on stylesheet
+pseudo-elements.
+
+### Styling rules for future changes
+
+1. Prefer inline Tailwind utilities or shared helpers like `cn(...)`.
+2. Reuse the shared glass surfaces (`dashboard-glass-panel`,
+   `dashboard-glass-card`) from `src/index.css`.
+3. Keep theme tokens in Tailwind config under `theme.extend.colors.dashboard`.
+4. Only add new CSS to `EnergyDashboard.css` when the effect is hard to express
+   with utilities alone, such as SVG animation paths or highly specific scene
+   positioning.
+
+## Node / Build Notes
+
+This repo uses Vite 8 and should be built with **Node 20.19+** or **22.12+**.
+
+If `npm run build` fails with a Vite engine error, check:
+
+```bash
+node -v
+which node
+```
+
+In this Codex shell, `typecheck` passed during the Tailwind migration, but full
+`build` was blocked by the shell resolving to Node 18 instead of the newer Node
+installed in your interactive environment.
+
+## Project Structure
+
+- `src/components/EnergyDashboard.tsx`
+  Orchestrates desktop vs mobile rendering and wires shared view-model data.
+- `src/components/dashboard/desktop/*`
+  Desktop overview shell, panels, and flow scene.
+- `src/components/mobile/*`
+  Mobile screens, shell, and mobile-specific presentational blocks.
+- `src/components/battery/*`
+  Battery optimizer UI sections shared between mobile Battery and desktop modal.
+- `src/components/ev/*`
+  EV charger content shared between desktop modal and mobile EV screens.
+- `src/hooks/*`
+  Data orchestration for HA, EVCC, price feeds, historical views, and optimizer.
+- `src/services/*`
+  Formatting, adapters, API clients, and pure data normalization logic.
 
 ## Deploy To Home Assistant Docker
 

@@ -1,38 +1,6 @@
+import type { PeakRateDay, PeakRateHour, PeakRateResult, PeakRateWindow } from '../models/peakRates'
+
 const LOOKAHEAD_MS = 24 * 60 * 60 * 1000
-
-export type PeakRateWindow = {
-  endMs: number
-  price: number
-  startMs: number
-}
-
-export type PeakRateHour = {
-  date: string
-  endIso: string
-  hour: number
-  label: string
-  price: number
-  startIso: string
-}
-
-export type PeakRateDay = {
-  average: string | null
-  date: string
-  label: string
-  peak: string | null
-  prices: PeakRateHour[]
-}
-
-export type PeakRateResult = {
-  average: string | null
-  days: PeakRateDay[]
-  error: boolean
-  hourlyPrices: number[]
-  peak: string | null
-  peakLabel: string
-  now: string | null
-  windows: PeakRateWindow[]
-}
 
 export function getPeakRateUrl() {
   const configured = getEnvValue('VITE_PEAK_RATE_URL')?.trim()

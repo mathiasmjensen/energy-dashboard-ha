@@ -1,33 +1,48 @@
-* {
-  box-sizing: border-box;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-width: 100%;
+    height: 100%;
+    min-height: 100%;
+    margin: 0;
+  }
+
+  body {
+    @apply overflow-hidden bg-dashboard-bg font-sans text-dashboard-text antialiased;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 }
 
-html,
-body,
-#root {
-  width: 100%;
-  min-width: 100%;
-  height: 100%;
-  min-height: 100%;
-  margin: 0;
-}
+@layer components {
+  .dashboard-glass-panel {
+    @apply relative overflow-hidden rounded-panel border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0)),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0))] bg-dashboard-panel text-dashboard-text shadow-panel;
+  }
 
-body {
-  overflow: hidden;
-  background: #020913;
-  color: #f7fbff;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
+  .dashboard-glass-card {
+    @apply border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.014))] bg-dashboard-bg/90 shadow-glass;
+  }
 }
 
 @media (max-width: 900px) {

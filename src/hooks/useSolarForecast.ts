@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
+import type { EvccSolarPayload, OpenMeteoPayload, SolarForecastResult, SolarForecastState } from '../models/solarForecast'
 import { getRawEntityState, getResolvedEntity } from '../services/energyEntityFormatting'
 import {
   getEvccSolarForecastUrl,
@@ -12,14 +13,8 @@ import {
   normalizeEvccForecast,
   normalizeForecast,
   readEvccSolarCache,
-  type EvccSolarPayload,
-  type OpenMeteoPayload,
-  type SolarForecastResult,
-  type SolarForecastState,
   writeEvccSolarCache,
 } from '../services/solarForecast'
-
-export type { SolarForecastResult, SolarForecastWindow } from '../services/solarForecast'
 
 const EVCC_SOLAR_CACHE_MS = 30 * 60 * 1000
 const POLL_MS = 60 * 60 * 1000

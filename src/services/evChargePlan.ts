@@ -1,11 +1,5 @@
-import type { PeakRateDay, PeakRateHour } from './peakRates'
-
-export type EvPlanPriceHour = PeakRateHour & {
-  disabled: boolean
-  endMs: number
-  index: number
-  startMs: number
-}
+import type { EvPlanPriceHour } from '../models/evChargePlan'
+import type { PeakRateDay, PeakRateHour } from '../models/peakRates'
 
 const HOUR_MS = 60 * 60 * 1000
 const DAY_MS = 24 * HOUR_MS

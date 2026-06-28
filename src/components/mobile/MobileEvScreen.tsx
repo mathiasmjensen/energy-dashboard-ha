@@ -34,16 +34,16 @@ export function MobileEvScreen({
   }
 
   return (
-    <div className="mobile-screen mobile-screen--ev" data-mode={activeMode}>
-      <GlassCard className="mobile-vehicle-card">
+    <div className="flex flex-col gap-4" data-mode={activeMode}>
+      <GlassCard className="grid grid-cols-[128px_1fr] gap-4 rounded-[24px] p-4">
         <img src={assetPath('/new-energy-dashboard/car.png')} alt="Tesla Model Y" />
-        <div className="mobile-vehicle-copy">
-          <strong>Tesla Model Y</strong>
-          <span>
-            <i />
+        <div className="grid content-center gap-2">
+          <strong className="text-xl font-semibold text-dashboard-text">Tesla Model Y</strong>
+          <span className="inline-flex items-center gap-2 text-sm font-medium text-dashboard-soft">
+            <i className="h-2.5 w-2.5 rounded-full bg-dashboard-green shadow-[0_0_14px_rgba(96,234,93,0.52)]" />
             Connected
           </span>
-          <small>Ready to charge</small>
+          <small className="text-sm text-dashboard-soft">Ready to charge</small>
         </div>
       </GlassCard>
 
@@ -56,7 +56,7 @@ export function MobileEvScreen({
       />
 
       {activeMode === 'status' ? (
-        <GlassCard className="mobile-ev-section mobile-ev-section--status">
+        <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
           <SectionHeading title="Charger status" />
           <EvChargerOverviewSection
             chargeRate={charger.chargeRate}
@@ -70,20 +70,20 @@ export function MobileEvScreen({
       ) : null}
 
       {activeMode === 'plan' ? (
-        <GlassCard className="mobile-ev-section mobile-ev-section--plan">
+        <GlassCard className="rounded-[24px] p-0">
           <EvChargerActivitySection controller={controller} layout="mobile" showTabs={false} />
         </GlassCard>
       ) : null}
 
       {activeMode === 'history' ? (
-        <GlassCard className="mobile-ev-section mobile-ev-section--history">
+        <GlassCard className="rounded-[24px] p-0">
           <EvChargerActivitySection controller={controller} layout="mobile" showTabs={false} />
         </GlassCard>
       ) : null}
 
-      <div className="mobile-ev-meta">
+      <div className="flex items-center justify-between px-1 text-sm text-dashboard-soft">
         <span>Vehicle battery</span>
-        <strong>{batterySoc}%</strong>
+        <strong className="text-base font-semibold text-dashboard-text">{batterySoc}%</strong>
       </div>
     </div>
   )

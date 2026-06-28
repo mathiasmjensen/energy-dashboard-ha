@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { MobileDashboardProps } from './MobileTypes'
+import { cn } from '../../lib/cn'
 import { assetPath } from '../../utils/assetPath'
 import { GlassCard, MobileBarChart, MobileIcon, MobileInsightControls, StatusChip } from './MobilePrimitives'
 
@@ -17,9 +18,9 @@ export function MobileHomeScreen({
   const priceStats = prices.summaryItems.slice(0, 2)
 
   return (
-    <div className="mobile-screen mobile-screen--home">
-      <div className="mobile-meta-row mobile-meta-row--home">
-        <div className="mobile-meta-row__left">
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
           <StatusChip tone="green">Normal</StatusChip>
           <StatusChip tone="gold">
             <MobileIcon name="sun" />
@@ -59,7 +60,7 @@ export function MobileHomeScreen({
         <MobileBarChart color="#3b82ff" labels={prices.pointLabels} unit="DKK/kWh" values={prices.points} />
       </HomeInsightCard>
 
-      <div className="mobile-footnote">Last updated {displayDate} {displayTime}</div>
+      <div className="px-1 text-[12px] text-[#7f8998]">Last updated {displayDate} {displayTime}</div>
     </div>
   )
 }
@@ -83,19 +84,19 @@ function HomeHeroCard({
   ]
 
   return (
-    <GlassCard className="mobile-home-hero-card">
-      <div className="mobile-home-hero-frame">
+    <GlassCard className="flex flex-col gap-4 rounded-[28px] p-4">
+      <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-[#08101d]">
         <img src={assetPath('/mobile-dashboard/image.png')} alt="Luxury home with solar roof, battery, EV charger, and Tesla" />
       </div>
 
-      <div className="mobile-home-hero-stats">
-        <div className="mobile-home-hero-stats__top">
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {topStats.map((stat) => (
             <HeroMetric key={stat.label} {...stat} />
           ))}
         </div>
 
-        <div className="mobile-home-hero-stats__bottom">
+        <div className="grid grid-cols-3 gap-2">
           {bottomStats.map((stat) => (
             <HeroMetric key={stat.label} {...stat} compact />
           ))}
@@ -121,18 +122,29 @@ function HeroMetric({
   value: string
 }) {
   return (
-    <div className="mobile-home-metric" data-compact={compact} data-tone={tone}>
-      <div className="mobile-home-metric__icon">
+    <div
+      className={cn(
+        'rounded-[18px] border px-3 py-3 shadow-[0_14px_36px_rgba(0,0,0,0.16)]',
+        compact ? 'grid gap-2 bg-white/[0.03]' : 'grid grid-cols-[40px_1fr] items-start gap-3 bg-white/[0.04]',
+        toneClasses[tone],
+      )}
+    >
+      <div
+        className={cn(
+          'grid place-items-center rounded-2xl border border-current/15 bg-current/10',
+          compact ? 'h-9 w-9' : 'h-10 w-10',
+        )}
+      >
         <MobileIcon name={icon} />
       </div>
 
-      <div className="mobile-home-metric__copy">
-        <span>{label}</span>
-        <strong>{value}</strong>
-        {compact && meta ? <small>{meta}</small> : null}
+      <div className={cn('min-w-0', compact ? 'grid gap-1' : 'grid gap-1')}>
+        <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
+        <strong className={cn('font-semibold text-dashboard-text', compact ? 'text-sm' : 'text-base')}>{value}</strong>
+        {compact && meta ? <small className="text-[11px] text-dashboard-soft">{meta}</small> : null}
       </div>
 
-      {!compact && meta ? <em>{meta}</em> : null}
+      {!compact && meta ? <em className="col-span-2 text-[11px] not-italic text-dashboard-soft">{meta}</em> : null}
     </div>
   )
 }
@@ -157,35 +169,42 @@ function HomeInsightCard({
   windowLabel: string
 }) {
   return (
-    <GlassCard className="mobile-home-insight-card">
-      <div className="mobile-card-header">
-        <h2>{title}</h2>
+    <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
+      <div className="mb-0 flex items-start justify-between gap-3">
+        <h2 className="text-[clamp(18px,4.8vw,22px)] font-semibold tracking-[-0.02em] text-white">{title}</h2>
         <MobileInsightControls controls={controls} />
       </div>
 
       <div className="mobile-window-chip">{windowLabel}</div>
 
-      <div className="mobile-home-insight-card__body">
-        <div className="mobile-home-insight-card__headline">
-          <span>{controls.mode === 'today' ? 'Today overview' : 'Timeline'}</span>
-          <strong>
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(120px,0.9fr)]">
+        <div className="grid content-start gap-1">
+          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{controls.mode === 'today' ? 'Today overview' : 'Timeline'}</span>
+          <strong className="text-[2rem] font-semibold leading-none text-dashboard-text">
             {metric}
-            <small>{unit}</small>
+            <small className="ml-1 text-[1rem] font-semibold text-dashboard-soft">{unit}</small>
           </strong>
-          <p>{metricLabel}</p>
+          <p className="text-sm text-dashboard-soft">{metricLabel}</p>
         </div>
 
-        <div className="mobile-home-insight-card__stats">
+        <div className="grid gap-2">
           {stats.map((item) => (
-            <div className="mobile-home-insight-chip" key={item.label}>
-              <span>{item.label}</span>
-              <strong>{item.value}</strong>
+            <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-3 py-2.5" key={item.label}>
+              <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{item.label}</span>
+              <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{item.value}</strong>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="mobile-home-insight-card__chart">{children}</div>
+      <div className="rounded-[20px] border border-white/8 bg-[#09101a]/72 p-2">{children}</div>
     </GlassCard>
   )
+}
+
+const toneClasses: Record<'blue' | 'gold' | 'green' | 'purple', string> = {
+  blue: 'border-dashboard-blue/25 text-dashboard-blue',
+  gold: 'border-dashboard-orange/25 text-dashboard-orange',
+  green: 'border-dashboard-green/25 text-dashboard-green',
+  purple: 'border-dashboard-purple/25 text-dashboard-purple',
 }

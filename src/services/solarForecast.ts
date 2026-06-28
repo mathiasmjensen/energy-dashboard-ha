@@ -1,3 +1,13 @@
+import type {
+  EvccSolarCache,
+  EvccSolarPayload,
+  OpenMeteoPayload,
+  SolarForecastResult,
+  SolarForecastSource,
+  SolarForecastState,
+  SolarForecastWindow,
+} from '../models/solarForecast'
+
 const DEFAULT_LATITUDE = 55.493
 const DEFAULT_LONGITUDE = 10.2046
 const DEFAULT_TILT = 30
@@ -5,51 +15,6 @@ const DEFAULT_AZIMUTH = 0
 const DEFAULT_PANEL_CAPACITY_KW = 10
 const DEFAULT_TIMEZONE = 'Europe/Copenhagen'
 const EVCC_SOLAR_CACHE_KEY = 'energy-dashboard:evcc-solar-forecast:v1'
-
-export type SolarForecastWindow = {
-  endTime: string
-  time: string
-  kwh: number
-  powerKw: number
-}
-
-export type SolarForecastSource = 'evcc' | 'open-meteo'
-
-export type OpenMeteoPayload = {
-  hourly?: {
-    global_tilted_irradiance?: Array<number | null>
-    time?: string[]
-  }
-}
-
-export type EvccSolarPayload = {
-  rates?: Array<{
-    end?: string
-    start?: string
-    value?: number
-  }>
-}
-
-export type EvccSolarCache = {
-  createdAt: number
-  windows: SolarForecastWindow[]
-}
-
-export type SolarForecastState = {
-  source: SolarForecastSource
-  windows: SolarForecastWindow[]
-}
-
-export type SolarForecastResult = {
-  currentPowerKw: string | null
-  hourlyKwh: number[]
-  hourlyPowerKw: number[]
-  maxPowerKw: string | null
-  source: SolarForecastSource
-  todayKwh: string | null
-  tomorrowKwh: string | null
-  windows: SolarForecastWindow[]
-}
 
 export function getSolarForecastUrl() {
   const configured = getEnvValue('VITE_SOLAR_FORECAST_URL')?.trim()

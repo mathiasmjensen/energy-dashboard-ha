@@ -1,123 +1,30 @@
-import type { PeakRateDay, PeakRateHour } from './peakRates'
-import type { SolarForecastWindow } from './solarForecast'
+import type {
+  BatteryOptimizerApiPlanPayload,
+  BatteryOptimizerApiSettingsPayload,
+  BatteryOptimizerApiStatusPayload,
+  BatteryOptimizerChartSeries,
+  BatteryOptimizerCharts,
+  BatteryOptimizerDecisionSummary,
+  BatteryOptimizerLiveInputs,
+  BatteryOptimizerMode,
+  BatteryOptimizerPlanRow,
+  BatteryOptimizerRecommendation,
+  BatteryOptimizerSettings,
+  BatteryOptimizerSnapshot,
+} from '../models/batteryOptimizer'
+import type { PeakRateDay, PeakRateHour } from '../models/peakRates'
+import type { SolarForecastWindow } from '../models/solarForecast'
 
 const STALE_MS = 30 * 60 * 1000
-
-export type BatteryOptimizerRecommendation = 'BUY' | 'CHARGE' | 'DISCHARGE' | 'HOLD' | 'SELL'
-export type BatteryOptimizerMode = 'auto' | 'charge' | 'discharge' | 'export' | 'idle' | 'manual'
-export type BatteryOptimizerSource = 'live' | 'mock'
-
-export type BatteryOptimizerStatus = {
-  batteryPowerKw: number
-  estimatedProfitTodayDkk: number
-  fullBuyPriceDkkPerKwh: number
-  gridPowerKw: number
-  mode: BatteryOptimizerMode
-  recommendation: BatteryOptimizerRecommendation
-  sellPriceDkkPerKwh: number
-  socPercent: number
-  spotPriceDkkPerKwh: number
-  updatedAt: string
-}
-
-export type BatteryOptimizerPlanRow = {
-  action: BatteryOptimizerRecommendation
-  endIso: string
-  expectedHouseUsageKwh: number
-  expectedProfitDkk: number
-  expectedSolarSurplusKwh: number
-  fullBuyPriceDkkPerKwh: number
-  sellPriceDkkPerKwh: number
-  spotPriceDkkPerKwh: number
-  startIso: string
-  targetSocPercent: number
-}
-
-export type BatteryOptimizerDecisionSummary = {
-  avoidBuyHours: string[]
-  bestBuyHours: string[]
-  bestSellHours: string[]
-  evChargingRecommendation: string
-  expectedDailyArbitrageProfitDkk: number
-  reserveForHouseUsage: string
-}
-
-export type BatteryOptimizerSettings = {
-  allowBatteryExport: boolean
-  allowGridCharging: boolean
-  autoMode: boolean
-  dryRun: boolean
-  maxGridChargeKwh: number
-  minReservePercent: number
-  pausedUntil: string | null
-}
-
-export type BatteryOptimizerChartSeries = {
-  labels: string[]
-  points: number[]
-}
-
-export type BatteryOptimizerCharts = {
-  plannedBatteryPower: BatteryOptimizerChartSeries
-  priceCurve: BatteryOptimizerChartSeries
-  profitByHour: BatteryOptimizerChartSeries
-  socForecast: BatteryOptimizerChartSeries
-}
-
-export type BatteryOptimizerSnapshot = {
-  charts: BatteryOptimizerCharts
-  decisionSummary: BatteryOptimizerDecisionSummary
-  planRows: BatteryOptimizerPlanRow[]
-  settings: BatteryOptimizerSettings
-  source: BatteryOptimizerSource
-  status: BatteryOptimizerStatus
-}
-
-export type BatteryOptimizerLiveInputs = {
-  batteryPowerKw: number | null
-  batterySocPercent: number | null
-  batteryStatus: string
-  currentPriceDkkPerKwh: number | null
-  gridPowerKw: number | null
-  peakRateDays: PeakRateDay[]
-  solarForecastWindows: SolarForecastWindow[]
-}
-
-export type BatteryOptimizerApiStatusPayload = Partial<{
-  batteryPowerKw: number
-  estimatedProfitTodayDkk: number
-  fullBuyPriceDkkPerKwh: number
-  gridPowerKw: number
-  mode: BatteryOptimizerMode | string
-  recommendation: BatteryOptimizerRecommendation | string
-  sellPriceDkkPerKwh: number
-  socPercent: number
-  spotPriceDkkPerKwh: number
-  updatedAt: string
-}>
-
-export type BatteryOptimizerApiPlanPayload = Partial<{
-  charts: Partial<{
-    plannedBatteryPower: unknown
-    priceCurve: unknown
-    profitByHour: unknown
-    socForecast: unknown
-  }>
-  decisionSummary: Partial<BatteryOptimizerDecisionSummary>
-  rows: unknown
-  updatedAt: string
-}>
-
-export type BatteryOptimizerApiSettingsPayload = Partial<BatteryOptimizerSettings>
 
 export function getBatteryOptimizerMode() {
   const configured = getEnvValue('VITE_BATTERY_OPTIMIZER_MODE')?.trim().toLowerCase()
 
-  if (configured === 'mock' || configured === 'direct-api') {
+  if (configured === 'mock' || configured === 'direct-api' || configured === 'ha-proxy') {
     return configured
   }
 
-  return 'ha-proxy' as const
+  return 'mock' as const
 }
 
 export function getBatteryOptimizerBaseUrl() {

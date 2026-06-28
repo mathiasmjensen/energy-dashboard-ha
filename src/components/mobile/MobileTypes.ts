@@ -57,7 +57,11 @@ export type MobileDashboardProps = {
   }
   distribution: {
     battery: string
+    batteryCharge: string
+    batteryDischarge: string
     ev: string
+    gridExport: string
+    gridImport: string
     grid: string
     home: string
     solar: string

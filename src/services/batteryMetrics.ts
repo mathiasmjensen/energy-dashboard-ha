@@ -1,14 +1,4 @@
-export type BatteryEnergyRole = 'capacity' | 'stored'
-
-export type BatteryEnergyMetrics = {
-  capacityKwh: number | null
-  storedEnergyKwh: number | null
-}
-
-export type BatteryTimeEstimate = {
-  label: string
-  value: string
-}
+import type { BatteryEnergyMetrics, BatteryEnergyRole, BatteryTimeEstimate } from '../models/batteryMetrics'
 
 const CAPACITY_TERMS = ['capacity', 'total']
 const STORED_ENERGY_TERMS = ['energy', 'remaining', 'stored']

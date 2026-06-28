@@ -16,7 +16,7 @@ function App() {
       hassUrl={hassUrl}
       hassToken={hassToken}
       loading={dashboard}
-      wrapperProps={{ className: 'hakit-shell' }}
+      wrapperProps={{ className: 'min-h-screen' }}
     >
       <ThemeProvider />
       {dashboard}
