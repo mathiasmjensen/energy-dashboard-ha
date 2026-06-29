@@ -2,6 +2,7 @@ import type { BatteryOptimizerState } from '../../models/batteryOptimizer'
 import type { DataStateBadgeModel } from '../../models/dataState'
 import type { InsightHeaderControls } from '../../models/dashboardInsights'
 import type { EvChargerController } from '../../models/evChargePlan'
+import type { NotificationPreferences, NotificationsState } from '../../models/notifications'
 
 export type InsightItem = {
   label: string
@@ -19,7 +20,7 @@ export type InsightChart = {
   windowLabel: string
 }
 
-export type MobileTab = 'battery' | 'ev' | 'home' | 'solar'
+export type MobileTab = 'battery' | 'ev' | 'home' | 'notifications' | 'solar'
 export type SolarPeriod = 'Day' | 'Month' | 'Week' | 'Year'
 export type BatteryPeriod = 'Day' | 'Month' | 'Week'
 
@@ -89,6 +90,13 @@ export type MobileDashboardProps = {
     labels: string[]
     value: string
   }
+  notifications: NotificationsState & {
+    disable: () => Promise<boolean>
+    enable: () => Promise<boolean>
+    refresh: () => Promise<boolean>
+  }
+  notificationPreferences: NotificationPreferences
+  onNotificationPreferenceChange: (key: keyof NotificationPreferences, value: boolean) => void
   weather: {
     condition: string
     dataState: DataStateBadgeModel

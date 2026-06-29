@@ -18,6 +18,8 @@ import { useEnergyData } from '../hooks/useEnergyData'
 import { useEvChargerController } from '../hooks/useEvChargerController'
 import { useHistoricalEnergyDay } from '../hooks/useHistoricalEnergyDay'
 import { useIsMobileView } from '../hooks/useIsMobileView'
+import { useNotificationPreferences } from '../hooks/useNotificationPreferences'
+import { useNotifications } from '../hooks/useNotifications'
 import { usePeakRates } from '../hooks/usePeakRates'
 import { useSceneScale } from '../hooks/useSceneScale'
 import { useSolarForecast } from '../hooks/useSolarForecast'
@@ -35,6 +37,8 @@ export function EnergyDashboard() {
   const peakRates = usePeakRates()
   const solarForecast = useSolarForecast()
   const todayTotals = useTodayEnergyTotals()
+  const notifications = useNotifications()
+  const notificationPreferences = useNotificationPreferences()
   const [isEvChargerOpen, setIsEvChargerOpen] = useState(false)
   const [insightDayOffset, setInsightDayOffset] = useState(0)
   const [insightViewMode, setInsightViewMode] = useState<InsightViewMode>('today')
@@ -192,6 +196,9 @@ export function EnergyDashboard() {
         displayTime={displayTime}
         energyDayControls={historicalEnergyDay.controls}
         insightControls={insightControls}
+        notificationPreferences={notificationPreferences.preferences}
+        notifications={notifications}
+        onNotificationPreferenceChange={notificationPreferences.setPreference}
         distribution={{ ...historicalEnergyDay.distribution, dataState: energyDistributionDataState }}
         overview={{
           batteryMeta: batteryFlowMeta,
@@ -258,6 +265,9 @@ export function EnergyDashboard() {
       energyDayControls={historicalEnergyDay.controls}
       insightControls={insightControls}
       isEvChargerOpen={isEvChargerOpen}
+      notificationPreferences={notificationPreferences.preferences}
+      notifications={notifications}
+      onNotificationPreferenceChange={notificationPreferences.setPreference}
       onCloseEvCharger={closeEvCharger}
       onOpenEvCharger={openEvCharger}
       prices={{ ...energyPriceInsight, dataState: pricesDataState }}

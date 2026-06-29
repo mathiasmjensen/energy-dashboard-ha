@@ -54,7 +54,7 @@ export function MobileBottomNav({
 }) {
   return (
     <nav
-      className="mobile-bottom-nav fixed inset-x-[max(14px,calc((100vw-430px)/2+14px))] bottom-[max(8px,env(safe-area-inset-bottom))] z-[60] grid min-h-[var(--mobile-nav-height)] grid-cols-4 gap-1 rounded-[22px] border border-white/10 bg-[#0a0f17]/88 p-[7px_8px] shadow-[0_-8px_24px_rgba(0,0,0,0.22),0_18px_44px_rgba(0,0,0,0.36)] backdrop-blur-xl"
+      className="mobile-bottom-nav fixed inset-x-[max(14px,calc((100vw-430px)/2+14px))] bottom-[max(8px,env(safe-area-inset-bottom))] z-[60] grid min-h-[var(--mobile-nav-height)] grid-cols-5 gap-1 rounded-[22px] border border-white/10 bg-[#0a0f17]/88 p-[7px_8px] shadow-[0_-8px_24px_rgba(0,0,0,0.22),0_18px_44px_rgba(0,0,0,0.36)] backdrop-blur-xl"
       aria-label="Mobile dashboard navigation"
     >
       {MOBILE_TABS.map((tab) => (

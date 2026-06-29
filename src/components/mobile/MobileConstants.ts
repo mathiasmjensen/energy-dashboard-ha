@@ -19,6 +19,7 @@ export const MOBILE_TABS: Array<{ icon: MobileIconName; key: MobileTab; label: s
   { icon: 'solar', key: 'solar', label: 'Solar', title: 'Solar' },
   { icon: 'battery', key: 'battery', label: 'Battery', title: 'Battery' },
   { icon: 'car', key: 'ev', label: 'EV', title: 'EV Charger' },
+  { icon: 'bell', key: 'notifications', label: 'Alerts', title: 'Notifications' },
 ]
 
 export const SOLAR_PERIODS: SolarPeriod[] = ['Day', 'Week', 'Month', 'Year']

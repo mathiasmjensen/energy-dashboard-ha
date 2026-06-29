@@ -21,6 +21,10 @@ export type NotificationsUnsubscribePayload = {
   endpoint: string
 }
 
+export type NotificationPreferenceKey = 'batteryOptimizer' | 'evCharging' | 'priceDrops' | 'solarSurplus'
+
+export type NotificationPreferences = Record<NotificationPreferenceKey, boolean>
+
 export type NotificationsState = {
   backendAvailable: boolean
   endpoint: string | null
@@ -29,6 +33,7 @@ export type NotificationsState = {
   isLoading: boolean
   isSubscribed: boolean
   isSyncing: boolean
+  lastSyncedAt: string | null
   permission: NotificationPermissionModel
   supported: boolean
 }

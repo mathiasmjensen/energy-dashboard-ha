@@ -72,8 +72,10 @@ When changing UI, prefer:
   - `src/models/batteryOptimizer.ts`
 - Notifications groundwork lives around:
   - `src/hooks/useNotifications.ts`
+  - `src/hooks/useNotificationPreferences.ts`
   - `src/services/notificationsClient.ts`
   - `src/models/notifications.ts`
+  - `src/components/notifications/NotificationsScreen.tsx`
   - `public/notifications-sw.js`
 - Historical day switching lives in:
   - `src/hooks/useHistoricalEnergyDay.ts`
