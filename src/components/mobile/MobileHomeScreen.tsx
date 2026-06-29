@@ -2,7 +2,15 @@ import type { ReactNode } from 'react'
 import type { MobileDashboardProps } from './MobileTypes'
 import { cn } from '../../lib/cn'
 import { assetPath } from '../../utils/assetPath'
-import { GlassCard, MobileBarChart, MobileIcon, MobileInsightControls, StatusChip } from './MobilePrimitives'
+import {
+  GlassCard,
+  KpiPill,
+  MobileBarChart,
+  MobileIcon,
+  MobileInsightControls,
+  NodeIcon,
+  StatusChip,
+} from './MobilePrimitives'
 
 export function MobileHomeScreen({
   battery,
@@ -14,53 +22,39 @@ export function MobileHomeScreen({
   solarForecast,
   weather,
 }: Pick<MobileDashboardProps, 'battery' | 'displayDate' | 'displayTime' | 'insightControls' | 'overview' | 'prices' | 'solarForecast' | 'weather'>) {
-  const forecastStats = solarForecast.summaryItems.slice(0, 2)
-  const priceStats = prices.summaryItems.slice(0, 2)
-
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <StatusChip tone="green">Normal</StatusChip>
-          <StatusChip tone="gold">
-            <MobileIcon name="sun" />
-            {weather.temperature}
-          </StatusChip>
-        </div>
-
-        <StatusChip tone="neutral">
-          <MobileIcon name="refresh" />
-          Refreshing
-        </StatusChip>
+    <div className="flex flex-col gap-4 pb-2">
+      <div className="grid grid-cols-3 gap-2.5">
+        <CompactStatusCard icon="sun" label="Weather" value={weather.temperature} secondary={weather.condition} tone="gold" />
+        <CompactStatusCard icon="refresh" label="Updated" value={displayTime} secondary={displayDate} tone="blue" />
+        <CompactStatusCard icon="battery" label="System" value="Normal" secondary={battery.status} tone="green" />
       </div>
 
       <HomeHeroCard battery={battery} overview={overview} />
 
-      <HomeInsightCard
+      <DesktopLikeInsightCard
         controls={insightControls}
         metric={solarForecast.totalKwh}
-        metricLabel="Total forecast"
-        stats={forecastStats}
+        metricLabel={solarForecast.primaryLabel}
+        summary={solarForecast.summaryItems.slice(0, 2)}
         title="Solar forecast"
         unit="kWh"
         windowLabel={solarForecast.windowLabel}
       >
         <MobileBarChart color="#f7b62f" labels={solarForecast.pointLabels} unit="kWh" values={solarForecast.points} />
-      </HomeInsightCard>
+      </DesktopLikeInsightCard>
 
-      <HomeInsightCard
+      <DesktopLikeInsightCard
         controls={insightControls}
         metric={prices.primaryValue}
-        metricLabel="Average price"
-        stats={priceStats}
+        metricLabel={prices.primaryLabel}
+        summary={prices.summaryItems.slice(0, 2)}
         title="Energy prices"
         unit="DKK/kWh"
         windowLabel={prices.windowLabel}
       >
-        <MobileBarChart color="#3b82ff" labels={prices.pointLabels} unit="DKK/kWh" values={prices.points} />
-      </HomeInsightCard>
-
-      <div className="px-1 text-[12px] text-[#7f8998]">Last updated {displayDate} {displayTime}</div>
+        <MobileBarChart color="#4c7cff" labels={prices.pointLabels} unit="DKK/kWh" values={prices.points} />
+      </DesktopLikeInsightCard>
     </div>
   )
 }
@@ -72,89 +66,103 @@ function HomeHeroCard({
   battery: MobileDashboardProps['battery']
   overview: MobileDashboardProps['overview']
 }) {
-  const topStats = [
-    { icon: 'solar' as const, label: 'PV', tone: 'green' as const, value: `${overview.solarPower} kW` },
-    { icon: 'sun' as const, label: 'Solar', tone: 'gold' as const, value: `${overview.solarPower} kW` },
-  ]
-
-  const bottomStats = [
-    { icon: 'grid' as const, label: 'Grid', meta: overview.gridMeta, tone: 'blue' as const, value: `${overview.gridPower} kW` },
-    { icon: 'battery' as const, label: 'Battery', meta: battery.soc, tone: 'green' as const, value: `${overview.batteryPower} kW` },
-    { icon: 'home' as const, label: 'Home', tone: 'purple' as const, value: `${overview.homePower} kW` },
-  ]
-
   return (
-    <GlassCard className="flex flex-col gap-4 rounded-[28px] p-4">
-      <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-[#08101d]">
-        <img src={assetPath('/mobile-dashboard/image.png')} alt="Luxury home with solar roof, battery, EV charger, and Tesla" />
-      </div>
+    <GlassCard className="overflow-hidden rounded-[28px] p-3">
+      <div className="relative overflow-hidden rounded-[24px] border border-white/8 bg-[#060b12]">
+        <img
+          className="h-[270px] w-full object-cover object-center"
+          src={assetPath('/mobile-dashboard/image.png')}
+          alt="Luxury home with solar roof, battery, EV charger, and Tesla"
+        />
 
-      <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-2 gap-3">
-          {topStats.map((stat) => (
-            <HeroMetric key={stat.label} {...stat} />
-          ))}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,12,0.08),rgba(4,7,12,0.18)_42%,rgba(4,7,12,0.7))]" />
+
+        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+          <KpiPill icon="sun" label="Solar" tone="gold" value={`${overview.solarPower} kW`} />
+          <KpiPill icon="grid" label="Grid" tone="blue" value={`${overview.gridPower} kW`} />
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          {bottomStats.map((stat) => (
-            <HeroMetric key={stat.label} {...stat} compact />
-          ))}
+        <div className="absolute bottom-3 left-3 right-3 grid grid-cols-3 gap-2">
+          <HeroFloatingStat icon="home" label="Home" meta={overview.homePower} tone="purple" />
+          <HeroFloatingStat icon="battery" label="Battery" meta={`${overview.batteryPower} kW`} subMeta={battery.soc} tone="green" />
+          <HeroFloatingStat icon="car" label="EV" meta={`${overview.evPower} kW`} subMeta={overview.evMeta} tone="blue" />
         </div>
       </div>
     </GlassCard>
   )
 }
 
-function HeroMetric({
-  compact = false,
+function HeroFloatingStat({
   icon,
   label,
   meta,
+  subMeta,
   tone,
-  value,
 }: {
-  compact?: boolean
-  icon: 'battery' | 'grid' | 'home' | 'solar' | 'sun'
+  icon: 'battery' | 'car' | 'home'
   label: string
-  meta?: string
-  tone: 'blue' | 'gold' | 'green' | 'purple'
-  value: string
+  meta: string
+  subMeta?: string
+  tone: 'blue' | 'green' | 'purple'
 }) {
   return (
     <div
       className={cn(
-        'rounded-[18px] border px-3 py-3 shadow-[0_14px_36px_rgba(0,0,0,0.16)]',
-        compact ? 'grid gap-2 bg-white/[0.03]' : 'grid grid-cols-[40px_1fr] items-start gap-3 bg-white/[0.04]',
-        toneClasses[tone],
+        'rounded-[18px] border px-3 py-2.5 shadow-[0_16px_34px_rgba(0,0,0,0.24)] backdrop-blur-md',
+        tone === 'green'
+          ? 'border-emerald-400/20 bg-emerald-400/[0.08]'
+          : tone === 'purple'
+            ? 'border-violet-400/20 bg-violet-400/[0.08]'
+            : 'border-sky-400/20 bg-sky-400/[0.08]',
       )}
     >
-      <div
-        className={cn(
-          'grid place-items-center rounded-2xl border border-current/15 bg-current/10',
-          compact ? 'h-9 w-9' : 'h-10 w-10',
-        )}
-      >
-        <MobileIcon name={icon} />
+      <div className="flex items-center gap-2">
+        <NodeIcon tone={tone === 'green' ? 'green' : tone === 'purple' ? 'neutral' : 'blue'}>
+          <MobileIcon name={icon} />
+        </NodeIcon>
+        <div className="min-w-0">
+          <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-white/55">{label}</span>
+          <strong className="block truncate text-[13px] font-semibold text-white">{meta}</strong>
+          {subMeta ? <small className="block truncate text-[11px] text-white/62">{subMeta}</small> : null}
+        </div>
       </div>
-
-      <div className={cn('min-w-0', compact ? 'grid gap-1' : 'grid gap-1')}>
-        <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
-        <strong className={cn('font-semibold text-dashboard-text', compact ? 'text-sm' : 'text-base')}>{value}</strong>
-        {compact && meta ? <small className="text-[11px] text-dashboard-soft">{meta}</small> : null}
-      </div>
-
-      {!compact && meta ? <em className="col-span-2 text-[11px] not-italic text-dashboard-soft">{meta}</em> : null}
     </div>
   )
 }
 
-function HomeInsightCard({
+function CompactStatusCard({
+  icon,
+  label,
+  secondary,
+  tone,
+  value,
+}: {
+  icon: 'battery' | 'refresh' | 'sun'
+  label: string
+  secondary: string
+  tone: 'blue' | 'gold' | 'green'
+  value: string
+}) {
+  return (
+    <GlassCard className="rounded-[20px] p-3">
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
+        <StatusChip tone={tone === 'green' ? 'green' : tone === 'gold' ? 'gold' : 'neutral'}>
+          <MobileIcon name={icon} />
+        </StatusChip>
+      </div>
+      <strong className="mt-2 block text-[14px] font-semibold text-dashboard-text">{value}</strong>
+      <small className="mt-1 block text-[11px] leading-4 text-dashboard-soft">{secondary}</small>
+    </GlassCard>
+  )
+}
+
+function DesktopLikeInsightCard({
   children,
   controls,
   metric,
   metricLabel,
-  stats,
+  summary,
   title,
   unit,
   windowLabel,
@@ -163,48 +171,45 @@ function HomeInsightCard({
   controls: MobileDashboardProps['insightControls']
   metric: string
   metricLabel: string
-  stats: Array<{ label: string; value: string }>
+  summary: Array<{ label: string; value: string }>
   title: string
   unit: string
   windowLabel: string
 }) {
   return (
-    <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
-      <div className="mb-0 flex items-start justify-between gap-3">
-        <h2 className="text-[clamp(18px,4.8vw,22px)] font-semibold tracking-[-0.02em] text-white">{title}</h2>
+    <GlassCard className="rounded-[24px] p-4">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-white">{title}</h2>
+          <div className="mt-2 inline-flex min-h-6 items-center rounded-full border border-white/10 bg-white/[0.04] px-2.5 text-[10px] font-medium text-dashboard-soft">
+            {windowLabel}
+          </div>
+        </div>
         <MobileInsightControls controls={controls} />
       </div>
 
-      <div className="mobile-window-chip">{windowLabel}</div>
+      <div className="grid gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_132px] gap-3">
+          <div className="grid content-start gap-1">
+            <strong className="text-[30px] font-semibold leading-none text-dashboard-text">
+              {metric}
+              <small className="ml-1 text-[14px] font-semibold text-dashboard-soft">{unit}</small>
+            </strong>
+            <p className="text-[13px] leading-5 text-dashboard-soft">{metricLabel}</p>
+          </div>
 
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(120px,0.9fr)]">
-        <div className="grid content-start gap-1">
-          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{controls.mode === 'today' ? 'Today overview' : 'Timeline'}</span>
-          <strong className="text-[2rem] font-semibold leading-none text-dashboard-text">
-            {metric}
-            <small className="ml-1 text-[1rem] font-semibold text-dashboard-soft">{unit}</small>
-          </strong>
-          <p className="text-sm text-dashboard-soft">{metricLabel}</p>
+          <div className="grid gap-2">
+            {summary.map((item) => (
+              <div className="rounded-[16px] border border-white/8 bg-[#0a111b]/88 px-3 py-2.5" key={item.label}>
+                <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{item.label}</span>
+                <strong className="mt-1 block text-[12px] font-semibold text-dashboard-text">{item.value}</strong>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="grid gap-2">
-          {stats.map((item) => (
-            <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-3 py-2.5" key={item.label}>
-              <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{item.label}</span>
-              <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{item.value}</strong>
-            </div>
-          ))}
-        </div>
+        <div className="rounded-[20px] border border-white/8 bg-[#09101a]/72 p-2.5">{children}</div>
       </div>
-
-      <div className="rounded-[20px] border border-white/8 bg-[#09101a]/72 p-2">{children}</div>
     </GlassCard>
   )
-}
-
-const toneClasses: Record<'blue' | 'gold' | 'green' | 'purple', string> = {
-  blue: 'border-dashboard-blue/25 text-dashboard-blue',
-  gold: 'border-dashboard-orange/25 text-dashboard-orange',
-  green: 'border-dashboard-green/25 text-dashboard-green',
-  purple: 'border-dashboard-purple/25 text-dashboard-purple',
 }

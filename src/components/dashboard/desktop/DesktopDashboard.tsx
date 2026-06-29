@@ -144,10 +144,10 @@ export function DesktopDashboard({
                 <button
                   key={label}
                   aria-current={active ? 'page' : undefined}
-                  className={`grid min-h-[46px] cursor-default grid-cols-[32px_1fr] items-center rounded-lg px-[14px] text-left ${
+                  className={`grid min-h-[46px] cursor-pointer grid-cols-[32px_1fr] items-center rounded-lg px-[14px] text-left transition ${
                     active
-                      ? 'bg-[linear-gradient(90deg,rgba(47,134,255,0.3),rgba(47,134,255,0.14))] text-dashboard-blue'
-                      : 'bg-transparent text-[#eef3f8]'
+                      ? 'bg-[linear-gradient(90deg,rgba(47,134,255,0.3),rgba(47,134,255,0.14))] text-dashboard-blue shadow-[0_12px_30px_rgba(47,134,255,0.15)]'
+                      : 'bg-transparent text-[#eef3f8] hover:bg-white/[0.05] hover:text-white'
                   }`}
                   data-active={Boolean(active)}
                   type="button"
@@ -190,21 +190,20 @@ export function DesktopDashboard({
                   evChargePowerValue={charger.powerValue}
                   gridPowerValue={grid.powerValue}
                 />
-                <FlowNode className="left-[92px] top-[390px]" label="Solar" tone="sun" unit="kW" value={solar.power} />
-                <FlowNode className="left-[92px] top-[474px]" label="Grid" meta={grid.status} tone="purple" unit="kW" value={grid.power} />
-                <FlowNode className="left-[390px] top-[432px]" label="Home" tone="blue" unit="kW" value={homePower} />
+                <FlowNode className="left-[92px] top-[382px]" label="Solar" tone="sun" unit="kW" value={solar.power} />
+                <FlowNode className="left-[92px] top-[466px]" label="Grid" meta={grid.status} tone="purple" unit="kW" value={grid.power} />
+                <FlowNode className="left-[390px] top-[424px]" label="Home" tone="blue" unit="kW" value={homePower} />
                 <FlowNode
-                  className="left-[690px] top-[390px]"
+                  className="left-[690px] top-[382px]"
                   label="Battery"
                   badge={battery.soc}
                   meta={battery.status}
                   tone="green"
                   unit="kW"
                   value={battery.power}
-                  onClick={openBatteryPage}
                 />
                 <FlowNode
-                  className="left-[690px] top-[474px]"
+                  className="left-[690px] top-[466px]"
                   label="EV"
                   meta={charger.status}
                   tone="muted"

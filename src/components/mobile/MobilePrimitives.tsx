@@ -32,20 +32,14 @@ export function MobileStatusBar({ displayTime }: { displayTime: string }) {
 
 export function MobileTopBar({ title }: { title: string }) {
   return (
-    <header className="mobile-top-bar flex items-center justify-between gap-3">
-      <button aria-label="Open menu" className="mobile-icon-button inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.26)] backdrop-blur-sm" type="button">
-        <MobileIcon name="menu" />
-      </button>
-      <div className="min-w-0 flex-1 text-center">
-        <h1 className="inline-flex items-center gap-1 text-[clamp(18px,4.8vw,24px)] font-semibold tracking-[-0.02em] text-white">
-          {title}
-          {title === 'Home' ? <MobileIcon name="chevronDown" /> : null}
-        </h1>
+    <header className="mobile-top-bar flex items-end justify-between gap-3 px-1">
+      <div className="min-w-0">
+        <h1 className="text-[clamp(24px,6vw,30px)] font-semibold tracking-[-0.03em] text-white">{title}</h1>
+        <p className="mt-1 text-[12px] text-dashboard-soft">Live home energy dashboard</p>
       </div>
-      <button aria-label="Open notifications" className="mobile-icon-button relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.26)] backdrop-blur-sm" type="button">
-        <MobileIcon name="bell" />
-        <span className="absolute right-2 top-2 h-[7px] w-[7px] rounded-full border-[1.5px] border-[#07111f] bg-dashboard-blue shadow-[0_0_12px_rgba(47,134,255,0.55)]" />
-      </button>
+      <div className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/[0.035] px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-dashboard-soft">
+        Active
+      </div>
     </header>
   )
 }

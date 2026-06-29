@@ -69,8 +69,27 @@ When changing UI, prefer:
   - `src/hooks/useBatteryOptimizer.ts`
   - `src/services/batteryOptimizer.ts`
   - `src/services/batteryOptimizerClient.ts`
+  - `src/models/batteryOptimizer.ts`
 - Historical day switching lives in:
   - `src/hooks/useHistoricalEnergyDay.ts`
+
+## Shared type layout
+
+Shared types are being centralized under `src/models`.
+
+Examples:
+
+- `src/models/batteryOptimizer.ts`
+- `src/models/dashboardInsights.ts`
+- `src/models/evChargePlan.ts`
+- `src/models/peakRates.ts`
+- `src/models/solarForecast.ts`
+
+When adding new cross-file types:
+
+1. put shared/domain shapes in `src/models`
+2. import them into hooks/services/components
+3. keep only tiny component-local prop helpers inline
 
 ## Recent high-value fixes
 
@@ -96,7 +115,9 @@ When changing UI, prefer:
 2. If desired, move the remaining flow animation classes into Tailwind config
    keyframes/utilities, but only if that stays readable
 3. Extract repeated card shells / headers into even smaller presentational
-   components
+  components
+4. Continue moving leftover exported view-only types out of component folders if
+   they become shared across screens
 
 ## Validation checklist
 

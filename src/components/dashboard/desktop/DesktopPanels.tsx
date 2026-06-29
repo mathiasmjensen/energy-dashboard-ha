@@ -27,9 +27,9 @@ export function EnergyDistributionPanel({
   solar: string
 }) {
   return (
-    <Panel className="h-[224px] px-4 pb-[14px] pt-6">
+    <Panel className="h-[232px] px-4 pb-[14px] pt-6">
       <PanelHeader controls={<DayWindowControls {...controls} />} showPeriod={false} title="Energy distribution" />
-      <div className="relative mt-[19px] h-[142px]">
+      <div className="relative mt-[17px] h-[152px]">
         <div className={desktopDistNodeClassName('solar')}>
           <span className={desktopDistDotClassName('solar')} aria-hidden="true" />
           <div>
@@ -42,11 +42,15 @@ export function EnergyDistributionPanel({
           <div>
             <span className="block text-[10px] leading-[1.1] text-[#c4cad3]">Grid</span>
             <strong className="mt-0.5 block whitespace-nowrap text-[11px] leading-[1.1] text-white">{gridImport} kWh</strong>
-            <div className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 border-t border-white/6 pt-1.5">
-              <span className="text-[9px] leading-[1.15] text-[#95a0af]">From</span>
-              <strong className="text-right text-[9px] leading-[1.15] text-[#edf2f7]">{gridImport} kWh</strong>
-              <span className="text-[9px] leading-[1.15] text-[#95a0af]">To</span>
-              <strong className="text-right text-[9px] leading-[1.15] text-[#edf2f7]">{gridExport} kWh</strong>
+            <div className="mt-1.5 flex flex-wrap gap-1.5 border-t border-white/6 pt-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-white/[0.03] px-1.5 py-0.5 text-[8.5px] leading-none text-[#cbd2dc]">
+                <span className="text-[#95a0af]">From</span>
+                <strong className="font-semibold text-[#edf2f7]">{gridImport}</strong>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-white/[0.03] px-1.5 py-0.5 text-[8.5px] leading-none text-[#cbd2dc]">
+                <span className="text-[#95a0af]">To</span>
+                <strong className="font-semibold text-[#edf2f7]">{gridExport}</strong>
+              </span>
             </div>
           </div>
         </div>
@@ -62,11 +66,15 @@ export function EnergyDistributionPanel({
           <div>
             <span className="block text-[10px] leading-[1.1] text-[#c4cad3]">Battery</span>
             <strong className="mt-0.5 block whitespace-nowrap text-[11px] leading-[1.1] text-white">{battery} kWh</strong>
-            <div className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 border-t border-white/6 pt-1.5">
-              <span className="text-[9px] leading-[1.15] text-[#95a0af]">To</span>
-              <strong className="text-right text-[9px] leading-[1.15] text-[#edf2f7]">{batteryCharge} kWh</strong>
-              <span className="text-[9px] leading-[1.15] text-[#95a0af]">From</span>
-              <strong className="text-right text-[9px] leading-[1.15] text-[#edf2f7]">{batteryDischarge} kWh</strong>
+            <div className="mt-1.5 flex flex-wrap gap-1.5 border-t border-white/6 pt-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-white/[0.03] px-1.5 py-0.5 text-[8.5px] leading-none text-[#cbd2dc]">
+                <span className="text-[#95a0af]">To</span>
+                <strong className="font-semibold text-[#edf2f7]">{batteryCharge}</strong>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-white/[0.03] px-1.5 py-0.5 text-[8.5px] leading-none text-[#cbd2dc]">
+                <span className="text-[#95a0af]">From</span>
+                <strong className="font-semibold text-[#edf2f7]">{batteryDischarge}</strong>
+              </span>
             </div>
           </div>
         </div>
@@ -77,11 +85,11 @@ export function EnergyDistributionPanel({
             <strong className="mt-0.5 block whitespace-nowrap text-[11px] leading-[1.1] text-white">{ev} kWh</strong>
           </div>
         </div>
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 420 150" aria-hidden="true">
-          <path d="M118 44H184Q204 44 204 62" fill="none" stroke="rgba(245,166,35,0.72)" strokeLinecap="round" strokeWidth="5" />
-          <path d="M118 112H184Q204 112 204 88" fill="none" stroke="rgba(166,77,245,0.75)" strokeLinecap="round" strokeWidth="5" />
-          <path d="M252 62Q252 44 276 44H348" fill="none" stroke="rgba(51,214,107,0.58)" strokeLinecap="round" strokeWidth="5" />
-          <path d="M252 88Q252 112 276 112H348" fill="none" stroke="rgba(166,173,182,0.42)" strokeLinecap="round" strokeWidth="5" />
+        <svg className="absolute inset-0 h-full w-full pointer-events-none" viewBox="0 0 420 154" aria-hidden="true">
+          <path d="M120 42H176Q192 42 192 60" fill="none" stroke="rgba(245,166,35,0.68)" strokeLinecap="round" strokeWidth="4" />
+          <path d="M120 116H176Q192 116 192 94" fill="none" stroke="rgba(166,77,245,0.72)" strokeLinecap="round" strokeWidth="4" />
+          <path d="M228 60Q228 42 248 42H292" fill="none" stroke="rgba(51,214,107,0.54)" strokeLinecap="round" strokeWidth="4" />
+          <path d="M228 94Q228 116 248 116H292" fill="none" stroke="rgba(166,173,182,0.38)" strokeLinecap="round" strokeWidth="4" />
         </svg>
       </div>
     </Panel>
@@ -141,10 +149,16 @@ export function BatteryStatusPanel({
 
   return (
     <Panel className="h-[188px] px-[18px] pb-[14px] pt-[17px]">
-      <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Battery status</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Battery status</h2>
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/6 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-dashboard-soft">
+          View details
+          <span aria-hidden="true">+</span>
+        </span>
+      </div>
       <button
         aria-label="Open battery details"
-        className="w-full rounded-[18px] bg-transparent p-0 text-left text-inherit transition hover:brightness-105 focus-visible:brightness-105"
+        className="w-full cursor-pointer rounded-[18px] bg-transparent p-0 text-left text-inherit transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:-translate-y-0.5 focus-visible:brightness-105"
         type="button"
         onClick={onOpen}
       >
@@ -325,14 +339,14 @@ export function EvChargerOverviewCard({
 
 function desktopDistNodeClassName(tone: 'battery' | 'ev' | 'grid' | 'home' | 'solar') {
   return cn(
-    'absolute z-[1] grid items-center gap-x-2 rounded-lg border border-white/[0.075] bg-[linear-gradient(180deg,rgba(255,255,255,0.052),rgba(255,255,255,0.012)),rgba(4,8,13,0.9)] px-[9px] py-[6px] shadow-[0_9px_20px_rgba(0,0,0,0.26)]',
+    'absolute z-[1] grid items-start gap-x-2 overflow-hidden rounded-lg border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.01)),rgba(6,10,16,0.97)] px-[8px] py-[6px] shadow-[0_9px_20px_rgba(0,0,0,0.3)] backdrop-blur-md',
     tone === 'home'
-      ? 'left-1/2 top-[47px] min-h-[38px] min-w-[94px] -translate-x-1/2 grid-cols-[9px_1fr] justify-items-start text-left text-dashboard-blue'
-      : 'min-h-[36px] min-w-[122px] grid-cols-[9px_minmax(78px,1fr)]',
-    tone === 'solar' && 'left-2 top-[14px] text-dashboard-orange',
-    tone === 'grid' && 'bottom-[9px] left-2 text-dashboard-purple',
-    tone === 'battery' && 'right-2 top-[14px] text-dashboard-green',
-    tone === 'ev' && 'bottom-[9px] right-2 text-[#d6dce3]',
+      ? 'left-1/2 top-[47px] min-h-[42px] min-w-[102px] -translate-x-1/2 grid-cols-[9px_1fr] justify-items-start text-left text-dashboard-blue'
+      : 'min-h-[40px] w-[118px] grid-cols-[9px_minmax(0,1fr)]',
+    tone === 'solar' && 'left-1 top-[10px] text-dashboard-orange',
+    tone === 'grid' && 'bottom-[5px] left-1 text-dashboard-purple',
+    tone === 'battery' && 'right-1 top-[10px] text-dashboard-green',
+    tone === 'ev' && 'bottom-[5px] right-1 text-[#d6dce3]',
   )
 }
 

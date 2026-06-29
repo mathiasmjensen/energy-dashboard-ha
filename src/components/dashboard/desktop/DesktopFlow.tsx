@@ -78,6 +78,12 @@ export function FlowNode({
             ) : null}
           </div>
         ) : null}
+        {onClick ? (
+          <span className="mt-1 inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/55">
+            Details
+            <span aria-hidden="true">+</span>
+          </span>
+        ) : null}
       </div>
     </>
   )
@@ -87,7 +93,7 @@ export function FlowNode({
       <button
         aria-label={`Open ${label} details`}
         className={cn(
-          'dashboard-glass-card absolute grid min-h-12 w-[136px] grid-cols-[10px_1fr] items-center gap-2.5 rounded-[9px] border px-2.5 py-2 text-left text-dashboard-text shadow-glass [text-shadow:0_1px_4px_rgba(0,0,0,0.6)] transition hover:brightness-105 focus-visible:brightness-105',
+          'dashboard-glass-card absolute grid min-h-12 w-[136px] cursor-pointer grid-cols-[10px_1fr] items-center gap-2.5 rounded-[9px] border px-2.5 py-2 text-left text-dashboard-text shadow-glass [text-shadow:0_1px_4px_rgba(0,0,0,0.6)] transition hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_16px_36px_rgba(0,0,0,0.24)] focus-visible:-translate-y-0.5 focus-visible:brightness-105',
           toneClassName,
           className,
         )}

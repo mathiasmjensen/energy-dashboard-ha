@@ -2,10 +2,17 @@ import { useMemo, useState } from 'react'
 import { MobileBatteryScreen } from './MobileBatteryScreen'
 import { MobileEvScreen } from './MobileEvScreen'
 import { MobileHomeScreen } from './MobileHomeScreen'
-import { MobileBottomNav } from './MobilePrimitives'
+import { MobileBottomNav, MobileStatusBar, MobileTopBar } from './MobilePrimitives'
 import { MobileSolarScreen } from './MobileSolarScreen'
 import type { BatteryPeriod, MobileDashboardProps, MobileTab, SolarPeriod } from './MobileTypes'
 import { getBatteryInsights } from './MobileUtils'
+
+const MOBILE_TAB_TITLES: Record<MobileTab, string> = {
+  battery: 'Battery',
+  ev: 'EV',
+  home: 'Home',
+  solar: 'Solar',
+}
 
 export function MobileDashboard({
   battery,
@@ -46,6 +53,11 @@ export function MobileDashboard({
       }
     >
       <div className="relative mx-auto block min-h-screen min-h-dvh w-full max-w-[430px] overflow-visible px-[max(14px,env(safe-area-inset-right))] pb-0 pl-[max(14px,env(safe-area-inset-left))] pr-[max(14px,env(safe-area-inset-right))] pt-[max(10px,env(safe-area-inset-top))]">
+        <div className="sticky top-0 z-30 mb-4 grid gap-3 bg-[linear-gradient(180deg,rgba(4,7,12,0.94),rgba(4,7,12,0.82)_72%,rgba(4,7,12,0))] pb-2 pt-1 backdrop-blur-sm">
+          <MobileStatusBar displayTime={displayTime} />
+          <MobileTopBar title={MOBILE_TAB_TITLES[activeTab]} />
+        </div>
+
         <section
           className="min-h-screen min-h-dvh overflow-visible pb-[var(--mobile-bottom-space)] pr-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           data-tab={activeTab}
