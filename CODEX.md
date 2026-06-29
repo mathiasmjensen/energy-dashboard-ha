@@ -70,6 +70,11 @@ When changing UI, prefer:
   - `src/services/batteryOptimizer.ts`
   - `src/services/batteryOptimizerClient.ts`
   - `src/models/batteryOptimizer.ts`
+- Notifications groundwork lives around:
+  - `src/hooks/useNotifications.ts`
+  - `src/services/notificationsClient.ts`
+  - `src/models/notifications.ts`
+  - `public/notifications-sw.js`
 - Historical day switching lives in:
   - `src/hooks/useHistoricalEnergyDay.ts`
 
@@ -100,6 +105,9 @@ When adding new cross-file types:
   repeatedly spamming 404 failures.
 - Interactive battery flow node styling was fixed so it keeps the same visual
   box treatment as the other nodes.
+- Notifications are now wired as non-visual infrastructure only: service
+  worker, typed client, and hook bootstrap. A future notifications tab can sit
+  on top of that without redoing the transport.
 
 ## Build notes
 
