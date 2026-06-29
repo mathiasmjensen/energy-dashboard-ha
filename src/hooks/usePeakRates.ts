@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
 import type { PeakRateResult, PeakRateWindow } from '../models/peakRates'
+import { getDashboardMockPeakRateWindows } from '../services/dashboardMockData'
 import { getRawEntityState, getResolvedEntity } from '../services/energyEntityFormatting'
 import {
   getPeakRatePayloadFromAttributes,
@@ -29,6 +30,7 @@ export function usePeakRates(): PeakRateResult {
 
     return normalizePeakRates(payload)
   }, [resolved])
+  const mockWindows = useMemo(() => getDashboardMockPeakRateWindows(new Date(nowMs)), [nowMs])
 
   useEffect(() => {
     const tickId = window.setInterval(() => setNowMs(Date.now()), TICK_MS)
@@ -80,7 +82,12 @@ export function usePeakRates(): PeakRateResult {
   }, [peakRateUrl])
 
   return useMemo(
-    () => getPeakRateResult(haWindows.length ? haWindows : peakRateUrl ? windows : [], nowMs, peakRateUrl ? error : false),
-    [error, haWindows, nowMs, peakRateUrl, windows],
+    () =>
+      getPeakRateResult(
+        haWindows.length ? haWindows : peakRateUrl ? (windows.length ? windows : mockWindows) : mockWindows,
+        nowMs,
+        peakRateUrl ? error && !windows.length && !haWindows.length : false,
+      ),
+    [error, haWindows, mockWindows, nowMs, peakRateUrl, windows],
   )
 }
