@@ -8,8 +8,6 @@ import type {
   BatteryOptimizerApiStatusPayload,
   BatteryOptimizerClient,
   BatteryOptimizerPath,
-  BatteryOptimizerPlanRow,
-  BatteryOptimizerSettings,
 } from '../models/batteryOptimizer'
 
 export class BatteryOptimizerRequestError extends Error {

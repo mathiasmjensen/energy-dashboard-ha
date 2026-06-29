@@ -1,4 +1,4 @@
-import type { BatteryOptimizerState } from '../../hooks/useBatteryOptimizer'
+import type { BatteryOptimizerState } from '../../models/batteryOptimizer'
 import {
   BatteryOptimizerCharts,
   BatteryOptimizerControlsCard,

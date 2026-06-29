@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import type { PointerEvent } from 'react'
-import type { EvChargerController } from '../hooks/useEvChargerController'
+import type { EvChargerController } from '../models/evChargePlan'
 import { EvChargerContent, EvUiIcon } from './ev/EvChargerContent'
 
 type EvChargerModalProps = {

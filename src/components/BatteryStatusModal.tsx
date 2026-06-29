@@ -1,5 +1,5 @@
 import type { PointerEvent } from 'react'
-import type { BatteryOptimizerState } from '../hooks/useBatteryOptimizer'
+import type { BatteryOptimizerState } from '../models/batteryOptimizer'
 import { useCallback, useEffect, useState } from 'react'
 import { cn } from '../lib/cn'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../services/batteryMetrics'

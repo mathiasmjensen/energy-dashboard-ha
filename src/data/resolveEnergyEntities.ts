@@ -1,3 +1,4 @@
+import type { HassEntities } from 'home-assistant-js-websocket'
 import { ENERGY_ENTITIES, ENERGY_ENTITY_CANDIDATES, type EnergyEntityKey } from './energyEntities'
 import type { HassEntity, ResolvedEnergyEntities, ResolvedEnergyEntity } from '../models/resolveEnergyEntities'
 

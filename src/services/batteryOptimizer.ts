@@ -11,6 +11,7 @@ import type {
   BatteryOptimizerRecommendation,
   BatteryOptimizerSettings,
   BatteryOptimizerSnapshot,
+  BatteryOptimizerSource,
 } from '../models/batteryOptimizer'
 import type { PeakRateDay, PeakRateHour } from '../models/peakRates'
 import type { SolarForecastWindow } from '../models/solarForecast'

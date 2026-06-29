@@ -1,5 +1,5 @@
 import { assetPath } from '../../../utils/assetPath'
-import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../services/dashboardInsights'
+import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../models/dashboardInsights'
 import { cn } from '../../../lib/cn'
 import { BarChart, DayWindowControls, type DayHeaderControls, InsightToolbar, Panel, PanelHeader } from './DesktopShared'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/batteryMetrics'

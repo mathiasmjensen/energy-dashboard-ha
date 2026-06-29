@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
+import type { BatteryHistoryPeriod, BatteryHistorySeries } from '../models/batteryHistory'
 import { getConnectionAccessToken, resolveHaApiBase } from '../services/haApi'
 import {
   buildBatteryHistorySeriesFromStates,
   getFallbackBatteryHistorySeries,
   normalizeBatteryHistoryStates,
-  type BatteryHistoryPeriod,
-  type BatteryHistorySeries,
 } from '../services/batteryHistory'
 
 type BatteryHistoryResult = {
