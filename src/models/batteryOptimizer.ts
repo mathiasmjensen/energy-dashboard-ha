@@ -5,7 +5,7 @@ export type BatteryOptimizerRecommendation = 'BUY' | 'CHARGE' | 'DISCHARGE' | 'H
 export type BatteryOptimizerMode = 'auto' | 'charge' | 'discharge' | 'export' | 'idle' | 'manual'
 export type BatteryOptimizerSource = 'live' | 'mock'
 
-export type BatteryOptimizerStatus = {
+export interface BatteryOptimizerStatus {
   batteryPowerKw: number
   estimatedProfitTodayDkk: number
   fullBuyPriceDkkPerKwh: number
@@ -18,7 +18,7 @@ export type BatteryOptimizerStatus = {
   updatedAt: string
 }
 
-export type BatteryOptimizerPlanRow = {
+export interface BatteryOptimizerPlanRow {
   action: BatteryOptimizerRecommendation
   endIso: string
   expectedHouseUsageKwh: number
@@ -31,7 +31,7 @@ export type BatteryOptimizerPlanRow = {
   targetSocPercent: number
 }
 
-export type BatteryOptimizerDecisionSummary = {
+export interface BatteryOptimizerDecisionSummary {
   avoidBuyHours: string[]
   bestBuyHours: string[]
   bestSellHours: string[]
@@ -40,7 +40,7 @@ export type BatteryOptimizerDecisionSummary = {
   reserveForHouseUsage: string
 }
 
-export type BatteryOptimizerSettings = {
+export interface BatteryOptimizerSettings {
   allowBatteryExport: boolean
   allowGridCharging: boolean
   autoMode: boolean
@@ -50,19 +50,19 @@ export type BatteryOptimizerSettings = {
   pausedUntil: string | null
 }
 
-export type BatteryOptimizerChartSeries = {
+export interface BatteryOptimizerChartSeries {
   labels: string[]
   points: number[]
 }
 
-export type BatteryOptimizerCharts = {
+export interface BatteryOptimizerCharts {
   plannedBatteryPower: BatteryOptimizerChartSeries
   priceCurve: BatteryOptimizerChartSeries
   profitByHour: BatteryOptimizerChartSeries
   socForecast: BatteryOptimizerChartSeries
 }
 
-export type BatteryOptimizerSnapshot = {
+export interface BatteryOptimizerSnapshot {
   charts: BatteryOptimizerCharts
   decisionSummary: BatteryOptimizerDecisionSummary
   planRows: BatteryOptimizerPlanRow[]
@@ -71,7 +71,7 @@ export type BatteryOptimizerSnapshot = {
   status: BatteryOptimizerStatus
 }
 
-export type BatteryOptimizerLiveInputs = {
+export interface BatteryOptimizerLiveInputs {
   batteryPowerKw: number | null
   batterySocPercent: number | null
   batteryStatus: string
@@ -81,7 +81,12 @@ export type BatteryOptimizerLiveInputs = {
   solarForecastWindows: SolarForecastWindow[]
 }
 
-export type BatteryOptimizerApiStatusPayload = Partial<{
+export interface BatteryOptimizerMockSnapshotOptions {
+  nowMs?: number
+  stale?: boolean
+}
+
+export interface BatteryOptimizerApiStatusFields {
   batteryPowerKw: number
   estimatedProfitTodayDkk: number
   fullBuyPriceDkkPerKwh: number
@@ -92,23 +97,56 @@ export type BatteryOptimizerApiStatusPayload = Partial<{
   socPercent: number
   spotPriceDkkPerKwh: number
   updatedAt: string
-}>
+}
 
-export type BatteryOptimizerApiPlanPayload = Partial<{
-  charts: Partial<{
-    plannedBatteryPower: unknown
-    priceCurve: unknown
-    profitByHour: unknown
-    socForecast: unknown
-  }>
+export type BatteryOptimizerApiStatusPayload = Partial<BatteryOptimizerApiStatusFields>
+
+export interface BatteryOptimizerApiPlanChartFields {
+  plannedBatteryPower: unknown
+  priceCurve: unknown
+  profitByHour: unknown
+  socForecast: unknown
+}
+
+export interface BatteryOptimizerApiPlanFields {
+  charts: Partial<BatteryOptimizerApiPlanChartFields>
   decisionSummary: Partial<BatteryOptimizerDecisionSummary>
   rows: unknown
   updatedAt: string
-}>
+}
+
+export type BatteryOptimizerApiPlanPayload = Partial<BatteryOptimizerApiPlanFields>
+
+export interface BatteryOptimizerNormalizedSnapshotPayloads {
+  inputs: BatteryOptimizerLiveInputs
+  planPayload: BatteryOptimizerApiPlanPayload
+  settingsPayload: BatteryOptimizerApiSettingsPayload
+  source: BatteryOptimizerSource
+  statusPayload: BatteryOptimizerApiStatusPayload
+}
+
+export interface BatteryOptimizerApplyPlanPayload {
+  planRows: BatteryOptimizerPlanRow[]
+  settings: BatteryOptimizerSettings
+}
+
+export interface BatteryOptimizerPausePayload {
+  untilIso: string
+}
+
+export interface BatteryOptimizerClient {
+  applyPlan: (payload: BatteryOptimizerApplyPlanPayload) => Promise<void>
+  getPlan: () => Promise<BatteryOptimizerApiPlanPayload>
+  getSettings: () => Promise<BatteryOptimizerApiSettingsPayload>
+  getStatus: () => Promise<BatteryOptimizerApiStatusPayload>
+  pauseUntilTomorrow: (payload: BatteryOptimizerPausePayload) => Promise<void>
+  refresh: () => Promise<void>
+  saveSettings: (payload: BatteryOptimizerSettings) => Promise<void>
+}
 
 export type BatteryOptimizerApiSettingsPayload = Partial<BatteryOptimizerSettings>
 
-export type BatteryOptimizerState = {
+export interface BatteryOptimizerState {
   errorMessage: string | null
   hasLiveError: boolean
   isApplyingPlan: boolean
@@ -134,13 +172,3 @@ export type BatteryOptimizerPath =
   | '/api/battery/refresh'
   | '/api/battery/settings'
   | '/api/battery/status'
-
-export type BatteryOptimizerClient = {
-  applyPlan: (payload: { planRows: BatteryOptimizerPlanRow[]; settings: BatteryOptimizerSettings }) => Promise<void>
-  getPlan: () => Promise<BatteryOptimizerApiPlanPayload>
-  getSettings: () => Promise<BatteryOptimizerApiSettingsPayload>
-  getStatus: () => Promise<BatteryOptimizerApiStatusPayload>
-  pauseUntilTomorrow: (payload: { untilIso: string }) => Promise<void>
-  refresh: () => Promise<void>
-  saveSettings: (payload: BatteryOptimizerSettings) => Promise<void>
-}

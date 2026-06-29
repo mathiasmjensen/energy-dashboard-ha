@@ -1,17 +1,16 @@
 import type {
-  BatteryOptimizerApiPlanPayload,
+  BatteryOptimizerNormalizedSnapshotPayloads,
   BatteryOptimizerApiSettingsPayload,
-  BatteryOptimizerApiStatusPayload,
   BatteryOptimizerChartSeries,
   BatteryOptimizerCharts,
   BatteryOptimizerDecisionSummary,
   BatteryOptimizerLiveInputs,
   BatteryOptimizerMode,
+  BatteryOptimizerMockSnapshotOptions,
   BatteryOptimizerPlanRow,
   BatteryOptimizerRecommendation,
   BatteryOptimizerSettings,
   BatteryOptimizerSnapshot,
-  BatteryOptimizerSource,
 } from '../models/batteryOptimizer'
 import type { PeakRateDay, PeakRateHour } from '../models/peakRates'
 import type { SolarForecastWindow } from '../models/solarForecast'
@@ -40,7 +39,7 @@ export function isBatteryOptimizerStale(updatedAt: string, nowMs = Date.now()) {
 
 export function createMockBatteryOptimizerSnapshot(
   inputs: BatteryOptimizerLiveInputs,
-  options?: { nowMs?: number; stale?: boolean },
+  options?: BatteryOptimizerMockSnapshotOptions,
 ): BatteryOptimizerSnapshot {
   const nowMs = options?.nowMs ?? Date.now()
   const updatedAt = new Date(nowMs - (options?.stale ? 45 : 8) * 60 * 1000).toISOString()
@@ -155,13 +154,7 @@ export function normalizeBatteryOptimizerSnapshot({
   settingsPayload,
   source,
   statusPayload,
-}: {
-  inputs: BatteryOptimizerLiveInputs
-  planPayload: BatteryOptimizerApiPlanPayload
-  settingsPayload: BatteryOptimizerApiSettingsPayload
-  source: BatteryOptimizerSource
-  statusPayload: BatteryOptimizerApiStatusPayload
-}): BatteryOptimizerSnapshot {
+}: BatteryOptimizerNormalizedSnapshotPayloads): BatteryOptimizerSnapshot {
   const fallback = createMockBatteryOptimizerSnapshot(inputs)
   const rawRows = normalizePlanRows(planPayload.rows)
   const planRows = rawRows.length ? rawRows : fallback.planRows
