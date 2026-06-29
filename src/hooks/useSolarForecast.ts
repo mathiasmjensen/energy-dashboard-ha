@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
 import type { EvccSolarPayload, OpenMeteoPayload, SolarForecastResult, SolarForecastState } from '../models/solarForecast'
+import { getDashboardMockSolarForecastState } from '../services/dashboardMockData'
 import { getRawEntityState, getResolvedEntity } from '../services/energyEntityFormatting'
 import {
   getEvccSolarForecastUrl,
@@ -37,6 +38,7 @@ export function useSolarForecast(): SolarForecastResult {
     )
   }, [panelCapacityKw, resolved])
   const hasHaForecast = haForecastState.windows.length > 0
+  const mockForecastState = useMemo(() => getDashboardMockSolarForecastState(new Date()), [])
 
   useEffect(() => {
     if (!evccForecastUrl || hasHaForecast) {
@@ -128,7 +130,7 @@ export function useSolarForecast(): SolarForecastResult {
     () =>
       hasHaForecast
         ? getForecastResult(haForecastState.windows, haForecastState.source)
-        : getForecastResult(forecastState.windows, forecastState.source),
-    [forecastState, haForecastState, hasHaForecast],
+        : getForecastResult(forecastState.windows.length ? forecastState.windows : mockForecastState.windows, forecastState.windows.length ? forecastState.source : mockForecastState.source),
+    [forecastState, haForecastState, hasHaForecast, mockForecastState],
   )
 }

@@ -3,6 +3,7 @@ import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
 import { getConnectionAccessToken, resolveHaApiBase } from '../services/haApi'
 import { ENERGY_ENTITY_NUMERIC_SCALE } from '../data/energyEntities'
+import { getDashboardMockData } from '../services/dashboardMockData'
 
 const MAX_DAY_OFFSET = 30
 const HOUR_MS = 60 * 60 * 1000
@@ -116,6 +117,7 @@ export function useHistoricalEnergyDay({
     ],
   )
   const sourceKey = useMemo(() => JSON.stringify(entityIds), [entityIds])
+  const mockHistoricalDay = useMemo(() => getDashboardMockData().historicalEnergyDay, [])
 
   useEffect(() => {
     if (dayOffset === 0) {
@@ -164,9 +166,9 @@ export function useHistoricalEnergyDay({
           setCache((current) => ({
             ...current,
             [cacheKey]: {
-              available: false,
-              distribution: EMPTY_DISTRIBUTION,
-              solarProduction: EMPTY_SOLAR_PRODUCTION,
+              available: true,
+              distribution: mockHistoricalDay.distribution,
+              solarProduction: mockHistoricalDay.solarProduction,
             },
           }))
         }
@@ -175,7 +177,7 @@ export function useHistoricalEnergyDay({
 
     void fetchHistory()
     return () => controller.abort()
-  }, [cache, connection, dayOffset, entityIds, sourceKey])
+  }, [cache, connection, dayOffset, entityIds, mockHistoricalDay, sourceKey])
 
   const activeEntry = dayOffset === 0 ? null : cache[getCacheKey(sourceKey, dayOffset)] ?? null
   const hasActiveHistory = dayOffset > 0 && activeEntry?.available
