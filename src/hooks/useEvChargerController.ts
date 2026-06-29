@@ -4,7 +4,6 @@ import { ENERGY_ENTITIES } from '../data/energyEntities'
 import { EVCC_CHARGE_MODES, getEvccModeServiceOption, normalizeEvccMode } from '../data/evcc'
 import type { EvChargerBottomMode, EvChargerController, EvPlanPriceHour, UseEvChargerControllerProps } from '../models/evChargePlan'
 import type { EvccChargeMode } from '../models/evcc'
-import type { PeakRateDay } from '../models/peakRates'
 import {
   createRollingPriceDay,
   createRollingPriceHours,

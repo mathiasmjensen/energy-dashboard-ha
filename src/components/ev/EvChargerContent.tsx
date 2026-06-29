@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import type { EvChargerBottomMode, EvChargerController, EvPlanPriceHour } from '../../hooks/useEvChargerController'
+import type { EvChargerBottomMode, EvChargerController, EvPlanPriceHour } from '../../models/evChargePlan'
 import { cn } from '../../lib/cn'
 import { assetPath } from '../../utils/assetPath'
 

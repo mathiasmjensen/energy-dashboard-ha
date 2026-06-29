@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import type { InsightHeaderControls } from '../../../services/dashboardInsights'
+import type { InsightHeaderControls } from '../../../models/dashboardInsights'
 import { cn } from '../../../lib/cn'
 import {
   formatChartValue,

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { BatteryOptimizerState } from '../../../hooks/useBatteryOptimizer'
+import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
 import { cn } from '../../../lib/cn'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/batteryMetrics'
 import {
@@ -15,6 +15,8 @@ import { LineChart, StatusPill } from './DesktopShared'
 
 const PERIODS = ['24h', '7d', '30d', '90d'] as const
 type BatteryHistoryPeriod = (typeof PERIODS)[number]
+const OPTIMIZER_SECTIONS = ['Status', 'Plan', 'Charts'] as const
+type OptimizerSection = (typeof OPTIMIZER_SECTIONS)[number]
 
 export function DesktopBatteryPage({
   battery,
@@ -47,6 +49,7 @@ export function DesktopBatteryPage({
   }
 }) {
   const [period, setPeriod] = useState<BatteryHistoryPeriod>('24h')
+  const [optimizerSection, setOptimizerSection] = useState<OptimizerSection>('Status')
 
   const timeEstimate = getBatteryTimeEstimate({
     capacityKwh: parseDisplayNumber(battery.capacity),
@@ -67,7 +70,7 @@ export function DesktopBatteryPage({
 
   return (
     <section
-      className="absolute left-[236px] right-0 top-0 h-[941px] overflow-hidden px-7 pb-6 pr-6 pt-6"
+      className="absolute left-[236px] right-0 top-0 h-[941px] overflow-hidden px-8 pb-6 pr-7 pt-6"
       aria-label="Battery details"
     >
       <header className="flex h-[70px] items-start justify-between">
@@ -82,44 +85,51 @@ export function DesktopBatteryPage({
         </div>
       </header>
 
-      <div className="grid h-[calc(100%-82px)] grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-5">
-        <section className="flex min-h-0 flex-col gap-5 overflow-hidden">
-          <div className="grid gap-4 xl:grid-cols-[1fr_220px_1fr]">
-            <div className="rounded-[22px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
-              <strong className="block text-[2.2rem] font-semibold leading-none text-dashboard-text">{battery.soc}</strong>
-              <span className="mt-1 block text-sm text-dashboard-soft">State of charge</span>
-              <div className="my-4 h-px bg-white/10" />
-              <strong className="block text-[1.6rem] font-semibold leading-none text-dashboard-text">{battery.energy} kWh</strong>
-              <span className="mt-1 block text-sm text-dashboard-soft">Stored energy</span>
+      <div className="grid h-[calc(100%-82px)] grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-6">
+        <section className="flex min-h-0 flex-col gap-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-[24px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-dashboard-muted">Battery state</span>
+                <strong className="mt-3 block text-[2.1rem] font-semibold leading-none text-dashboard-text">{battery.soc}</strong>
+                <span className="mt-1.5 block text-sm text-dashboard-soft">State of charge</span>
+                <div className="my-4 h-px bg-white/10" />
+                <strong className="block text-[1.6rem] font-semibold leading-none text-dashboard-text">{battery.energy} kWh</strong>
+                <span className="mt-1.5 block text-sm text-dashboard-soft">Stored energy</span>
+              </div>
+
+              <div className="rounded-[24px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-dashboard-muted">Current behavior</span>
+                <strong
+                  className={cn(
+                    'mt-3 block text-[1.4rem] font-semibold',
+                    battery.status.toLowerCase() === 'charging'
+                      ? 'text-emerald-300'
+                      : battery.status.toLowerCase() === 'discharging'
+                        ? 'text-rose-300'
+                        : 'text-dashboard-text',
+                  )}
+                >
+                  {battery.status}
+                </strong>
+                <strong className="mt-3 block text-[1.8rem] font-semibold leading-none text-dashboard-text">{battery.power} kW</strong>
+                <span className="mt-1.5 block text-sm text-dashboard-soft">{timeEstimate.label}</span>
+                <div className="my-4 h-px bg-white/10" />
+                <strong className="block text-[1.25rem] font-semibold leading-none text-dashboard-text">{timeEstimate.value}</strong>
+              </div>
             </div>
 
-            <div className="flex items-center justify-center rounded-[22px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+            <div className="flex items-center justify-center rounded-[24px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
               <BatteryVisual level={battery.socValue} size="modal" />
-            </div>
-
-            <div className="rounded-[22px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
-              <strong
-                className={cn(
-                  'block text-[1.45rem] font-semibold',
-                  battery.status.toLowerCase() === 'charging'
-                    ? 'text-emerald-300'
-                    : battery.status.toLowerCase() === 'discharging'
-                      ? 'text-rose-300'
-                      : 'text-dashboard-text',
-                )}
-              >
-                {battery.status}
-              </strong>
-              <strong className="mt-3 block text-[1.85rem] font-semibold leading-none text-dashboard-text">{battery.power} kW</strong>
-              <span className="mt-1 block text-sm text-dashboard-soft">{timeEstimate.label}</span>
-              <div className="my-4 h-px bg-white/10" />
-              <strong className="block text-[1.4rem] font-semibold leading-none text-dashboard-text">{timeEstimate.value}</strong>
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-col rounded-[22px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+          <div className="flex min-h-0 flex-1 flex-col rounded-[24px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold text-dashboard-text">Battery % over time</h2>
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold text-dashboard-text">Battery % over time</h2>
+                <p className="text-sm text-dashboard-soft">State of charge history for the selected window.</p>
+              </div>
               <div className="flex flex-wrap gap-2" role="tablist" aria-label="Battery history period">
                 {PERIODS.map((item) => (
                   <button
@@ -142,7 +152,7 @@ export function DesktopBatteryPage({
             </div>
 
             <LineChart
-              className="min-h-[260px] rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3"
+              className="insight-line-chart min-h-[240px] flex-1 rounded-[20px] border border-white/8 bg-[#0b111d]/88 p-4"
               color="#60ea5d"
               label="Battery percentage over time"
               labels={activeHistory.labels}
@@ -150,7 +160,7 @@ export function DesktopBatteryPage({
               unit="%"
             />
 
-            <div className="mt-4 flex items-start gap-3 rounded-[18px] border border-white/8 bg-[#0b111d]/88 px-4 py-3">
+            <div className="mt-3 flex items-start gap-3 rounded-[20px] border border-white/8 bg-[#0b111d]/88 px-4 py-3">
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-semibold text-dashboard-text">
                 i
               </span>
@@ -161,15 +171,43 @@ export function DesktopBatteryPage({
           </div>
         </section>
 
-        <section className="flex min-h-0 flex-col gap-5 overflow-y-auto pr-1">
+        <section className="flex min-h-0 flex-col gap-4 overflow-hidden">
           <OptimizerStateBanner optimizer={batteryOptimizer} variant="desktop" />
-          <div className="grid gap-4 xl:grid-cols-2">
-            <BatteryOptimizerStatusCard optimizer={batteryOptimizer} variant="desktop" />
-            <BatteryOptimizerDecisionSummary optimizer={batteryOptimizer} variant="desktop" />
-            <BatteryOptimizerControlsCard optimizer={batteryOptimizer} variant="desktop" />
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Battery optimizer sections">
+            {OPTIMIZER_SECTIONS.map((item) => (
+              <button
+                key={item}
+                aria-selected={optimizerSection === item}
+                className={cn(
+                  'inline-flex min-h-10 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition',
+                  optimizerSection === item
+                    ? 'border-dashboard-blue/45 bg-dashboard-blue/16 text-dashboard-text shadow-[0_10px_24px_rgba(77,122,255,0.18)]'
+                    : 'border-white/10 bg-white/5 text-dashboard-soft hover:border-white/20 hover:bg-white/8 hover:text-dashboard-text',
+                )}
+                role="tab"
+                type="button"
+                onClick={() => setOptimizerSection(item)}
+              >
+                {item}
+              </button>
+            ))}
           </div>
-          <BatteryOptimizerPlanTable optimizer={batteryOptimizer} planHours={48} variant="desktop" />
-          <BatteryOptimizerCharts optimizer={batteryOptimizer} variant="desktop" />
+
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {optimizerSection === 'Status' ? (
+              <div className="grid h-full gap-4">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                  <BatteryOptimizerStatusCard optimizer={batteryOptimizer} variant="desktop" />
+                  <BatteryOptimizerDecisionSummary optimizer={batteryOptimizer} variant="desktop" />
+                </div>
+                <BatteryOptimizerControlsCard optimizer={batteryOptimizer} variant="desktop" />
+              </div>
+            ) : optimizerSection === 'Plan' ? (
+              <BatteryOptimizerPlanTable optimizer={batteryOptimizer} planHours={48} variant="desktop" />
+            ) : (
+              <BatteryOptimizerCharts optimizer={batteryOptimizer} variant="desktop" />
+            )}
+          </div>
         </section>
       </div>
     </section>

@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
-import type { BatteryOptimizerState } from '../../hooks/useBatteryOptimizer'
+import { useState } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import type { BatteryOptimizerPlanRow, BatteryOptimizerState } from '../../models/batteryOptimizer'
 import { cn } from '../../lib/cn'
 import {
   formatOptimizerCurrency,
@@ -83,7 +84,7 @@ export function BatteryOptimizerStatusCard({
       <div
         className={cn(
           'grid gap-3',
-          variant === 'desktop' ? 'grid-cols-2 xl:grid-cols-4' : 'grid-cols-2',
+          variant === 'desktop' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2',
         )}
       >
         <StatusMetric label="Battery SoC" value={formatOptimizerPercent(status.socPercent)} />
@@ -96,7 +97,7 @@ export function BatteryOptimizerStatusCard({
         <StatusMetric label="Profit today" value={formatOptimizerCurrency(status.estimatedProfitTodayDkk)} />
       </div>
 
-      <div className={cn('flex items-center gap-3', variant === 'desktop' ? 'justify-between' : 'flex-wrap')}>
+      <div className={cn('flex items-center gap-3', variant === 'desktop' ? 'flex-wrap justify-between' : 'flex-wrap')}>
         <RecommendationBadge recommendation={status.recommendation} tone={recommendationTone} variant={variant} />
         <div className="flex flex-wrap items-center gap-2 text-xs text-dashboard-soft">
           <small className="text-xs text-dashboard-soft">Updated {formatOptimizerUpdatedAt(status.updatedAt)}</small>
@@ -128,13 +129,13 @@ export function BatteryOptimizerDecisionSummary({
   return wrapVariantCard(
     variant,
     'Decision summary',
-    <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-2 xl:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2')}>
-      <SummaryBlock label="Best hours to sell" value={joinWindowLabels(summary.bestSellHours)} />
-      <SummaryBlock label="Best hours to buy" value={joinWindowLabels(summary.bestBuyHours)} />
-      <SummaryBlock label="Avoid buying" value={joinWindowLabels(summary.avoidBuyHours)} />
-      <SummaryBlock label="Daily arbitrage profit" value={formatOptimizerCurrency(summary.expectedDailyArbitrageProfitDkk)} />
-      <SummaryBlock label="House reserve" value={summary.reserveForHouseUsage} />
-      <SummaryBlock label="EV charging" value={summary.evChargingRecommendation} />
+    <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2')}>
+      <SummaryBlock compact={variant === 'desktop'} label="Best hours to sell" value={joinWindowLabels(summary.bestSellHours, variant)} />
+      <SummaryBlock compact={variant === 'desktop'} label="Best hours to buy" value={joinWindowLabels(summary.bestBuyHours, variant)} />
+      <SummaryBlock compact={variant === 'desktop'} label="Avoid buying" value={joinWindowLabels(summary.avoidBuyHours, variant)} />
+      <SummaryBlock compact={variant === 'desktop'} label="Daily arbitrage profit" value={formatOptimizerCurrency(summary.expectedDailyArbitrageProfitDkk)} />
+      <SummaryBlock compact={variant === 'desktop'} label="House reserve" value={formatDecisionSummaryText(summary.reserveForHouseUsage, 'reserve', variant)} />
+      <SummaryBlock compact={variant === 'desktop'} label="EV charging" value={formatDecisionSummaryText(summary.evChargingRecommendation, 'ev', variant)} />
     </div>,
   )
 }
@@ -166,7 +167,7 @@ export function BatteryOptimizerControlsCard({
     variant,
     'Optimizer controls',
     <>
-      <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-2 xl:grid-cols-3' : 'grid-cols-1')}>
+      <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1')}>
         <ToggleRow
           checked={settings.autoMode}
           disabled={isBusy}
@@ -257,6 +258,12 @@ export function BatteryOptimizerPlanTable({
   planHours: number
   variant: Variant
 }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const rows = optimizer.snapshot ? slicePlanRows(optimizer.snapshot.planRows, planHours) : []
+  const visibleRows = variant === 'desktop' ? (isExpanded ? rows : rows.slice(0, 6)) : rows
+  const hiddenCount = Math.max(0, rows.length - visibleRows.length)
+  const planSummary = getPlanSummary(rows)
+
   if (optimizer.isLoading && !optimizer.snapshot) {
     return <OptimizerLoadingCard title="Optimization plan" variant={variant} />
   }
@@ -264,8 +271,6 @@ export function BatteryOptimizerPlanTable({
   if (optimizer.isEmpty || !optimizer.snapshot) {
     return <OptimizerEmptyCard title="Optimization plan" variant={variant} />
   }
-
-  const rows = slicePlanRows(optimizer.snapshot.planRows, planHours)
 
   if (variant === 'mobile') {
     return (
@@ -305,38 +310,50 @@ export function BatteryOptimizerPlanTable({
         <div className={planPillClassName()}>{planHours}h horizon</div>
       </div>
 
-      <div className="overflow-x-auto rounded-[18px] border border-white/8 bg-[#0b111d]/88">
-        <table className="min-w-full border-separate border-spacing-0 text-left">
-          <thead>
-            <tr>
-              {['Hour', 'Spot', 'Full buy', 'Sell', 'Solar surplus', 'House usage', 'Target SoC', 'Action', 'Profit / loss'].map((heading) => (
-                <th
-                  className="border-b border-white/8 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-dashboard-muted"
-                  key={heading}
-                >
-                  {heading}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr className="even:bg-white/[0.02]" key={row.startIso}>
-                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-text">{formatOptimizerHourRange(row)}</td>
-                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerPrice(row.spotPriceDkkPerKwh)}</td>
-                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerPrice(row.fullBuyPriceDkkPerKwh)}</td>
-                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerPrice(row.sellPriceDkkPerKwh)}</td>
-                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerEnergy(row.expectedSolarSurplusKwh)}</td>
-                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerEnergy(row.expectedHouseUsageKwh)}</td>
-                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerPercent(row.targetSocPercent)}</td>
-                <td className="border-b border-white/6 px-4 py-3">
-                  <OptimizerPlanActionChip action={row.action} />
-                </td>
-                <td className="border-b border-white/6 px-4 py-3 text-sm text-dashboard-soft">{formatOptimizerCurrency(row.expectedProfitDkk)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid gap-4">
+        <div className="grid gap-3 xl:grid-cols-3">
+          <SummaryBlock label="Next action" value={planSummary.nextAction} />
+          <SummaryBlock label="Best projected window" value={planSummary.bestWindow} />
+          <SummaryBlock label="Projected plan result" value={planSummary.projectedProfit} />
+        </div>
+
+        <div className="grid gap-3 xl:grid-cols-2" aria-label="Battery optimization plan">
+          {visibleRows.map((row) => (
+            <article
+              key={row.startIso}
+              className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-4 shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
+            >
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <strong className="block text-base font-semibold text-dashboard-text">{formatOptimizerHourRange(row)}</strong>
+                  <span className="block text-sm text-dashboard-soft">Target SoC {formatOptimizerPercent(row.targetSocPercent)}</span>
+                </div>
+                <OptimizerPlanActionChip action={row.action} />
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <PlanMiniStat label="Spot price" value={formatOptimizerPrice(row.spotPriceDkkPerKwh)} />
+                <PlanMiniStat label="Full buy" value={formatOptimizerPrice(row.fullBuyPriceDkkPerKwh)} />
+                <PlanMiniStat label="Sell price" value={formatOptimizerPrice(row.sellPriceDkkPerKwh)} />
+                <PlanMiniStat label="Solar surplus" value={formatOptimizerEnergy(row.expectedSolarSurplusKwh)} />
+                <PlanMiniStat label="House usage" value={formatOptimizerEnergy(row.expectedHouseUsageKwh)} />
+                <PlanMiniStat label="Profit / loss" value={formatOptimizerCurrency(row.expectedProfitDkk)} />
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {hiddenCount > 0 ? (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              className={secondaryButtonClassName()}
+              onClick={() => setIsExpanded((current) => !current)}
+            >
+              {isExpanded ? 'Show fewer plan hours' : `Show ${hiddenCount} more plan hours`}
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   )
@@ -371,7 +388,7 @@ export function BatteryOptimizerCharts({
   }
 
   return (
-    <section className="grid grid-cols-2 gap-4">
+    <section className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
       <OptimizerDesktopChartCard color="#3d86ff" labels={charts.priceCurve.labels} points={charts.priceCurve.points} title="DK1 price curve" unit="DKK/kWh" />
       <OptimizerDesktopChartCard color="#60ea5d" labels={charts.socForecast.labels} points={charts.socForecast.points} title="Battery SoC forecast" unit="%" />
       <OptimizerDesktopChartCard color="#f0b339" labels={charts.plannedBatteryPower.labels} points={charts.plannedBatteryPower.points} title="Planned charge / discharge" unit="kW" />
@@ -449,29 +466,54 @@ function OptimizerMobileChartCard({
   )
 }
 
-function SummaryBlock({ label, value }: { label: string; value: string }) {
+function SummaryBlock({
+  compact = false,
+  label,
+  value,
+}: {
+  compact?: boolean
+  label: string
+  value: string
+}) {
   return (
-    <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+    <div className={cn('rounded-[18px] border border-white/8 bg-[#0b111d]/88 shadow-[0_12px_28px_rgba(0,0,0,0.18)]', compact ? 'p-3' : 'p-4')}>
       <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
-      <strong className="mt-2 block text-sm font-semibold leading-5 text-dashboard-text">{value}</strong>
+      <strong
+        className={cn(
+          'mt-2 block font-semibold text-dashboard-text',
+          compact ? 'text-[0.94rem] leading-6' : 'text-[1rem] leading-7',
+        )}
+        style={
+          compact
+            ? ({
+                WebkitBoxOrient: 'vertical',
+                WebkitLineClamp: 3,
+                display: '-webkit-box',
+                overflow: 'hidden',
+              } as CSSProperties)
+            : undefined
+        }
+      >
+        {value}
+      </strong>
     </div>
   )
 }
 
 function StatusMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+    <div className="min-h-[128px] rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-4 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
       <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
-      <strong className="mt-2 block text-base font-semibold text-dashboard-text">{value}</strong>
+      <strong className="mt-3 block break-words text-[1.22rem] font-semibold leading-7 text-dashboard-text">{value}</strong>
     </div>
   )
 }
 
 function PlanMiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/6 bg-white/[0.02] px-3 py-2">
+    <div className="rounded-2xl border border-white/6 bg-white/[0.02] px-3 py-3">
       <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-dashboard-muted">{label}</span>
-      <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{value}</strong>
+      <strong className="mt-1 block break-words text-sm font-semibold leading-6 text-dashboard-text">{value}</strong>
     </div>
   )
 }
@@ -579,8 +621,52 @@ function wrapVariantCard(variant: Variant, title: string, body: ReactNode) {
   )
 }
 
-function joinWindowLabels(labels: string[]) {
-  return labels.length ? labels.join(', ') : 'No strong window identified'
+function joinWindowLabels(labels: string[], variant: Variant) {
+  if (!labels.length) {
+    return 'No strong window identified'
+  }
+
+  if (variant === 'desktop' && labels.length > 4) {
+    return `${labels.slice(0, 4).join(', ')} +${labels.length - 4}`
+  }
+
+  return labels.join(', ')
+}
+
+function formatDecisionSummaryText(value: string, type: 'ev' | 'reserve', variant: Variant) {
+  if (variant !== 'desktop') {
+    return value
+  }
+
+  const normalized = value.trim()
+
+  if (type === 'reserve') {
+    return normalized
+      .replace('Reserve battery for house usage through the next expensive window.', 'Keep reserve for house through next expensive window.')
+      .replace('Enough headroom to trade while keeping house reserve.', 'Enough headroom to trade while keeping reserve.')
+  }
+
+  return normalized
+    .replace('Wait for the cheaper grid window unless strong solar surplus appears first.', 'Wait for cheaper grid window unless strong solar surplus appears.')
+    .replace('Prefer solar charging until lower prices arrive.', 'Prefer solar charging until lower prices arrive.')
+}
+
+function getPlanSummary(rows: BatteryOptimizerPlanRow[]) {
+  const nextRow = rows[0]
+  const bestRow = rows.reduce<typeof nextRow | null>((best, row) => {
+    if (!best || row.expectedProfitDkk > best.expectedProfitDkk) {
+      return row
+    }
+
+    return best
+  }, null)
+  const totalProfit = rows.reduce((sum, row) => sum + row.expectedProfitDkk, 0)
+
+  return {
+    bestWindow: bestRow ? `${formatOptimizerHourRange(bestRow)} · ${bestRow.action}` : 'No strong window identified',
+    nextAction: nextRow ? `${nextRow.action} · ${formatOptimizerHourRange(nextRow)}` : 'No plan available',
+    projectedProfit: formatOptimizerCurrency(totalProfit),
+  }
 }
 
 function mapToneToMobile(tone: 'blue' | 'gold' | 'green' | 'neutral' | 'purple') {

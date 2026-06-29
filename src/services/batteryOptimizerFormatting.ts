@@ -3,7 +3,7 @@ import type {
   BatteryOptimizerPlanRow,
   BatteryOptimizerRecommendation,
   BatteryOptimizerSource,
-} from './batteryOptimizer'
+} from '../models/batteryOptimizer'
 
 export function formatOptimizerCurrency(value: number | null | undefined, suffix = 'DKK') {
   if (value === null || value === undefined || !Number.isFinite(value)) {
@@ -86,6 +86,8 @@ export function getOptimizerRecommendationTone(recommendation: BatteryOptimizerR
     case 'SELL':
       return 'gold' as const
     case 'HOLD':
+      return 'neutral' as const
+    default:
       return 'neutral' as const
   }
 }

@@ -8,8 +8,8 @@ import {
   FALLBACK_SOLAR_CURVE,
   getEnergyPriceInsight,
   getSolarForecastInsight,
-  type InsightViewMode,
 } from '../services/dashboardInsights'
+import type { InsightViewMode } from '../models/dashboardInsights'
 import { MobileDashboard } from './mobile/MobileDashboard'
 import { useBatteryHistory } from '../hooks/useBatteryHistory'
 import { useBatteryOptimizer } from '../hooks/useBatteryOptimizer'

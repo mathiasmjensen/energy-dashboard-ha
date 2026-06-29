@@ -1,6 +1,6 @@
-import type { InsightHeaderControls } from '../../services/dashboardInsights'
-import type { EvChargerController } from '../../hooks/useEvChargerController'
-import type { BatteryOptimizerState } from '../../hooks/useBatteryOptimizer'
+import type { BatteryOptimizerState } from '../../models/batteryOptimizer'
+import type { InsightHeaderControls } from '../../models/dashboardInsights'
+import type { EvChargerController } from '../../models/evChargePlan'
 
 export type InsightItem = {
   label: string
