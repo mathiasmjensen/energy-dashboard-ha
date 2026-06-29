@@ -255,7 +255,7 @@ export function BatteryOptimizerPlanTable({
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const rows = optimizer.snapshot ? slicePlanRows(optimizer.snapshot.planRows, planHours) : []
-  const visibleRows = variant === 'desktop' ? (isExpanded ? rows : rows.slice(0, 8)) : rows
+  const visibleRows = variant === 'desktop' ? (isExpanded ? rows.slice(0, 12) : rows.slice(0, 6)) : rows
   const hiddenCount = Math.max(0, rows.length - visibleRows.length)
   const planSummary = getPlanSummary(rows)
 
@@ -305,12 +305,12 @@ export function BatteryOptimizerPlanTable({
         <div className={planPillClassName()}>{planHours}h horizon</div>
       </div>
 
-      <div className="grid h-full min-h-0 gap-4 lg:grid-cols-[282px_minmax(0,1fr)]">
-        <aside className="grid content-start gap-3">
+      <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="grid content-start gap-3 sm:grid-cols-2 xl:grid-cols-1">
           <SummaryBlock compact label="Next action" value={planSummary.nextAction} />
           <SummaryBlock compact label="Best projected window" value={planSummary.bestWindow} />
           <SummaryBlock compact label="Projected plan result" value={planSummary.projectedProfit} />
-          <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+          <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] sm:col-span-2 xl:col-span-1">
             <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">How to read</span>
             <div className="mt-3 flex flex-wrap gap-2">
               <OptimizerPlanActionChip action="BUY" />
@@ -323,9 +323,15 @@ export function BatteryOptimizerPlanTable({
               Rows are ordered by time. Target shows where the optimizer wants battery state of charge to land by the end of that hour.
             </p>
           </div>
-          <div className="grid gap-2 rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] md:grid-cols-1">
-            <PlanMiniStat label="Highest sell price" value={rows.length ? formatOptimizerPrice(Math.max(...rows.map((row) => row.sellPriceDkkPerKwh))) : '---'} />
-            <PlanMiniStat label="Lowest spot price" value={rows.length ? formatOptimizerPrice(Math.min(...rows.map((row) => row.spotPriceDkkPerKwh))) : '---'} />
+          <div className="grid gap-2 rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] sm:col-span-2 sm:grid-cols-3 xl:col-span-1 xl:grid-cols-1">
+            <PlanMiniStat
+              label="Highest sell price"
+              value={rows.length ? formatOptimizerPrice(Math.max(...rows.map((row) => row.sellPriceDkkPerKwh))) : '---'}
+            />
+            <PlanMiniStat
+              label="Lowest spot price"
+              value={rows.length ? formatOptimizerPrice(Math.min(...rows.map((row) => row.spotPriceDkkPerKwh))) : '---'}
+            />
             <PlanMiniStat
               label="Avg target SoC"
               value={
@@ -337,7 +343,7 @@ export function BatteryOptimizerPlanTable({
           </div>
         </aside>
 
-        <div className="flex min-h-0 flex-col gap-3 overflow-hidden">
+        <div className="flex min-h-0 flex-col gap-3">
           <div className="grid grid-cols-[110px_88px_88px_88px_82px_82px_minmax(90px,1fr)] items-center gap-2 rounded-[16px] border border-white/8 bg-white/[0.035] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-dashboard-muted">
             <span>Time</span>
             <span>Action</span>
@@ -348,7 +354,7 @@ export function BatteryOptimizerPlanTable({
             <span className="text-right">Profit</span>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1" aria-label="Battery optimization plan">
+          <div aria-label="Battery optimization plan">
             <div className="grid gap-2">
             {visibleRows.map((row) => (
               <article
