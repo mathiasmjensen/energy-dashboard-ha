@@ -9,6 +9,7 @@ import {
   getEnergyPriceInsight,
   getSolarForecastInsight,
 } from '../services/dashboardInsights'
+import type { DataStateBadgeModel } from '../models/dataState'
 import type { InsightViewMode } from '../models/dashboardInsights'
 import { MobileDashboard } from './mobile/MobileDashboard'
 import { useBatteryHistory } from '../hooks/useBatteryHistory'
@@ -76,6 +77,10 @@ export function EnergyDashboard() {
   const batterySoc = appendUnit(data.batterySoc, '%')
   const evSoc = appendUnit(data.evChargePercent, '%')
   const batteryFlowMeta = [data.batteryStatus, batterySoc !== '---' ? batterySoc : null].filter(Boolean).join(' · ')
+  const toBadge = (tone: 'live' | 'mock' | 'stale'): DataStateBadgeModel => ({
+    label: tone === 'live' ? 'Live' : tone === 'mock' ? 'Mock' : 'Stale',
+    tone,
+  })
   const batteryOptimizerInputs = useMemo(
     () => ({
       batteryPowerKw: data.batteryPowerValue,
@@ -115,6 +120,13 @@ export function EnergyDashboard() {
       value: solarProductionEnergyKwh,
     },
   })
+  const pricesDataState = toBadge(peakRates.source === 'mock' ? 'mock' : peakRates.isStale ? 'stale' : 'live')
+  const solarForecastDataState = toBadge(solarForecast.isMock ? 'mock' : 'live')
+  const energyDistributionDataState = toBadge(historicalEnergyDay.distribution.dataState === 'mock' ? 'mock' : 'live')
+  const solarProductionDataState = toBadge(historicalEnergyDay.solarProduction.dataState === 'mock' ? 'mock' : 'live')
+  const weatherDataState = toBadge(data.dataState.weather as 'live' | 'mock')
+  const overviewDataState = toBadge(data.dataState.overview as 'live' | 'mock')
+  const batteryDataState = toBadge(data.dataState.battery as 'live' | 'mock')
   const insightControls = {
     canGoNext: true,
     canGoPrevious: true,
@@ -160,6 +172,7 @@ export function EnergyDashboard() {
       <MobileDashboard
         battery={{
           capacity: data.batteryCapacity,
+          dataState: batteryDataState,
           energy: data.batteryEnergy,
           power: data.batteryPower,
           soc: data.batterySoc,
@@ -179,10 +192,11 @@ export function EnergyDashboard() {
         displayTime={displayTime}
         energyDayControls={historicalEnergyDay.controls}
         insightControls={insightControls}
-        distribution={historicalEnergyDay.distribution}
+        distribution={{ ...historicalEnergyDay.distribution, dataState: energyDistributionDataState }}
         overview={{
           batteryMeta: batteryFlowMeta,
           batteryPower: data.batteryPower,
+          dataState: overviewDataState,
           evMeta: data.evChargeStatus,
           evPower: data.evChargePower,
           gridMeta: data.gridStatus,
@@ -190,15 +204,17 @@ export function EnergyDashboard() {
           homePower: data.homePower,
           solarPower: data.solarPower,
         }}
-        prices={energyPriceInsight}
-        solarForecast={solarForecastInsight}
+        prices={{ ...energyPriceInsight, dataState: pricesDataState }}
+        solarForecast={{ ...solarForecastInsight, dataState: solarForecastDataState }}
         solarProduction={{
           curve: historicalEnergyDay.solarProduction.curve,
+          dataState: solarProductionDataState,
           labels: historicalEnergyDay.solarProduction.labels,
           value: historicalEnergyDay.solarProduction.value,
         }}
         weather={{
           condition: data.weatherCondition,
+          dataState: weatherDataState,
           temperature: data.weatherTemperature,
         }}
       />
@@ -209,6 +225,7 @@ export function EnergyDashboard() {
     <DesktopDashboard
       battery={{
         capacity: data.batteryCapacity,
+        dataState: batteryDataState,
         energy: data.batteryEnergy,
         meta: batteryFlowMeta,
         power: data.batteryPower,
@@ -231,7 +248,7 @@ export function EnergyDashboard() {
       controller={evController}
       displayDate={displayDate}
       displayTime={displayTime}
-      distribution={historicalEnergyDay.distribution}
+      distribution={{ ...historicalEnergyDay.distribution, dataState: energyDistributionDataState }}
       grid={{
         power: data.gridPower,
         powerValue: data.gridPowerValue,
@@ -243,17 +260,18 @@ export function EnergyDashboard() {
       isEvChargerOpen={isEvChargerOpen}
       onCloseEvCharger={closeEvCharger}
       onOpenEvCharger={openEvCharger}
-      prices={energyPriceInsight}
+      prices={{ ...energyPriceInsight, dataState: pricesDataState }}
       sceneStyle={sceneStyle}
       shellStyle={shellStyle}
       weather={{
         condition: data.weatherCondition,
+        dataState: weatherDataState,
         temperature: data.weatherTemperature,
       }}
       solar={{
-        forecast: solarForecastInsight,
+        forecast: { ...solarForecastInsight, dataState: solarForecastDataState },
         power: data.solarPower,
-        production: historicalEnergyDay.solarProduction,
+        production: { ...historicalEnergyDay.solarProduction, dataState: solarProductionDataState },
       }}
     />
   )

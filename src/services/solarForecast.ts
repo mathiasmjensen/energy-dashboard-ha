@@ -202,6 +202,7 @@ export function getInitialSolarForecastState(evccForecastUrl: string): SolarFore
 export function getForecastResult(
   windows: SolarForecastWindow[],
   source: SolarForecastSource,
+  isMock = false,
   nowMs = Date.now(),
 ): SolarForecastResult {
   const todayKey = getLocalDateKey(new Date(nowMs))
@@ -237,6 +238,7 @@ export function getForecastResult(
     currentPowerKw: formatKw(activeWindow?.powerKw ?? 0, source === 'evcc'),
     hourlyKwh,
     hourlyPowerKw,
+    isMock,
     maxPowerKw: formatKw(maxPowerKw, source === 'evcc'),
     source,
     todayKwh: formatKwh(todayKwh, source === 'evcc'),

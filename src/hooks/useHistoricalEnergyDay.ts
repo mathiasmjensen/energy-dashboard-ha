@@ -35,6 +35,7 @@ type HistoricalEnergyDayResult = {
     battery: string
     batteryCharge: string
     batteryDischarge: string
+    dataState?: 'live' | 'mock'
     ev: string
     gridExport: string
     gridImport: string
@@ -44,6 +45,7 @@ type HistoricalEnergyDayResult = {
   }
   solarProduction: {
     curve: number[]
+    dataState?: 'live' | 'mock'
     labels: string[]
     value: string
   }
@@ -56,6 +58,7 @@ type HistoricalEnergyDayProps = {
 
 type HistoricalEnergyDayCacheEntry = {
   available: boolean
+  source: 'live' | 'mock'
   distribution: HistoricalEnergyDayResult['distribution']
   solarProduction: HistoricalEnergyDayResult['solarProduction']
 }
@@ -167,6 +170,7 @@ export function useHistoricalEnergyDay({
             ...current,
             [cacheKey]: {
               available: true,
+              source: 'mock',
               distribution: mockHistoricalDay.distribution,
               solarProduction: mockHistoricalDay.solarProduction,
             },
@@ -193,16 +197,16 @@ export function useHistoricalEnergyDay({
         onPrevious: () => setDayOffset((current) => Math.min(MAX_DAY_OFFSET, current + 1)),
       },
       solarProduction: hasActiveHistory
-        ? activeEntry.solarProduction
+        ? { ...activeEntry.solarProduction, dataState: activeEntry.source }
         : isHistoricalSelection && activeEntry
-          ? EMPTY_SOLAR_PRODUCTION
-          : currentSolarProduction,
+          ? { ...EMPTY_SOLAR_PRODUCTION, dataState: 'mock' }
+          : { ...currentSolarProduction, dataState: 'live' },
       distribution:
         hasActiveHistory
-          ? activeEntry.distribution
+          ? { ...activeEntry.distribution, dataState: activeEntry.source }
           : isHistoricalSelection && activeEntry
-            ? EMPTY_DISTRIBUTION
-            : currentDistribution,
+            ? { ...EMPTY_DISTRIBUTION, dataState: 'mock' }
+            : { ...currentDistribution, dataState: 'live' },
     }),
     [activeEntry, currentDistribution, currentSolarProduction, dayOffset, hasActiveHistory, isHistoricalSelection],
   )
@@ -350,6 +354,7 @@ function buildHistoricalDayEntry(
 
   return {
     available: hasData,
+    source: hasData ? 'live' : 'mock',
     distribution: {
       battery: formatKwh(Math.max(batteryChargeDistributionTotal, batteryDischargeDistributionTotal)),
       batteryCharge: formatKwh(batteryChargeDistributionTotal),

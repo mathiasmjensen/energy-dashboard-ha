@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
+import type { DataStateBadgeModel } from '../../../models/dataState'
 import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../models/dashboardInsights'
 import type { EvChargerController } from '../../../models/evChargePlan'
 import { assetPath } from '../../../utils/assetPath'
@@ -29,6 +30,7 @@ type DesktopTab = (typeof NAV_ITEMS)[number]['key']
 export type DesktopDashboardProps = {
   battery: {
     capacity: string
+    dataState: DataStateBadgeModel
     energy: string
     meta: string
     power: string
@@ -61,6 +63,7 @@ export type DesktopDashboardProps = {
     battery: string
     batteryCharge: string
     batteryDischarge: string
+    dataState: DataStateBadgeModel
     ev: string
     gridExport: string
     gridImport: string
@@ -80,6 +83,7 @@ export type DesktopDashboardProps = {
   onOpenEvCharger: () => void
   weather: {
     condition: string
+    dataState: DataStateBadgeModel
     temperature: string
   }
   sceneStyle: CSSProperties
@@ -89,6 +93,7 @@ export type DesktopDashboardProps = {
     power: string
     production: {
       curve: number[]
+      dataState: DataStateBadgeModel
       labels: string[]
       value: string
     }
@@ -216,8 +221,8 @@ export function DesktopDashboard({
                 className="absolute bottom-3 left-3 right-[10px] grid h-[264px] grid-cols-[320px_330px_248px] gap-[10px]"
                 aria-label="Bottom analytics"
               >
-                <SolarForecastCard controls={insightControls} insight={solar.forecast} />
-                <EnergyPricesCard controls={insightControls} insight={prices} />
+                <SolarForecastCard badge={solar.forecast.dataState} controls={insightControls} insight={solar.forecast} />
+                <EnergyPricesCard badge={prices.dataState} controls={insightControls} insight={prices} />
                 <EvChargerOverviewCard
                   battery={charger.battery}
                   chargeRate={charger.chargeRate}
@@ -233,6 +238,7 @@ export function DesktopDashboard({
                 battery={distribution.battery}
                 batteryCharge={distribution.batteryCharge}
                 batteryDischarge={distribution.batteryDischarge}
+                badge={distribution.dataState}
                 controls={energyDayControls}
                 ev={distribution.ev}
                 gridExport={distribution.gridExport}
@@ -241,12 +247,14 @@ export function DesktopDashboard({
                 solar={distribution.solar}
               />
               <SolarProductionPanel
+                badge={solar.production.dataState}
                 controls={energyDayControls}
                 curve={solar.production.curve}
                 labels={solar.production.labels}
                 value={solar.production.value}
               />
               <BatteryStatusPanel
+                badge={battery.dataState}
                 capacity={battery.capacity}
                 energy={battery.energy}
                 onOpen={openBatteryPage}

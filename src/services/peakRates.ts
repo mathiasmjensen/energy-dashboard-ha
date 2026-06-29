@@ -66,9 +66,11 @@ export function getPeakRateResult(windows: PeakRateWindow[], nowMs: number, erro
     days: getPeakRateDays(windows, nowMs),
     error,
     hourlyPrices: lookaheadWindows.slice(0, 24).map((window) => window.price),
+    isStale: false,
     now: activeWindow ? formatPrice(activeWindow.price) : null,
     peak: peakWindow ? formatPrice(peakWindow.price) : null,
     peakLabel: formatWindowLabel(peakWindow),
+    source: 'remote',
     windows,
   }
 }

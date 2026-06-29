@@ -36,6 +36,7 @@ export type SolarForecastResult = {
   currentPowerKw: string | null
   hourlyKwh: number[]
   hourlyPowerKw: number[]
+  isMock: boolean
   maxPowerKw: string | null
   source: SolarForecastSource
   todayKwh: string | null

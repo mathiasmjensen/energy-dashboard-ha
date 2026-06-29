@@ -11,7 +11,7 @@ import {
 import { BatteryVisual } from '../shared/BatteryVisual'
 import type { BatteryPeriod, MobileDashboardProps } from './MobileTypes'
 import { BATTERY_PERIODS } from './MobileConstants'
-import { GlassCard, MobileLineChart, SectionHeading, SegmentedControl, StatusChip } from './MobilePrimitives'
+import { GlassCard, MobileDataStateBadge, MobileLineChart, SectionHeading, SegmentedControl, StatusChip } from './MobilePrimitives'
 
 const MOBILE_BATTERY_SECTIONS = ['Details', 'Optimizer'] as const
 type MobileBatterySection = (typeof MOBILE_BATTERY_SECTIONS)[number]
@@ -53,6 +53,11 @@ export function MobileBatteryScreen({
       {section === 'Details' ? (
         <>
           <GlassCard className="grid gap-4 rounded-[26px] p-4">
+            <div className="flex items-center justify-between gap-2">
+              <SectionHeading title="Battery status" />
+              <MobileDataStateBadge badge={battery.dataState} />
+            </div>
+
             <div className="grid grid-cols-[1fr_124px] gap-4">
               <div className="grid content-start gap-3">
                 <div>
@@ -92,7 +97,10 @@ export function MobileBatteryScreen({
 
           <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
             <div className="flex flex-col gap-3">
-              <SectionHeading title="Battery history" />
+              <div className="flex items-center justify-between gap-2">
+                <SectionHeading title="Battery history" />
+                <MobileDataStateBadge badge={battery.dataState} />
+              </div>
               <SegmentedControl
                 active={period}
                 ariaLabel="Battery history period"

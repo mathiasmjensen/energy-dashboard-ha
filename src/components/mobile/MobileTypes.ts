@@ -1,4 +1,5 @@
 import type { BatteryOptimizerState } from '../../models/batteryOptimizer'
+import type { DataStateBadgeModel } from '../../models/dataState'
 import type { InsightHeaderControls } from '../../models/dashboardInsights'
 import type { EvChargerController } from '../../models/evChargePlan'
 
@@ -8,6 +9,7 @@ export type InsightItem = {
 }
 
 export type InsightChart = {
+  dataState?: DataStateBadgeModel
   pointLabels: string[]
   points: number[]
   primaryLabel: string
@@ -24,6 +26,7 @@ export type BatteryPeriod = 'Day' | 'Month' | 'Week'
 export type MobileDashboardProps = {
   battery: {
     capacity: string
+    dataState: DataStateBadgeModel
     energy: string
     power: string
     soc: string
@@ -59,6 +62,7 @@ export type MobileDashboardProps = {
     battery: string
     batteryCharge: string
     batteryDischarge: string
+    dataState: DataStateBadgeModel
     ev: string
     gridExport: string
     gridImport: string
@@ -69,6 +73,7 @@ export type MobileDashboardProps = {
   overview: {
     batteryMeta: string
     batteryPower: string
+    dataState: DataStateBadgeModel
     evMeta: string
     evPower: string
     gridMeta: string
@@ -80,11 +85,13 @@ export type MobileDashboardProps = {
   solarForecast: InsightChart & { totalKwh: string }
   solarProduction: {
     curve: number[]
+    dataState: DataStateBadgeModel
     labels: string[]
     value: string
   }
   weather: {
     condition: string
+    dataState: DataStateBadgeModel
     temperature: string
   }
 }

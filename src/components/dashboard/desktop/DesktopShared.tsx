@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import type { DataStateBadgeModel } from '../../../models/dataState'
 import type { InsightHeaderControls } from '../../../models/dashboardInsights'
 import { cn } from '../../../lib/cn'
 import {
@@ -66,26 +67,48 @@ export function StatusPill({
 }
 
 export function PanelHeader({
+  badge,
   controls,
   showPeriod = true,
   title,
 }: {
+  badge?: DataStateBadgeModel
   controls?: ReactNode
   showPeriod?: boolean
   title: string
 }) {
   return (
     <header className="flex items-start justify-between gap-3">
-      <h2 className="text-[22px] font-semibold leading-none tracking-[-0.01em] text-white">{title}</h2>
-      {controls ? (
-        controls
-      ) : showPeriod ? (
-        <span className="inline-flex h-[30px] min-w-[98px] items-center justify-between rounded-md border border-white/10 bg-black/25 px-2.5 text-[12px] text-white">
-          Today
-          <span aria-hidden="true">v</span>
-        </span>
-      ) : null}
+      <div className="flex min-w-0 items-center gap-2">
+        <h2 className="text-[22px] font-semibold leading-none tracking-[-0.01em] text-white">{title}</h2>
+        {badge ? <DataStateBadge badge={badge} /> : null}
+      </div>
+      <div className="flex items-center gap-2">
+        {controls ? (
+          controls
+        ) : showPeriod ? (
+          <span className="inline-flex h-[30px] min-w-[98px] items-center justify-between rounded-md border border-white/10 bg-black/25 px-2.5 text-[12px] text-white">
+            Today
+            <span aria-hidden="true">v</span>
+          </span>
+        ) : null}
+      </div>
     </header>
+  )
+}
+
+export function DataStateBadge({ badge }: { badge: DataStateBadgeModel }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex h-[22px] items-center rounded-full border px-2.5 text-[10px] font-semibold uppercase tracking-[0.12em]',
+        badge.tone === 'live' && 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200',
+        badge.tone === 'mock' && 'border-sky-400/25 bg-sky-400/10 text-sky-100',
+        badge.tone === 'stale' && 'border-amber-300/25 bg-amber-300/10 text-amber-100',
+      )}
+    >
+      {badge.label}
+    </span>
   )
 }
 

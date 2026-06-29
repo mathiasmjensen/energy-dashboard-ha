@@ -5,6 +5,7 @@ import { assetPath } from '../../utils/assetPath'
 import {
   GlassCard,
   MobileBarChart,
+  MobileDataStateBadge,
   MobileIcon,
   MobileInsightControls,
   NodeIcon,
@@ -24,7 +25,7 @@ export function MobileHomeScreen({
   return (
     <div className="flex flex-col gap-4 pb-2">
       <div className="grid grid-cols-3 gap-2.5">
-        <CompactStatusCard icon="sun" label="Weather" value={weather.temperature} secondary={weather.condition} tone="gold" />
+        <CompactStatusCard badge={weather.dataState} icon="sun" label="Weather" value={weather.temperature} secondary={weather.condition} tone="gold" />
         <CompactStatusCard icon="refresh" label="Updated" value={displayTime} secondary={displayDate} tone="blue" />
         <CompactStatusCard icon="battery" label="System" value="Normal" secondary={battery.status} tone="green" />
       </div>
@@ -33,6 +34,7 @@ export function MobileHomeScreen({
 
       <DesktopLikeInsightCard
         controls={insightControls}
+        badge={solarForecast.dataState}
         metric={solarForecast.totalKwh}
         metricLabel={solarForecast.primaryLabel}
         summary={solarForecast.summaryItems.slice(0, 2)}
@@ -45,6 +47,7 @@ export function MobileHomeScreen({
 
       <DesktopLikeInsightCard
         controls={insightControls}
+        badge={prices.dataState}
         metric={prices.primaryValue}
         metricLabel={prices.primaryLabel}
         summary={prices.summaryItems.slice(0, 2)}
@@ -79,6 +82,9 @@ function HomeHeroCard({
         </div>
 
         <div className="grid gap-4 px-3 pb-3 pt-4">
+          <div className="flex justify-end">
+            {overview.dataState ? <MobileDataStateBadge badge={overview.dataState} /> : null}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <InfoStat icon="sun" label="PV" tone="green" value={overview.solarPower} />
             <InfoStat icon="sun" label="Solar" tone="gold" value={overview.solarPower} />
@@ -158,12 +164,14 @@ function MetricTile({
 }
 
 function CompactStatusCard({
+  badge,
   icon,
   label,
   secondary,
   tone,
   value,
 }: {
+  badge?: import('../../models/dataState').DataStateBadgeModel
   icon: 'battery' | 'refresh' | 'sun'
   label: string
   secondary: string
@@ -174,9 +182,12 @@ function CompactStatusCard({
     <GlassCard className="rounded-[20px] p-3">
       <div className="flex items-start justify-between gap-2">
         <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
-        <StatusChip tone={tone === 'green' ? 'green' : tone === 'gold' ? 'gold' : 'neutral'}>
-          <MobileIcon name={icon} />
-        </StatusChip>
+        <div className="flex items-center gap-1.5">
+          {badge ? <MobileDataStateBadge badge={badge} /> : null}
+          <StatusChip tone={tone === 'green' ? 'green' : tone === 'gold' ? 'gold' : 'neutral'}>
+            <MobileIcon name={icon} />
+          </StatusChip>
+        </div>
       </div>
       <strong className="mt-2 block text-[13px] font-semibold text-dashboard-text">{value}</strong>
       <small className="mt-1 block text-[10px] leading-4 text-dashboard-soft">{secondary}</small>
@@ -185,6 +196,7 @@ function CompactStatusCard({
 }
 
 function DesktopLikeInsightCard({
+  badge,
   children,
   controls,
   metric,
@@ -194,6 +206,7 @@ function DesktopLikeInsightCard({
   unit,
   windowLabel,
 }: {
+  badge?: import('../../models/dataState').DataStateBadgeModel
   children: ReactNode
   controls: MobileDashboardProps['insightControls']
   metric: string
@@ -208,8 +221,11 @@ function DesktopLikeInsightCard({
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-white">{title}</h2>
-          <div className="mt-2 inline-flex min-h-6 items-center rounded-full border border-white/10 bg-white/[0.04] px-2.5 text-[10px] font-medium text-dashboard-soft">
-            {windowLabel}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {badge ? <MobileDataStateBadge badge={badge} /> : null}
+            <div className="inline-flex min-h-6 items-center rounded-full border border-white/10 bg-white/[0.04] px-2.5 text-[10px] font-medium text-dashboard-soft">
+              {windowLabel}
+            </div>
           </div>
         </div>
         <MobileInsightControls controls={controls} />

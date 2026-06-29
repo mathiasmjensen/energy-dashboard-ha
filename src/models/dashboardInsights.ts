@@ -1,3 +1,5 @@
+import type { DataStateBadgeModel } from './dataState'
+
 export type InsightViewMode = 'timeline' | 'today'
 
 export type InsightHeaderControls = {
@@ -15,6 +17,7 @@ export type InsightMetricItem = {
 }
 
 export type SolarForecastInsight = {
+  dataState?: DataStateBadgeModel
   pointLabels: string[]
   points: number[]
   primaryLabel: string
@@ -24,6 +27,7 @@ export type SolarForecastInsight = {
 }
 
 export type EnergyPriceInsight = {
+  dataState?: DataStateBadgeModel
   pointLabels: string[]
   points: number[]
   primaryLabel: string
