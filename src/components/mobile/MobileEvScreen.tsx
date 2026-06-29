@@ -35,9 +35,12 @@ export function MobileEvScreen({
 
   return (
     <div className="flex flex-col gap-4" data-mode={activeMode}>
-      <GlassCard className="grid grid-cols-[128px_1fr] gap-4 rounded-[24px] p-4">
-        <img src={assetPath('/new-energy-dashboard/car.png')} alt="Tesla Model Y" />
+      <GlassCard className="grid grid-cols-[128px_1fr] gap-4 rounded-[26px] p-4">
+        <div className="rounded-[20px] border border-white/8 bg-[#0b111d]/88 p-2">
+          <img src={assetPath('/new-energy-dashboard/car.png')} alt="Tesla Model Y" />
+        </div>
         <div className="grid content-center gap-2">
+          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Vehicle</span>
           <strong className="text-xl font-semibold text-dashboard-text">Tesla Model Y</strong>
           <span className="inline-flex items-center gap-2 text-sm font-medium text-dashboard-soft">
             <i className="h-2.5 w-2.5 rounded-full bg-dashboard-green shadow-[0_0_14px_rgba(96,234,93,0.52)]" />
@@ -81,10 +84,12 @@ export function MobileEvScreen({
         </GlassCard>
       ) : null}
 
-      <div className="flex items-center justify-between px-1 text-sm text-dashboard-soft">
-        <span>Vehicle battery</span>
-        <strong className="text-base font-semibold text-dashboard-text">{batterySoc}%</strong>
-      </div>
+      <GlassCard className="rounded-[22px] p-4">
+        <div className="flex items-center justify-between text-sm text-dashboard-soft">
+          <span>Vehicle battery</span>
+          <strong className="text-base font-semibold text-dashboard-text">{batterySoc}%</strong>
+        </div>
+      </GlassCard>
     </div>
   )
 }

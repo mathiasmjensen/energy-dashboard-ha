@@ -81,12 +81,7 @@ export function BatteryOptimizerStatusCard({
     variant,
     'Battery optimizer status',
     <>
-      <div
-        className={cn(
-          'grid gap-3',
-          variant === 'desktop' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2',
-        )}
-      >
+      <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-4' : 'grid-cols-2')}>
         <StatusMetric label="Battery SoC" value={formatOptimizerPercent(status.socPercent)} />
         <StatusMetric label="Battery mode" value={getOptimizerModeLabel(status.mode)} />
         <StatusMetric label="Battery power" value={formatOptimizerPower(status.batteryPowerKw)} />
@@ -167,7 +162,7 @@ export function BatteryOptimizerControlsCard({
     variant,
     'Optimizer controls',
     <>
-      <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1')}>
+      <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-3' : 'grid-cols-1')}>
         <ToggleRow
           checked={settings.autoMode}
           disabled={isBusy}
@@ -234,7 +229,7 @@ export function BatteryOptimizerControlsCard({
         </label>
       </div>
 
-      <div className={cn('flex gap-3', variant === 'desktop' ? 'flex-wrap' : 'flex-col')}>
+      <div className={cn(variant === 'desktop' ? 'grid grid-cols-3 gap-3' : 'flex flex-col gap-3')}>
         <button type="button" className={secondaryButtonClassName()} disabled={isBusy} onClick={optimizer.refresh}>
           {optimizer.isRefreshing ? 'Refreshing...' : 'Refresh prices / forecast'}
         </button>
@@ -260,7 +255,7 @@ export function BatteryOptimizerPlanTable({
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const rows = optimizer.snapshot ? slicePlanRows(optimizer.snapshot.planRows, planHours) : []
-  const visibleRows = variant === 'desktop' ? (isExpanded ? rows : rows.slice(0, 6)) : rows
+  const visibleRows = variant === 'desktop' ? (isExpanded ? rows : rows.slice(0, 8)) : rows
   const hiddenCount = Math.max(0, rows.length - visibleRows.length)
   const planSummary = getPlanSummary(rows)
 
@@ -310,50 +305,83 @@ export function BatteryOptimizerPlanTable({
         <div className={planPillClassName()}>{planHours}h horizon</div>
       </div>
 
-      <div className="grid gap-4">
-        <div className="grid gap-3 xl:grid-cols-3">
-          <SummaryBlock label="Next action" value={planSummary.nextAction} />
-          <SummaryBlock label="Best projected window" value={planSummary.bestWindow} />
-          <SummaryBlock label="Projected plan result" value={planSummary.projectedProfit} />
-        </div>
+      <div className="grid h-full min-h-0 gap-4 lg:grid-cols-[282px_minmax(0,1fr)]">
+        <aside className="grid content-start gap-3">
+          <SummaryBlock compact label="Next action" value={planSummary.nextAction} />
+          <SummaryBlock compact label="Best projected window" value={planSummary.bestWindow} />
+          <SummaryBlock compact label="Projected plan result" value={planSummary.projectedProfit} />
+          <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+            <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">How to read</span>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <OptimizerPlanActionChip action="BUY" />
+              <OptimizerPlanActionChip action="CHARGE" />
+              <OptimizerPlanActionChip action="HOLD" />
+              <OptimizerPlanActionChip action="DISCHARGE" />
+              <OptimizerPlanActionChip action="SELL" />
+            </div>
+            <p className="mt-3 text-[12px] leading-5 text-dashboard-soft">
+              Rows are ordered by time. Target shows where the optimizer wants battery state of charge to land by the end of that hour.
+            </p>
+          </div>
+          <div className="grid gap-2 rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] md:grid-cols-1">
+            <PlanMiniStat label="Highest sell price" value={rows.length ? formatOptimizerPrice(Math.max(...rows.map((row) => row.sellPriceDkkPerKwh))) : '---'} />
+            <PlanMiniStat label="Lowest spot price" value={rows.length ? formatOptimizerPrice(Math.min(...rows.map((row) => row.spotPriceDkkPerKwh))) : '---'} />
+            <PlanMiniStat
+              label="Avg target SoC"
+              value={
+                rows.length
+                  ? formatOptimizerPercent(rows.reduce((sum, row) => sum + row.targetSocPercent, 0) / rows.length)
+                  : '---'
+              }
+            />
+          </div>
+        </aside>
 
-        <div className="grid gap-3 xl:grid-cols-2" aria-label="Battery optimization plan">
-          {visibleRows.map((row) => (
-            <article
-              key={row.startIso}
-              className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-4 shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
-            >
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <strong className="block text-base font-semibold text-dashboard-text">{formatOptimizerHourRange(row)}</strong>
-                  <span className="block text-sm text-dashboard-soft">Target SoC {formatOptimizerPercent(row.targetSocPercent)}</span>
+        <div className="flex min-h-0 flex-col gap-3 overflow-hidden">
+          <div className="grid grid-cols-[110px_88px_88px_88px_82px_82px_minmax(90px,1fr)] items-center gap-2 rounded-[16px] border border-white/8 bg-white/[0.035] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-dashboard-muted">
+            <span>Time</span>
+            <span>Action</span>
+            <span>Spot</span>
+            <span>Target</span>
+            <span>Solar</span>
+            <span>House</span>
+            <span className="text-right">Profit</span>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1" aria-label="Battery optimization plan">
+            <div className="grid gap-2">
+            {visibleRows.map((row) => (
+              <article
+                key={row.startIso}
+                className="grid grid-cols-[110px_88px_88px_88px_82px_82px_minmax(90px,1fr)] items-center gap-2 rounded-[16px] border border-white/8 bg-[#0b111d]/88 px-3 py-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.16)]"
+              >
+                <div className="min-w-0">
+                  <strong className="block truncate text-[0.84rem] font-semibold text-dashboard-text">{formatOptimizerHourRange(row)}</strong>
+                  <span className="mt-0.5 block truncate text-[0.72rem] text-dashboard-soft">Buy {formatOptimizerPrice(row.fullBuyPriceDkkPerKwh)}</span>
                 </div>
                 <OptimizerPlanActionChip action={row.action} />
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-3">
-                <PlanMiniStat label="Spot price" value={formatOptimizerPrice(row.spotPriceDkkPerKwh)} />
-                <PlanMiniStat label="Full buy" value={formatOptimizerPrice(row.fullBuyPriceDkkPerKwh)} />
-                <PlanMiniStat label="Sell price" value={formatOptimizerPrice(row.sellPriceDkkPerKwh)} />
-                <PlanMiniStat label="Solar surplus" value={formatOptimizerEnergy(row.expectedSolarSurplusKwh)} />
-                <PlanMiniStat label="House usage" value={formatOptimizerEnergy(row.expectedHouseUsageKwh)} />
-                <PlanMiniStat label="Profit / loss" value={formatOptimizerCurrency(row.expectedProfitDkk)} />
-              </div>
-            </article>
-          ))}
-        </div>
-
-        {hiddenCount > 0 ? (
-          <div className="flex justify-center">
-            <button
-              type="button"
-              className={secondaryButtonClassName()}
-              onClick={() => setIsExpanded((current) => !current)}
-            >
-              {isExpanded ? 'Show fewer plan hours' : `Show ${hiddenCount} more plan hours`}
-            </button>
+                <strong className="text-[0.82rem] font-semibold text-dashboard-text">{formatOptimizerPrice(row.spotPriceDkkPerKwh)}</strong>
+                <strong className="text-[0.82rem] font-semibold text-dashboard-text">{formatOptimizerPercent(row.targetSocPercent)}</strong>
+                <span className="text-[0.8rem] text-dashboard-soft">{formatOptimizerEnergy(row.expectedSolarSurplusKwh)}</span>
+                <span className="text-[0.8rem] text-dashboard-soft">{formatOptimizerEnergy(row.expectedHouseUsageKwh)}</span>
+                <strong className="text-right text-[0.82rem] font-semibold text-dashboard-text">{formatOptimizerCurrency(row.expectedProfitDkk)}</strong>
+              </article>
+            ))}
+            </div>
           </div>
-        ) : null}
+
+          {hiddenCount > 0 ? (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                className={secondaryButtonClassName()}
+                onClick={() => setIsExpanded((current) => !current)}
+              >
+                {isExpanded ? 'Show fewer plan hours' : `Show ${hiddenCount} more plan hours`}
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </section>
   )
@@ -388,7 +416,7 @@ export function BatteryOptimizerCharts({
   }
 
   return (
-    <section className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
+    <section className="grid grid-cols-2 gap-4">
       <OptimizerDesktopChartCard color="#3d86ff" labels={charts.priceCurve.labels} points={charts.priceCurve.points} title="DK1 price curve" unit="DKK/kWh" />
       <OptimizerDesktopChartCard color="#60ea5d" labels={charts.socForecast.labels} points={charts.socForecast.points} title="Battery SoC forecast" unit="%" />
       <OptimizerDesktopChartCard color="#f0b339" labels={charts.plannedBatteryPower.labels} points={charts.plannedBatteryPower.points} title="Planned charge / discharge" unit="kW" />
@@ -476,12 +504,12 @@ function SummaryBlock({
   value: string
 }) {
   return (
-    <div className={cn('rounded-[18px] border border-white/8 bg-[#0b111d]/88 shadow-[0_12px_28px_rgba(0,0,0,0.18)]', compact ? 'p-3' : 'p-4')}>
+    <div className={cn('rounded-[18px] border border-white/8 bg-[#0b111d]/88 shadow-[0_12px_28px_rgba(0,0,0,0.18)]', compact ? 'p-2.5' : 'p-4')}>
       <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
       <strong
         className={cn(
           'mt-2 block font-semibold text-dashboard-text',
-          compact ? 'text-[0.94rem] leading-6' : 'text-[1rem] leading-7',
+          compact ? 'text-[0.84rem] leading-5' : 'text-[1rem] leading-7',
         )}
         style={
           compact
@@ -502,18 +530,18 @@ function SummaryBlock({
 
 function StatusMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-h-[128px] rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-4 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+    <div className="min-h-[88px] rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
       <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
-      <strong className="mt-3 block break-words text-[1.22rem] font-semibold leading-7 text-dashboard-text">{value}</strong>
+      <strong className="mt-2 block break-words text-[0.96rem] font-semibold leading-5 text-dashboard-text">{value}</strong>
     </div>
   )
 }
 
 function PlanMiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/6 bg-white/[0.02] px-3 py-3">
+    <div className="rounded-2xl border border-white/6 bg-white/[0.02] px-2 py-2">
       <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-dashboard-muted">{label}</span>
-      <strong className="mt-1 block break-words text-sm font-semibold leading-6 text-dashboard-text">{value}</strong>
+      <strong className="mt-1 block break-words text-[0.84rem] font-semibold leading-5 text-dashboard-text">{value}</strong>
     </div>
   )
 }
@@ -685,16 +713,16 @@ function mapToneToMobile(tone: 'blue' | 'gold' | 'green' | 'neutral' | 'purple')
 function fieldClassName(variant: Variant) {
   return cn(
     'flex rounded-[18px] border border-white/8 bg-[#0b111d]/88 shadow-[0_12px_28px_rgba(0,0,0,0.18)]',
-    variant === 'desktop' ? 'items-center justify-between gap-4 p-3' : 'flex-col gap-3 p-3',
+    variant === 'desktop' ? 'items-center justify-between gap-2.5 p-2.5' : 'flex-col gap-3 p-3',
   )
 }
 
 function secondaryButtonClassName() {
-  return 'inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50'
+  return 'inline-flex min-h-10 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-[0.82rem] font-semibold text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50'
 }
 
 function primaryButtonClassName() {
-  return 'inline-flex min-h-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,rgba(77,122,255,0.98),rgba(86,231,112,0.88))] px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_18px_40px_rgba(77,122,255,0.28)] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50'
+  return 'inline-flex min-h-10 w-full items-center justify-center rounded-2xl bg-[linear-gradient(135deg,rgba(77,122,255,0.98),rgba(86,231,112,0.88))] px-3.5 py-2.5 text-[0.82rem] font-semibold text-slate-950 shadow-[0_18px_40px_rgba(77,122,255,0.28)] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50'
 }
 
 function planPillClassName() {

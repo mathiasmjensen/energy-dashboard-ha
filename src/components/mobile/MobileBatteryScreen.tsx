@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { BatteryOptimizerState } from '../../models/batteryOptimizer'
 import {
   BatteryOptimizerCharts,
@@ -10,7 +11,17 @@ import {
 import { BatteryVisual } from '../shared/BatteryVisual'
 import type { BatteryPeriod, MobileDashboardProps } from './MobileTypes'
 import { BATTERY_PERIODS } from './MobileConstants'
-import { GlassCard, MobileLineChart, SmallMetricCard, SectionHeading, SegmentedControl, StatusChip } from './MobilePrimitives'
+import { GlassCard, MobileLineChart, SectionHeading, SegmentedControl, StatusChip } from './MobilePrimitives'
+
+const MOBILE_BATTERY_SECTIONS = ['Details', 'Optimizer'] as const
+type MobileBatterySection = (typeof MOBILE_BATTERY_SECTIONS)[number]
+const MOBILE_OPTIMIZER_SECTIONS = ['status', 'plan', 'charts'] as const
+type MobileOptimizerSection = (typeof MOBILE_OPTIMIZER_SECTIONS)[number]
+const MOBILE_OPTIMIZER_LABELS: Record<MobileOptimizerSection, string> = {
+  charts: 'Charts',
+  plan: 'Plan',
+  status: 'Status',
+}
 
 export function MobileBatteryScreen({
   battery,
@@ -32,62 +43,111 @@ export function MobileBatteryScreen({
   period: BatteryPeriod
   onPeriodChange: (period: BatteryPeriod) => void
 }) {
+  const [section, setSection] = useState<MobileBatterySection>('Details')
+  const [optimizerSection, setOptimizerSection] = useState<MobileOptimizerSection>('status')
+
   return (
-    <div className="flex flex-col gap-4">
-      <GlassCard className="grid gap-4 rounded-[26px] p-4 sm:grid-cols-[1fr_132px_1fr]">
-        <div className="flex min-w-0 flex-col justify-center">
-          <span className="text-xs font-medium uppercase tracking-[0.14em] text-dashboard-muted">State of charge</span>
-          <strong className="mt-2 text-[2rem] font-semibold leading-none text-dashboard-text">{battery.soc}%</strong>
-          <small className="mt-4 text-xs font-medium uppercase tracking-[0.14em] text-dashboard-muted">Stored energy</small>
-          <strong className="mt-2 text-[1.15rem] font-semibold text-dashboard-text">{battery.energy} kWh</strong>
-        </div>
+    <div className="flex flex-col gap-4 pb-2">
+      <SegmentedControl active={section} ariaLabel="Battery mobile section" options={MOBILE_BATTERY_SECTIONS} onChange={(value) => setSection(value as MobileBatterySection)} />
 
-        <div className="flex items-center justify-center py-2">
-          <BatteryVisual level={battery.socValue} />
-        </div>
+      {section === 'Details' ? (
+        <>
+          <GlassCard className="grid gap-4 rounded-[26px] p-4">
+            <div className="grid grid-cols-[1fr_124px] gap-4">
+              <div className="grid content-start gap-3">
+                <div>
+                  <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Battery state</span>
+                  <strong className="mt-2 block text-[2rem] font-semibold leading-none text-dashboard-text">{battery.soc}%</strong>
+                  <span className="mt-1.5 block text-sm text-dashboard-soft">State of charge</span>
+                </div>
+                <div className="h-px bg-white/10" />
+                <div>
+                  <strong className="block text-[1.25rem] font-semibold text-dashboard-text">{battery.energy} kWh</strong>
+                  <span className="mt-1 block text-sm text-dashboard-soft">Stored energy</span>
+                </div>
+              </div>
 
-        <div className="flex min-w-0 flex-col justify-center gap-3">
-          <StatusChip tone={battery.status === 'Charging' ? 'green' : battery.status === 'Discharging' ? 'danger' : 'neutral'}>
-            {battery.status}
-          </StatusChip>
-          <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-3 py-2">
-            <small className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Power</small>
-            <strong className="mt-1 block text-lg font-semibold text-dashboard-text">{battery.power} kW</strong>
-          </div>
-          <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-3 py-2">
-            <small className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{insights.runtimeLabel}</small>
-            <strong className="mt-1 block text-lg font-semibold text-dashboard-text">{insights.runtimeValue}</strong>
-          </div>
-        </div>
-      </GlassCard>
+              <div className="flex items-center justify-center rounded-[20px] border border-white/8 bg-[#0b111d]/88 p-3">
+                <BatteryVisual level={battery.socValue} />
+              </div>
+            </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <SmallMetricCard label="Capacity" value={`${battery.capacity} kWh`} />
-        <SmallMetricCard label="Charge rate" value={`${insights.chargeRate} kW`} />
-        <SmallMetricCard label="Discharge rate" value={`${insights.dischargeRate} kW`} />
-        <SmallMetricCard label="Battery power" value={`${battery.power} kW`} />
-      </div>
+            <div className="grid grid-cols-2 gap-3">
+              <DetailCard label="Current behavior" tone={battery.status === 'Charging' ? 'green' : battery.status === 'Discharging' ? 'danger' : 'neutral'}>
+                <StatusChip tone={battery.status === 'Charging' ? 'green' : battery.status === 'Discharging' ? 'danger' : 'neutral'}>
+                  {battery.status}
+                </StatusChip>
+              </DetailCard>
+              <DetailCard label="Power">
+                <strong className="text-[1.05rem] font-semibold text-dashboard-text">{battery.power} kW</strong>
+              </DetailCard>
+              <DetailCard label="Charge rate">
+                <strong className="text-[1.05rem] font-semibold text-dashboard-text">{insights.chargeRate} kW</strong>
+              </DetailCard>
+              <DetailCard label={insights.runtimeLabel}>
+                <strong className="text-[1.05rem] font-semibold text-dashboard-text">{insights.runtimeValue}</strong>
+              </DetailCard>
+            </div>
+          </GlassCard>
 
-      <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
-        <div className="flex flex-col gap-3">
-          <SectionHeading title="Battery history" />
+          <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
+            <div className="flex flex-col gap-3">
+              <SectionHeading title="Battery history" />
+              <SegmentedControl
+                active={period}
+                ariaLabel="Battery history period"
+                options={BATTERY_PERIODS}
+                onChange={(value) => onPeriodChange(value as BatteryPeriod)}
+              />
+            </div>
+
+            <div className="rounded-[20px] border border-white/8 bg-[#09101a]/72 p-2.5">
+              <MobileLineChart color="#60ea5d" labels={history.labels} points={history.points} unit="%" />
+            </div>
+          </GlassCard>
+        </>
+      ) : (
+        <>
+          <OptimizerStateBanner optimizer={optimizer} variant="mobile" />
           <SegmentedControl
-            active={period}
-            ariaLabel="Battery history period"
-            options={BATTERY_PERIODS}
-            onChange={(value) => onPeriodChange(value as BatteryPeriod)}
+            active={optimizerSection}
+            ariaLabel="Battery optimizer section"
+            optionLabels={MOBILE_OPTIMIZER_LABELS}
+            options={MOBILE_OPTIMIZER_SECTIONS}
+            onChange={(value) => setOptimizerSection(value as MobileOptimizerSection)}
           />
-        </div>
 
-        <MobileLineChart color="#4fd55f" labels={history.labels} points={history.points} unit="%" />
-      </GlassCard>
+          {optimizerSection === 'status' ? (
+            <>
+              <BatteryOptimizerStatusCard optimizer={optimizer} variant="mobile" />
+              <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="mobile" />
+              <BatteryOptimizerControlsCard optimizer={optimizer} variant="mobile" />
+            </>
+          ) : null}
 
-      <OptimizerStateBanner optimizer={optimizer} variant="mobile" />
-      <BatteryOptimizerStatusCard optimizer={optimizer} variant="mobile" />
-      <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="mobile" />
-      <BatteryOptimizerControlsCard optimizer={optimizer} variant="mobile" />
-      <BatteryOptimizerPlanTable optimizer={optimizer} planHours={24} variant="mobile" />
-      <BatteryOptimizerCharts optimizer={optimizer} variant="mobile" />
+          {optimizerSection === 'plan' ? <BatteryOptimizerPlanTable optimizer={optimizer} planHours={24} variant="mobile" /> : null}
+          {optimizerSection === 'charts' ? <BatteryOptimizerCharts optimizer={optimizer} variant="mobile" /> : null}
+        </>
+      )}
+    </div>
+  )
+}
+
+function DetailCard({
+  children,
+  label,
+  tone = 'neutral',
+}: {
+  children: React.ReactNode
+  label: string
+  tone?: 'danger' | 'green' | 'neutral'
+}) {
+  return (
+    <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 px-3 py-3 shadow-[0_12px_28px_rgba(0,0,0,0.16)]">
+      <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
+      <div className="mt-2">
+        {tone === 'neutral' ? children : <div className={tone === 'green' ? 'text-emerald-300' : 'text-rose-300'}>{children}</div>}
+      </div>
     </div>
   )
 }

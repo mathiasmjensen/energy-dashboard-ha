@@ -14,7 +14,7 @@ sidebar, central energy-flow scene, right detail rail, and bottom analytics row.
 
 The Battery surfaces now include a battery optimizer layer:
 - mobile Battery tab: summary + history + optimizer stack
-- desktop Battery modal: summary + history + optimizer workspace
+- desktop Battery page: summary + history + optimizer workspace
 
 The UI is currently being migrated away from a monolithic stylesheet toward
 Tailwind utility classes and shared presentational primitives. The design should
@@ -112,8 +112,23 @@ installed in your environment.
   EV charger content shared between desktop modal and mobile EV screens.
 - `src/hooks/*`
   Data orchestration for HA, EVCC, price feeds, historical views, and optimizer.
+- `src/models/*`
+  Shared domain types for optimizer state, prices, forecasts, EV planning, and
+  HA-facing data shapes.
 - `src/services/*`
   Formatting, adapters, API clients, and pure data normalization logic.
+
+## Type Organization
+
+Shared app/domain types now live in `src/models` instead of being declared
+inside services and hooks.
+
+Use this rule going forward:
+
+1. Put shared domain types in `src/models/*`
+2. Keep services focused on normalization, formatting, and side-effect helpers
+3. Keep hooks focused on orchestration and React state
+4. Leave tiny component-private prop types local only when they are not shared
 
 ## Deploy To Home Assistant Docker
 

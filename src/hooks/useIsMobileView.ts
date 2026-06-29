@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-const MOBILE_BREAKPOINT = 900
+const MOBILE_BREAKPOINT = 1180
 
 function getMatches() {
   if (typeof window === 'undefined') {
