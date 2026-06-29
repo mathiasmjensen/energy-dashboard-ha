@@ -1,5 +1,6 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
 import { useMemo, useState } from 'react'
+import type { DataStateBadgeModel } from '../../models/dataState'
 import { cn } from '../../lib/cn'
 import { formatChartValue, getBarChartGeometry, getMobileLineChartGeometry } from '../../services/chartGeometry'
 import type { InsightHeaderControls } from '../../models/dashboardInsights'
@@ -79,6 +80,7 @@ export function MobileBottomNav({
 export function AnalyticsCard({
   accent,
   actionLabel,
+  badge,
   children,
   controls,
   controlsNode,
@@ -90,6 +92,7 @@ export function AnalyticsCard({
 }: {
   accent: 'blue' | 'solar'
   actionLabel?: string
+  badge?: DataStateBadgeModel
   children: ReactNode
   controls?: InsightHeaderControls
   controlsNode?: ReactNode
@@ -102,7 +105,10 @@ export function AnalyticsCard({
   return (
     <GlassCard className="mobile-analytics-card p-5" data-accent={accent}>
       <div className="mb-3 flex items-start justify-between gap-3">
-        <h2 className="text-[clamp(18px,4.8vw,22px)] font-semibold tracking-[-0.02em] text-white">{title}</h2>
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="text-[clamp(18px,4.8vw,22px)] font-semibold tracking-[-0.02em] text-white">{title}</h2>
+          {badge ? <MobileDataStateBadge badge={badge} /> : null}
+        </div>
         {controlsNode ? controlsNode : controls ? <MobileInsightControls controls={controls} /> : <MobileCardAction label={actionLabel ?? 'Today'} />}
       </div>
 
@@ -235,6 +241,21 @@ export function GlassCard({
 
 export function SectionHeading({ title }: { title: string }) {
   return <h2 className="text-[clamp(18px,4.8vw,22px)] font-semibold tracking-[-0.02em] text-white">{title}</h2>
+}
+
+export function MobileDataStateBadge({ badge }: { badge: DataStateBadgeModel }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex h-6 items-center rounded-full border px-2.5 text-[10px] font-semibold uppercase tracking-[0.12em]',
+        badge.tone === 'live' && 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200',
+        badge.tone === 'mock' && 'border-sky-400/25 bg-sky-400/10 text-sky-100',
+        badge.tone === 'stale' && 'border-amber-300/25 bg-amber-300/10 text-amber-100',
+      )}
+    >
+      {badge.label}
+    </span>
+  )
 }
 
 export function SegmentedControl({

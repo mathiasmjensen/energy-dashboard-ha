@@ -129,8 +129,12 @@ export function useSolarForecast(): SolarForecastResult {
   return useMemo(
     () =>
       hasHaForecast
-        ? getForecastResult(haForecastState.windows, haForecastState.source)
-        : getForecastResult(forecastState.windows.length ? forecastState.windows : mockForecastState.windows, forecastState.windows.length ? forecastState.source : mockForecastState.source),
+        ? getForecastResult(haForecastState.windows, haForecastState.source, false)
+        : getForecastResult(
+            forecastState.windows.length ? forecastState.windows : mockForecastState.windows,
+            forecastState.windows.length ? forecastState.source : mockForecastState.source,
+            !forecastState.windows.length,
+          ),
     [forecastState, haForecastState, hasHaForecast, mockForecastState],
   )
 }

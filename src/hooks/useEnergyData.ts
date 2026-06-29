@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
-import { pickArrayValue, pickDisplayValue, pickNumberValue, getDashboardMockData } from '../services/dashboardMockData'
+import { isMissingDisplayValue, pickArrayValue, pickDisplayValue, pickNumberValue, getDashboardMockData } from '../services/dashboardMockData'
 import {
   formatBatteryKwh,
   getBatteryDailyEnergyTotal,
@@ -61,8 +61,26 @@ export function useEnergyData() {
       dischargeTodayKwh: batteryDischargeTodayValue,
       status: batteryStatus,
     })
+    const weatherSource =
+      isMissingDisplayValue(weather.condition) || isMissingDisplayValue(weather.temperature) ? 'mock' : 'live'
+    const overviewSource =
+      [solarPowerValue, gridPowerValue, batteryPowerValue, getNumericState(resolved, 'homePower')].some((value) => value === null)
+        ? 'mock'
+        : 'live'
+    const batterySource =
+      batterySoc === null || batteryPowerValue === null || batteryEnergyMetrics.storedEnergyKwh === null ? 'mock' : 'live'
+    const evSource = evChargePowerValue === null ? 'mock' : 'live'
+    const solarProductionSource =
+      solarProductionFeed.available || !isMissingDisplayValue(formatState(resolved, 'solarProductionToday', 'kWh')) ? 'live' : 'mock'
 
     return {
+      dataState: {
+        battery: batterySource,
+        ev: evSource,
+        overview: overviewSource,
+        solarProduction: solarProductionSource,
+        weather: weatherSource,
+      },
       weatherCondition: pickDisplayValue(weather.condition, mock.weatherCondition),
       weatherTemperature: pickDisplayValue(weather.temperature, mock.weatherTemperature),
       solarPower: pickDisplayValue(formatState(resolved, 'solarPower', 'kW'), mock.solarPower),

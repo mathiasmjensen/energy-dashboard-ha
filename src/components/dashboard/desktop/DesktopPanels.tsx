@@ -1,7 +1,8 @@
 import { assetPath } from '../../../utils/assetPath'
+import type { DataStateBadgeModel } from '../../../models/dataState'
 import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../models/dashboardInsights'
 import { cn } from '../../../lib/cn'
-import { BarChart, DayWindowControls, type DayHeaderControls, InsightToolbar, Panel, PanelHeader } from './DesktopShared'
+import { BarChart, DataStateBadge, DayWindowControls, type DayHeaderControls, InsightToolbar, Panel, PanelHeader } from './DesktopShared'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/batteryMetrics'
 import { BatteryVisual } from '../../shared/BatteryVisual'
 
@@ -9,6 +10,7 @@ export function EnergyDistributionPanel({
   battery,
   batteryCharge,
   batteryDischarge,
+  badge,
   controls,
   ev,
   gridExport,
@@ -19,6 +21,7 @@ export function EnergyDistributionPanel({
   battery: string
   batteryCharge: string
   batteryDischarge: string
+  badge?: DataStateBadgeModel
   controls: DayHeaderControls
   ev: string
   gridExport: string
@@ -28,7 +31,7 @@ export function EnergyDistributionPanel({
 }) {
   return (
     <Panel className="h-[232px] px-4 pb-[14px] pt-6">
-      <PanelHeader controls={<DayWindowControls {...controls} />} showPeriod={false} title="Energy distribution" />
+      <PanelHeader badge={badge} controls={<DayWindowControls {...controls} />} showPeriod={false} title="Energy distribution" />
       <div className="relative mt-[17px] h-[152px]">
         <div className={desktopDistNodeClassName('solar')}>
           <span className={desktopDistDotClassName('solar')} aria-hidden="true" />
@@ -97,11 +100,13 @@ export function EnergyDistributionPanel({
 }
 
 export function SolarProductionPanel({
+  badge,
   controls,
   curve,
   labels,
   value,
 }: {
+  badge?: DataStateBadgeModel
   controls: DayHeaderControls
   curve: number[]
   labels: string[]
@@ -109,7 +114,7 @@ export function SolarProductionPanel({
 }) {
   return (
     <Panel className="h-[228px] px-4 py-4">
-      <PanelHeader controls={<DayWindowControls {...controls} />} showPeriod={false} title="Solar production" />
+      <PanelHeader badge={badge} controls={<DayWindowControls {...controls} />} showPeriod={false} title="Solar production" />
       <div className="mt-[18px] flex items-baseline gap-1.5">
         <strong className="text-[27px] leading-none text-white">{value}</strong>
         <span className="text-[16px] font-[720] text-white">kWh</span>
@@ -123,6 +128,7 @@ export function SolarProductionPanel({
 }
 
 export function BatteryStatusPanel({
+  badge,
   capacity,
   energy,
   onOpen,
@@ -131,6 +137,7 @@ export function BatteryStatusPanel({
   socValue,
   status,
 }: {
+  badge?: DataStateBadgeModel
   capacity: string
   energy: string
   onOpen?: () => void
@@ -150,7 +157,10 @@ export function BatteryStatusPanel({
   return (
     <Panel className="h-[188px] px-[18px] pb-[14px] pt-[17px]">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Battery status</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Battery status</h2>
+          {badge ? <span className="shrink-0"><DataStateBadge badge={badge} /></span> : null}
+        </div>
         <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/6 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-dashboard-soft">
           View details
           <span aria-hidden="true">+</span>
@@ -213,15 +223,17 @@ export function VehiclePanel({ battery, range }: { battery: string; range: strin
 }
 
 export function SolarForecastCard({
+  badge,
   controls,
   insight,
 }: {
+  badge?: DataStateBadgeModel
   controls: InsightHeaderControls
   insight: SolarForecastInsight
 }) {
   return (
     <Panel className="grid h-[264px] grid-rows-[auto_auto_auto_minmax(90px,1fr)] gap-2 px-[14px] pb-3 pt-[14px]">
-      <PanelHeader showPeriod={false} title="Solar forecast" />
+      <PanelHeader badge={badge} showPeriod={false} title="Solar forecast" />
       <InsightToolbar controls={controls} windowLabel={insight.windowLabel} />
       <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-end gap-2">
         <div className="grid gap-1">
@@ -256,15 +268,17 @@ export function SolarForecastCard({
 }
 
 export function EnergyPricesCard({
+  badge,
   controls,
   insight,
 }: {
+  badge?: DataStateBadgeModel
   controls: InsightHeaderControls
   insight: EnergyPriceInsight
 }) {
   return (
     <Panel className="grid h-[264px] grid-rows-[auto_auto_auto_minmax(90px,1fr)] gap-2 px-[14px] pb-3 pt-[14px]">
-      <PanelHeader showPeriod={false} title="Energy prices" />
+      <PanelHeader badge={badge} showPeriod={false} title="Energy prices" />
       <InsightToolbar controls={controls} windowLabel={insight.windowLabel} />
       <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-end gap-2">
         <div className="grid gap-1">

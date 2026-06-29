@@ -26,8 +26,10 @@ export type PeakRateResult = {
   days: PeakRateDay[]
   error: boolean
   hourlyPrices: number[]
+  isStale: boolean
   peak: string | null
   peakLabel: string
   now: string | null
+  source: 'ha' | 'mock' | 'remote'
   windows: PeakRateWindow[]
 }

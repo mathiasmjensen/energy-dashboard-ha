@@ -5,6 +5,7 @@ import {
   FlowPath,
   GlassCard,
   MobileBarChart,
+  MobileDataStateBadge,
   MobileIcon,
   NodeIcon,
   SegmentedControl,
@@ -39,7 +40,10 @@ export function MobileSolarScreen({
 
       <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-[clamp(18px,4.8vw,22px)] font-semibold tracking-[-0.02em] text-white">Energy flow</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-[clamp(18px,4.8vw,22px)] font-semibold tracking-[-0.02em] text-white">Energy flow</h2>
+            {distribution.dataState ? <MobileDataStateBadge badge={distribution.dataState} /> : null}
+          </div>
           <MobileDayControls controls={energyDayControls} />
         </div>
         <SolarFlowDiagram distribution={distribution} overview={overview} />
@@ -47,6 +51,7 @@ export function MobileSolarScreen({
 
       <AnalyticsCard
         accent="solar"
+        badge={solarProduction.dataState}
         controlsNode={<MobileDayControls controls={energyDayControls} />}
         metric={solarProduction.value}
         title="Solar production"
@@ -63,6 +68,7 @@ export function MobileSolarScreen({
       <AnalyticsCard
         accent="solar"
         actionLabel="Today"
+        badge={solarForecast.dataState}
         controls={insightControls}
         metric={solarForecast.totalKwh}
         summary={solarForecast.summaryItems}
@@ -76,6 +82,7 @@ export function MobileSolarScreen({
       <AnalyticsCard
         accent="blue"
         actionLabel="Today"
+        badge={prices.dataState}
         controls={insightControls}
         metric={prices.primaryValue}
         summary={prices.summaryItems}

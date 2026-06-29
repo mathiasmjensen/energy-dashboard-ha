@@ -82,12 +82,21 @@ export function usePeakRates(): PeakRateResult {
   }, [peakRateUrl])
 
   return useMemo(
-    () =>
-      getPeakRateResult(
+    () => {
+      const source = haWindows.length ? 'ha' : peakRateUrl ? (windows.length ? 'remote' : 'mock') : 'mock'
+      const isStale = source === 'remote' && error && windows.length > 0
+      const result = getPeakRateResult(
         haWindows.length ? haWindows : peakRateUrl ? (windows.length ? windows : mockWindows) : mockWindows,
         nowMs,
         peakRateUrl ? error && !windows.length && !haWindows.length : false,
-      ),
+      )
+
+      return {
+        ...result,
+        isStale,
+        source,
+      }
+    },
     [error, haWindows, mockWindows, nowMs, peakRateUrl, windows],
   )
 }
