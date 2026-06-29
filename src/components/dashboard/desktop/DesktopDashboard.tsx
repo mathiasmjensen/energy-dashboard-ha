@@ -4,8 +4,10 @@ import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
 import type { DataStateBadgeModel } from '../../../models/dataState'
 import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../models/dashboardInsights'
 import type { EvChargerController } from '../../../models/evChargePlan'
+import type { NotificationPreferences, NotificationsState } from '../../../models/notifications'
 import { assetPath } from '../../../utils/assetPath'
 import { EvChargerModal } from '../../EvChargerModal'
+import { DesktopNotificationsPage } from '../../notifications/NotificationsScreen'
 import { DesktopBatteryPage } from './DesktopBatteryPage'
 import { EnergyFlowMap, FlowNode } from './DesktopFlow'
 import type { DayHeaderControls } from './DesktopShared'
@@ -23,6 +25,7 @@ import { OverviewIcon, StatusPill } from './DesktopShared'
 const NAV_ITEMS = [
   { icon: 'home' as const, key: 'overview' as const, label: 'Overview' },
   { icon: 'battery' as const, key: 'battery' as const, label: 'Battery' },
+  { icon: 'bell' as const, key: 'notifications' as const, label: 'Notifications' },
 ] as const
 
 type DesktopTab = (typeof NAV_ITEMS)[number]['key']
@@ -79,6 +82,13 @@ export type DesktopDashboardProps = {
   homePower: string
   insightControls: InsightHeaderControls
   isEvChargerOpen: boolean
+  notificationPreferences: NotificationPreferences
+  notifications: NotificationsState & {
+    disable: () => Promise<boolean>
+    enable: () => Promise<boolean>
+    refresh: () => Promise<boolean>
+  }
+  onNotificationPreferenceChange: (key: keyof NotificationPreferences, value: boolean) => void
   onCloseEvCharger: () => void
   onOpenEvCharger: () => void
   weather: {
@@ -115,6 +125,9 @@ export function DesktopDashboard({
   homePower,
   insightControls,
   isEvChargerOpen,
+  notificationPreferences,
+  notifications,
+  onNotificationPreferenceChange,
   onCloseEvCharger,
   onOpenEvCharger,
   prices,
@@ -266,13 +279,23 @@ export function DesktopDashboard({
               <VehiclePanel battery={charger.battery} range={charger.range} />
             </aside>
           </>
-        ) : (
+        ) : activeTab === 'battery' ? (
           <DesktopBatteryPage
             battery={battery}
             batteryHistory={batteryHistory}
             batteryOptimizer={batteryOptimizer}
             displayDate={displayDate}
             displayTime={displayTime}
+            weather={weather}
+          />
+        ) : (
+          <DesktopNotificationsPage
+            controller={notifications}
+            displayDate={displayDate}
+            displayTime={displayTime}
+            notifications={notifications}
+            preferences={notificationPreferences}
+            setPreference={onNotificationPreferenceChange}
             weather={weather}
           />
         )}

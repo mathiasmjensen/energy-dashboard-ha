@@ -11,6 +11,7 @@ import {
 
 export type IconName =
   | 'battery'
+  | 'bell'
   | 'bolt'
   | 'car'
   | 'clock'
@@ -368,6 +369,13 @@ function renderOverviewIcon(name: IconName) {
   switch (name) {
     case 'battery':
       return <path d="M8 6h8v2h2v12H6V8h2V6Zm1 6h6M12 10v8" />
+    case 'bell':
+      return (
+        <>
+          <path d="M12 4a4 4 0 0 1 4 4v2.2c0 .7.18 1.39.52 2l1.08 1.8H6.4l1.08-1.8c.34-.61.52-1.3.52-2V8a4 4 0 0 1 4-4Z" />
+          <path d="M10 18a2 2 0 0 0 4 0" />
+        </>
+      )
     case 'bolt':
       return <path d="m13 2-7 12h5l-1 8 8-13h-5l0-7Z" fill="currentColor" stroke="none" />
     case 'car':

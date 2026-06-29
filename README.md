@@ -129,10 +129,14 @@ installed in your interactive environment.
   Formatting, adapters, API clients, and pure data normalization logic.
 - `src/hooks/useNotifications.ts`
   Browser push registration and backend subscription syncing.
+- `src/hooks/useNotificationPreferences.ts`
+  Local per-device alert preferences used by the notifications screens.
 - `src/services/notificationsClient.ts`
   Typed client for the standalone notifications backend.
 - `src/models/notifications.ts`
   Shared notifications models for client state and backend payloads.
+- `src/components/notifications/NotificationsScreen.tsx`
+  Shared desktop/mobile notifications UI.
 
 ## Type Organization
 

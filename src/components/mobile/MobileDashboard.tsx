@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { MobileBatteryScreen } from './MobileBatteryScreen'
 import { MobileEvScreen } from './MobileEvScreen'
 import { MobileHomeScreen } from './MobileHomeScreen'
+import { MobileNotificationsScreen } from '../notifications/NotificationsScreen'
 import { MobileBottomNav } from './MobilePrimitives'
 import { MobileSolarScreen } from './MobileSolarScreen'
 import type { BatteryPeriod, MobileDashboardProps, MobileTab, SolarPeriod } from './MobileTypes'
@@ -19,6 +20,9 @@ export function MobileDashboard({
   insightControls,
   distribution,
   overview,
+  notificationPreferences,
+  notifications,
+  onNotificationPreferenceChange,
   prices,
   solarForecast,
   solarProduction,
@@ -91,6 +95,15 @@ export function MobileDashboard({
           ) : null}
 
           {activeTab === 'ev' ? <MobileEvScreen batterySoc={battery.soc} charger={charger} controller={controller} /> : null}
+
+          {activeTab === 'notifications' ? (
+            <MobileNotificationsScreen
+              controller={notifications}
+              notifications={notifications}
+              preferences={notificationPreferences}
+              setPreference={onNotificationPreferenceChange}
+            />
+          ) : null}
         </section>
 
         <MobileBottomNav activeTab={activeTab} onChange={setActiveTab} />

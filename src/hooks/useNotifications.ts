@@ -10,6 +10,7 @@ const EMPTY_STATE: NotificationsState = {
   isLoading: false,
   isSubscribed: false,
   isSyncing: false,
+  lastSyncedAt: null,
   permission: 'unsupported',
   supported: false,
 }
@@ -39,6 +40,7 @@ export function useNotifications() {
         ...current,
         endpoint,
         isSubscribed: hasSubscription,
+        lastSyncedAt: new Date().toISOString(),
         permission: Notification.permission,
       }))
 
@@ -55,6 +57,7 @@ export function useNotifications() {
         errorMessage: null,
         history,
         isSubscribed: true,
+        lastSyncedAt: new Date().toISOString(),
         permission: Notification.permission,
       }))
     },
@@ -148,6 +151,7 @@ export function useNotifications() {
         history,
         isSubscribed: true,
         isSyncing: false,
+        lastSyncedAt: new Date().toISOString(),
         permission,
       }))
       return true
@@ -184,6 +188,7 @@ export function useNotifications() {
         history: [],
         isSubscribed: false,
         isSyncing: false,
+        lastSyncedAt: new Date().toISOString(),
       }))
       return true
     } catch (error) {
@@ -196,10 +201,45 @@ export function useNotifications() {
     }
   }, [client, supported])
 
+  const refresh = useCallback(async () => {
+    if (!client || !supported) {
+      return false
+    }
+
+    setState((current) => ({ ...current, isSyncing: true }))
+    try {
+      const history = await client.getHistory()
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.getSubscription()
+      setState((current) => ({
+        ...current,
+        backendAvailable: true,
+        endpoint: subscription?.endpoint ?? current.endpoint,
+        errorMessage: null,
+        history,
+        isSubscribed: Boolean(subscription),
+        isSyncing: false,
+        lastSyncedAt: new Date().toISOString(),
+        permission: Notification.permission,
+      }))
+      return true
+    } catch (error) {
+      const isMissing = error instanceof NotificationsRequestError && error.status === 404
+      setState((current) => ({
+        ...current,
+        backendAvailable: !isMissing,
+        errorMessage: isMissing ? null : error instanceof Error ? error.message : 'Could not refresh notifications',
+        isSyncing: false,
+      }))
+      return false
+    }
+  }, [client, supported])
+
   return {
     ...state,
     disable,
     enable,
+    refresh,
   }
 }
 
