@@ -1,6 +1,7 @@
 import { ThemeProvider } from '@hakit/components'
 import { HassConnect } from '@hakit/core'
 import { EnergyDashboard } from './components/EnergyDashboard'
+import { NotificationsBootstrap } from './components/NotificationsBootstrap'
 
 function App() {
   const hassUrl = import.meta.env.VITE_HA_URL?.trim() || (import.meta.env.PROD ? window.location.origin : '')
@@ -19,6 +20,7 @@ function App() {
       wrapperProps={{ className: 'min-h-screen' }}
     >
       <ThemeProvider />
+      <NotificationsBootstrap />
       {dashboard}
     </HassConnect>
   )

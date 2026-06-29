@@ -32,6 +32,16 @@ npm run dev -- --host 0.0.0.0
 Set `VITE_HA_URL` in `.env` to your Home Assistant URL. `VITE_HA_TOKEN` is
 optional; leaving it blank lets HAKit use the normal Home Assistant login flow.
 
+If you run the standalone notifications/web-push service, also set:
+
+```bash
+VITE_NOTIFICATIONS_BASE_URL=http://YOUR_NOTIFICATIONS_HOST:PORT
+```
+
+The frontend now registers `public/notifications-sw.js` and keeps a typed
+notifications client/hook ready for a future notifications tab. It does not add
+new dashboard UI chrome in this pass.
+
 ## Scripts
 
 ```bash
@@ -117,6 +127,12 @@ installed in your environment.
   HA-facing data shapes.
 - `src/services/*`
   Formatting, adapters, API clients, and pure data normalization logic.
+- `src/hooks/useNotifications.ts`
+  Browser push registration and backend subscription syncing.
+- `src/services/notificationsClient.ts`
+  Typed client for the standalone notifications backend.
+- `src/models/notifications.ts`
+  Shared notifications models for client state and backend payloads.
 
 ## Type Organization
 
