@@ -4,7 +4,6 @@ import { cn } from '../../lib/cn'
 import { assetPath } from '../../utils/assetPath'
 import {
   GlassCard,
-  KpiPill,
   MobileBarChart,
   MobileIcon,
   MobileInsightControls,
@@ -68,47 +67,75 @@ function HomeHeroCard({
 }) {
   return (
     <GlassCard className="overflow-hidden rounded-[28px] p-3">
-      <div className="relative overflow-hidden rounded-[24px] border border-white/8 bg-[#060b12]">
-        <img
-          className="h-[270px] w-full object-cover object-center"
-          src={assetPath('/mobile-dashboard/image.png')}
-          alt="Luxury home with solar roof, battery, EV charger, and Tesla"
-        />
-
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,12,0.08),rgba(4,7,12,0.18)_42%,rgba(4,7,12,0.7))]" />
-
-        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-          <KpiPill icon="sun" label="Solar" tone="gold" value={`${overview.solarPower} kW`} />
-          <KpiPill icon="grid" label="Grid" tone="blue" value={`${overview.gridPower} kW`} />
+      <div className="overflow-hidden rounded-[24px] border border-white/8 bg-[#0b1018]">
+        <div className="px-3 pt-3">
+          <div className="overflow-hidden rounded-[22px] border border-white/6 bg-[#060b12]">
+            <img
+              className="h-[232px] w-full object-cover object-center"
+              src={assetPath('/mobile-dashboard/image.png')}
+              alt="Luxury home with solar roof, battery, EV charger, and Tesla"
+            />
+          </div>
         </div>
 
-        <div className="absolute bottom-3 left-3 right-3 grid grid-cols-3 gap-2">
-          <HeroFloatingStat icon="home" label="Home" meta={overview.homePower} tone="purple" />
-          <HeroFloatingStat icon="battery" label="Battery" meta={`${overview.batteryPower} kW`} subMeta={battery.soc} tone="green" />
-          <HeroFloatingStat icon="car" label="EV" meta={`${overview.evPower} kW`} subMeta={overview.evMeta} tone="blue" />
+        <div className="grid gap-4 px-3 pb-3 pt-4">
+          <div className="grid grid-cols-2 gap-3">
+            <InfoStat icon="sun" label="PV" tone="green" value={overview.solarPower} />
+            <InfoStat icon="sun" label="Solar" tone="gold" value={overview.solarPower} />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <MetricTile icon="grid" label="Grid" tone="blue" value={overview.gridPower} subValue={overview.gridMeta} />
+            <MetricTile icon="battery" label="Battery" tone="green" value={overview.batteryPower} subValue={battery.soc} />
+            <MetricTile icon="home" label="Home" tone="purple" value={overview.homePower} />
+          </div>
         </div>
       </div>
     </GlassCard>
   )
 }
 
-function HeroFloatingStat({
+function InfoStat({
   icon,
   label,
-  meta,
-  subMeta,
   tone,
+  value,
 }: {
-  icon: 'battery' | 'car' | 'home'
+  icon: 'sun'
   label: string
-  meta: string
-  subMeta?: string
+  tone: 'gold' | 'green'
+  value: string
+}) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <StatusChip tone={tone === 'green' ? 'green' : 'gold'}>
+        <MobileIcon name={icon} />
+      </StatusChip>
+      <div className="min-w-0">
+        <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
+        <strong className="block truncate text-[22px] font-semibold leading-none text-dashboard-text">{value}</strong>
+      </div>
+    </div>
+  )
+}
+
+function MetricTile({
+  icon,
+  label,
+  subValue,
+  tone,
+  value,
+}: {
+  icon: 'battery' | 'grid' | 'home'
+  label: string
+  subValue?: string
   tone: 'blue' | 'green' | 'purple'
+  value: string
 }) {
   return (
     <div
       className={cn(
-        'rounded-[18px] border px-3 py-2.5 shadow-[0_16px_34px_rgba(0,0,0,0.24)] backdrop-blur-md',
+        'min-w-0 rounded-[18px] border px-3 py-2.5 shadow-[0_16px_34px_rgba(0,0,0,0.2)] backdrop-blur-md',
         tone === 'green'
           ? 'border-emerald-400/20 bg-emerald-400/[0.08]'
           : tone === 'purple'
@@ -122,8 +149,8 @@ function HeroFloatingStat({
         </NodeIcon>
         <div className="min-w-0">
           <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-white/55">{label}</span>
-          <strong className="block truncate text-[13px] font-semibold text-white">{meta}</strong>
-          {subMeta ? <small className="block truncate text-[11px] text-white/62">{subMeta}</small> : null}
+          <strong className="block truncate text-[12px] font-semibold text-white">{value}</strong>
+          {subValue ? <small className="block truncate text-[10px] text-white/62">{subValue}</small> : null}
         </div>
       </div>
     </div>
@@ -151,8 +178,8 @@ function CompactStatusCard({
           <MobileIcon name={icon} />
         </StatusChip>
       </div>
-      <strong className="mt-2 block text-[14px] font-semibold text-dashboard-text">{value}</strong>
-      <small className="mt-1 block text-[11px] leading-4 text-dashboard-soft">{secondary}</small>
+      <strong className="mt-2 block text-[13px] font-semibold text-dashboard-text">{value}</strong>
+      <small className="mt-1 block text-[10px] leading-4 text-dashboard-soft">{secondary}</small>
     </GlassCard>
   )
 }
