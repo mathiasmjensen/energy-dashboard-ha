@@ -25,3 +25,10 @@ server-data
 *.njsproj
 *.sln
 *.sw?
+# Local secrets / production config
+.env
+.env.*
+!.env.example
+home-assistant/secrets.yaml
+server/*.env
+server/.env

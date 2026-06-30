@@ -1,4 +1,5 @@
 import type { ChargeSessionCache, EvccApiSession, EvccChargeSession } from '../models/evccChargeSessions'
+import { resolveBrowserVisibleUrl } from './runtimeSecurity'
 
 const CACHE_KEY = 'energy-dashboard:evcc-charge-sessions:v1'
 
@@ -42,11 +43,11 @@ export function getEvccSessionsUrl() {
   }
 
   if (configured) {
-    return configured
+    return resolveBrowserVisibleUrl(configured)
   }
 
   const baseUrl = getEnvValue('VITE_EVCC_URL')?.trim()
-  return baseUrl ? `${baseUrl.replace(/\/$/, '')}/api/sessions` : ''
+  return baseUrl ? resolveBrowserVisibleUrl(`${baseUrl.replace(/\/$/, '')}/api/sessions`) : ''
 }
 
 function getEnvValue(key: string) {

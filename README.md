@@ -163,18 +163,20 @@ the container as `/config`. The dashboard should be copied to that mount under
 cp .env.example .env
 ```
 
-Edit `.env` if you need to override the URL:
+Edit `.env` only if you need to override the URL or explicitly allow direct browser backends:
 
 ```bash
 VITE_HA_URL=
 VITE_HA_TOKEN=
+VITE_ENABLE_DIRECT_BROWSER_APIS=false
 ```
 
 When the dashboard is opened from Home Assistant at `/local/...`, the production
 build defaults to the same browser origin. Set `VITE_HA_URL` only if you deploy
-the dashboard somewhere else or need a specific HTTPS/reverse-proxy URL. Leave
-`VITE_HA_TOKEN` empty unless you intentionally want to bake a long-lived token
-into the static build.
+the dashboard somewhere else or need a specific HTTPS/reverse-proxy URL. Keep
+`VITE_HA_TOKEN` empty in production. Browser-side direct backends are disabled
+by default in production unless `VITE_ENABLE_DIRECT_BROWSER_APIS=true` is set
+intentionally.
 
 2. Build for Home Assistant's `/local` path:
 
@@ -331,7 +333,26 @@ foxess_api_domain: https://www.foxesscloud.com
 
 `foxess_api_domain` is optional and defaults to `https://www.foxesscloud.com`.
 A placeholder template is included at
-`home-assistant/secrets.yaml`.
+`home-assistant/secrets.example.yaml`. Copy it to your private
+`/config/secrets.yaml` inside Home Assistant; do not commit the real secrets file.
+
+
+## Production Safety
+
+The repo is now wired for a Home-Assistant-first production setup:
+
+- keep `VITE_HA_TOKEN` empty in production
+- keep `VITE_ENABLE_DIRECT_BROWSER_APIS=false` in production
+- prefer HA REST sensors / packages over direct browser calls to EVCC, price feeds, or optimizer backends
+- keep FoxESS keys, backend URLs, and publish secrets only in Home Assistant or server-side env files
+
+Run a local leak check before pushing:
+
+```bash
+npm run security:check
+```
+
+This scans the repo for committed `.env` files, tracked `home-assistant/secrets.yaml`, known secret patterns, and private LAN URLs that should be turned into placeholders before publishing.
 
 ## Peak Rates
 
@@ -360,7 +381,7 @@ command_line:
       name: Energy Dashboard Peak Rates
       unique_id: energy_dashboard_peak_rates
       command: >-
-        python3 -c "import json, urllib.request; data=json.load(urllib.request.urlopen('http://YOUR_SERVICE_HOST:1000/', timeout=10)); print(json.dumps({'count': len(data), 'prices': data}))"
+        python3 -c "import json, urllib.request; data=json.load(urllib.request.urlopen('http://ENERGY_PRICE_PROXY_HOST:1000/', timeout=10)); print(json.dumps({'count': len(data), 'prices': data}))"
       value_template: "{{ value_json.count }}"
       json_attributes:
         - prices
@@ -370,7 +391,7 @@ command_line:
 Optional browser fallback:
 
 ```bash
-VITE_PEAK_RATE_URL=http://YOUR_SERVICE_HOST:1000/
+VITE_PEAK_RATE_URL=http://ENERGY_PRICE_PROXY_HOST:1000/
 ```
 
 The feed should return an array of hourly windows:
@@ -393,7 +414,7 @@ Example HA REST sensor:
 
 ```yaml
 rest:
-  - resource: http://YOUR_SERVICE_HOST:7070/api/tariff/solar
+  - resource: http://EVCC_HOST:7070/api/tariff/solar
     scan_interval: 900
     sensor:
       - name: Energy Dashboard Solar Forecast
@@ -407,7 +428,7 @@ Optional browser fallback:
 
 ```bash
 VITE_EVCC_URL=http://YOUR_SERVICE_HOST:7070
-VITE_EVCC_SOLAR_FORECAST_URL=http://YOUR_SERVICE_HOST:7070/api/tariff/solar
+VITE_EVCC_SOLAR_FORECAST_URL=http://EVCC_HOST:7070/api/tariff/solar
 ```
 
 EVCC returns forecast power in 15-minute windows. The dashboard integrates each
@@ -455,7 +476,7 @@ command_line:
       name: Energy Dashboard EVCC Charge Sessions
       unique_id: energy_dashboard_evcc_charge_sessions
       command: >-
-        python3 -c "import json, urllib.request; data=json.load(urllib.request.urlopen('http://YOUR_SERVICE_HOST:7070/api/sessions', timeout=10)); print(json.dumps({'count': len(data), 'sessions': data[:25]}))"
+        python3 -c "import json, urllib.request; data=json.load(urllib.request.urlopen('http://EVCC_HOST:7070/api/sessions', timeout=10)); print(json.dumps({'count': len(data), 'sessions': data[:25]}))"
       value_template: "{{ value_json.count }}"
       json_attributes:
         - sessions
@@ -465,7 +486,7 @@ command_line:
 Optional browser fallback:
 
 ```bash
-VITE_EVCC_SESSIONS_URL=http://YOUR_SERVICE_HOST:7070/api/sessions
+VITE_EVCC_SESSIONS_URL=http://EVCC_HOST:7070/api/sessions
 ```
 
 ## Battery Optimizer

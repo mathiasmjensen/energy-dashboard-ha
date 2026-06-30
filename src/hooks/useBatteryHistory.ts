@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
 import type { BatteryHistoryPeriod, BatteryHistorySeries } from '../models/batteryHistory'
-import { getConnectionAccessToken, resolveHaApiBase } from '../services/haApi'
+import { resolveHaAccessToken, resolveHaApiBase } from '../services/haApi'
 import {
   buildBatteryHistorySeriesFromStates,
   getFallbackBatteryHistorySeries,
@@ -40,7 +40,7 @@ export function useBatteryHistory(fallbackSocValue: number): BatteryHistoryResul
     const endDate = new Date().toISOString()
     const apiBase = resolveHaApiBase()
     const url = `${apiBase}/api/history/period/${encodeURIComponent(startDate)}?filter_entity_id=${encodeURIComponent(batterySocEntityId)}&end_time=${encodeURIComponent(endDate)}&minimal_response&no_attributes`
-    const accessToken = import.meta.env.VITE_HA_TOKEN?.trim() || getConnectionAccessToken(connection)
+    const accessToken = resolveHaAccessToken(connection)
 
     async function fetchHistory() {
       try {

@@ -1,4 +1,5 @@
 import type { PeakRateDay, PeakRateHour, PeakRateResult, PeakRateWindow } from '../models/peakRates'
+import { resolveBrowserVisibleUrl } from './runtimeSecurity'
 
 const LOOKAHEAD_MS = 24 * 60 * 60 * 1000
 
@@ -9,7 +10,7 @@ export function getPeakRateUrl() {
     return ''
   }
 
-  return configured || ''
+  return configured ? resolveBrowserVisibleUrl(configured) : ''
 }
 
 function getEnvValue(key: string) {

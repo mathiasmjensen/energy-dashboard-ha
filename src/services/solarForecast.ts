@@ -7,6 +7,7 @@ import type {
   SolarForecastState,
   SolarForecastWindow,
 } from '../models/solarForecast'
+import { resolveBrowserVisibleUrl } from './runtimeSecurity'
 
 const DEFAULT_LATITUDE = 55.493
 const DEFAULT_LONGITUDE = 10.2046
@@ -24,7 +25,7 @@ export function getSolarForecastUrl() {
   }
 
   if (configured) {
-    return configured
+    return resolveBrowserVisibleUrl(configured)
   }
 
   const params = new URLSearchParams({
@@ -56,7 +57,7 @@ export function getEvccSolarForecastUrl() {
     return ''
   }
 
-  return `${baseUrl.replace(/\/$/, '')}/api/tariff/solar`
+  return resolveBrowserVisibleUrl(`${baseUrl.replace(/\/$/, '')}/api/tariff/solar`)
 }
 
 export function getPanelCapacityKw() {

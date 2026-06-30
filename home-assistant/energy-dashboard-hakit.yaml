@@ -28,11 +28,11 @@ input_boolean:
 
 rest_command:
   evcc_enable_charge:
-    url: "http://YOUR_INTERNAL_HOST:7070/api/loadpoints/1/mode/now"
+    url: "http://EVCC_HOST:7070/api/loadpoints/1/mode/now"
     method: POST
 
   evcc_disable_charge:
-    url: "http://YOUR_INTERNAL_HOST:7070/api/loadpoints/1/mode/pv"
+    url: "http://EVCC_HOST:7070/api/loadpoints/1/mode/pv"
     method: POST
 
 command_line:
@@ -40,7 +40,7 @@ command_line:
       name: Energy Dashboard Peak Rates
       unique_id: energy_dashboard_peak_rates
       command: >-
-        python3 -c "import json, urllib.request; url='http://YOUR_INTERNAL_HOST:1000/'; data=json.load(urllib.request.urlopen(url, timeout=15)); print(json.dumps({'count': len(data) if isinstance(data, list) else 0, 'prices': data if isinstance(data, list) else data.get('prices', data.get('windows', data.get('rates', []))) }))"
+        python3 -c "import json, urllib.request; url='http://ENERGY_PRICE_PROXY_HOST:1000/'; data=json.load(urllib.request.urlopen(url, timeout=15)); print(json.dumps({'count': len(data) if isinstance(data, list) else 0, 'prices': data if isinstance(data, list) else data.get('prices', data.get('windows', data.get('rates', []))) }))"
       value_template: "{{ value_json.count }}"
       json_attributes:
         - prices
@@ -50,7 +50,7 @@ command_line:
       name: Energy Dashboard EVCC Charge Sessions
       unique_id: energy_dashboard_evcc_charge_sessions
       command: >-
-        python3 -c "import json, urllib.request; url='http://YOUR_INTERNAL_HOST:7070/api/sessions'; data=json.load(urllib.request.urlopen(url, timeout=15)); sessions=data if isinstance(data, list) else data.get('sessions', data.get('items', data.get('data', []))); print(json.dumps({'count': len(sessions), 'sessions': sessions[:25]}))"
+        python3 -c "import json, urllib.request; url='http://EVCC_HOST:7070/api/sessions'; data=json.load(urllib.request.urlopen(url, timeout=15)); sessions=data if isinstance(data, list) else data.get('sessions', data.get('items', data.get('data', []))); print(json.dumps({'count': len(sessions), 'sessions': sessions[:25]}))"
       value_template: "{{ value_json.count }}"
       json_attributes:
         - sessions
@@ -249,7 +249,7 @@ command_line:
       scan_interval: 300
 
 rest:
-  - resource: "http://YOUR_INTERNAL_HOST:7070/api/tariff/solar"
+  - resource: "http://EVCC_HOST:7070/api/tariff/solar"
     scan_interval: 900
     sensor:
       - name: Energy Dashboard Solar Forecast

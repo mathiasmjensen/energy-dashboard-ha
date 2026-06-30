@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
-import { getConnectionAccessToken, resolveHaApiBase } from '../services/haApi'
+import { resolveHaAccessToken, resolveHaApiBase } from '../services/haApi'
 import { ENERGY_ENTITY_NUMERIC_SCALE } from '../data/energyEntities'
 import { getDashboardMockData } from '../services/dashboardMockData'
 
@@ -141,7 +141,7 @@ export function useHistoricalEnergyDay({
     }
 
     const controller = new AbortController()
-    const accessToken = import.meta.env.VITE_HA_TOKEN?.trim() || getConnectionAccessToken(connection)
+    const accessToken = resolveHaAccessToken(connection)
     const apiBase = resolveHaApiBase()
     const { end, start } = getDayWindow(dayOffset)
     const cacheKey = getCacheKey(sourceKey, dayOffset)

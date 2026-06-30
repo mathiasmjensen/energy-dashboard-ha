@@ -1,3 +1,4 @@
+import { resolveBrowserVisibleUrl } from './runtimeSecurity'
 import type {
   NotificationHistoryEntry,
   NotificationsPublicKeyPayload,
@@ -16,7 +17,8 @@ export class NotificationsRequestError extends Error {
 }
 
 export function resolveNotificationsBase() {
-  return import.meta.env.VITE_NOTIFICATIONS_BASE_URL?.trim()?.replace(/\/$/, '') ?? ''
+  const configured = import.meta.env.VITE_NOTIFICATIONS_BASE_URL?.trim() ?? ''
+  return configured ? resolveBrowserVisibleUrl(configured) : ''
 }
 
 export function isNotificationsEnabled() {

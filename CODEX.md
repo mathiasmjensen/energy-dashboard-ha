@@ -79,7 +79,7 @@ When changing UI, prefer:
   - `public/notifications-sw.js`
 - Home Assistant notifications package:
   - `home-assistant/energy_dashboard_notifications.yaml`
-  - `home-assistant/secrets.yaml`
+  - `home-assistant/secrets.example.yaml`
 - Historical day switching lives in:
   - `src/hooks/useHistoricalEnergyDay.ts`
 
@@ -159,3 +159,11 @@ npm run test:e2e
 
 If build cannot run because Codex is on the wrong Node version, say that
 clearly in the final response.
+
+
+## Security guardrails
+
+- Real secrets must never be committed.
+- Keep only `home-assistant/secrets.example.yaml` in git; real `/config/secrets.yaml` stays private.
+- Before publishing or pushing, run `npm run security:check`.
+- Production builds should keep `VITE_HA_TOKEN` empty and `VITE_ENABLE_DIRECT_BROWSER_APIS=false` unless there is a deliberate reason to expose direct browser backends.

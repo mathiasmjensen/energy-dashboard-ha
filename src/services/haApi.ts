@@ -1,8 +1,10 @@
+import { resolveSafeBrowserHaToken, resolveBrowserVisibleUrl } from './runtimeSecurity'
+
 export function resolveHaApiBase() {
   const explicitUrl = import.meta.env.VITE_HA_URL?.trim()
 
   if (explicitUrl) {
-    return explicitUrl.replace(/\/$/, '')
+    return resolveBrowserVisibleUrl(explicitUrl)
   }
 
   if (typeof window !== 'undefined') {
@@ -23,4 +25,8 @@ export function getConnectionAccessToken(connection: unknown) {
   }
 
   return 'accessToken' in maybeAuth && typeof maybeAuth.accessToken === 'string' ? maybeAuth.accessToken : undefined
+}
+
+export function resolveHaAccessToken(connection: unknown) {
+  return resolveSafeBrowserHaToken(getConnectionAccessToken(connection))
 }
