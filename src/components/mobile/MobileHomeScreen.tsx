@@ -140,7 +140,7 @@ function MetricTile({
   return (
     <div
       className={cn(
-        'min-w-0 rounded-[18px] border px-2.5 py-2.5 shadow-[0_16px_34px_rgba(0,0,0,0.2)] backdrop-blur-md',
+        'min-w-0 rounded-[18px] border px-2.5 py-2 shadow-[0_16px_34px_rgba(0,0,0,0.2)] backdrop-blur-md',
         tone === 'green'
           ? 'border-emerald-400/20 bg-emerald-400/[0.08]'
           : tone === 'purple'
@@ -148,11 +148,11 @@ function MetricTile({
             : 'border-sky-400/20 bg-sky-400/[0.08]',
       )}
     >
-      <div className="grid min-h-[74px] grid-rows-[auto_1fr] gap-2">
-        <div className="flex items-center gap-2">
+      <div className="grid min-h-[68px] grid-rows-[auto_1fr] gap-1.5">
+        <div className="flex items-center gap-1.5">
           <div
             className={cn(
-              'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-black/28',
+              'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border bg-black/22',
               tone === 'green'
                 ? 'border-emerald-400/18 text-emerald-300'
                 : tone === 'purple'
@@ -160,14 +160,14 @@ function MetricTile({
                   : 'border-sky-400/18 text-sky-300',
             )}
           >
-            <MobileIcon className="h-4 w-4" name={icon} />
+            <MobileIcon className="h-3.5 w-3.5" name={icon} />
           </div>
-          <span className="min-w-0 truncate text-[10px] font-medium uppercase tracking-[0.14em] text-white/55">{label}</span>
+          <span className="min-w-0 truncate text-[9px] font-medium uppercase tracking-[0.14em] text-white/52">{label}</span>
         </div>
 
         <div className="min-w-0">
-          <strong className="block truncate text-[18px] font-semibold leading-none text-white">{value}</strong>
-          {subValue ? <small className="mt-1 block truncate text-[10px] leading-4 text-white/62">{subValue}</small> : null}
+          <strong className="block truncate text-[16px] font-semibold leading-none text-white">{value}</strong>
+          {subValue ? <small className="mt-0.5 block truncate text-[9px] leading-4 text-white/60">{subValue}</small> : null}
         </div>
       </div>
     </div>
