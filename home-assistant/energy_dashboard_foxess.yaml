@@ -1,61 +1,15 @@
-# Legacy combined Home Assistant package for the Energy Dashboard HAKit app.
+# FoxESS / Fox Cloud totals package for the Energy Dashboard.
 #
-# Prefer the split packages instead:
-# - energy_dashboard_helpers.yaml
-# - energy_dashboard_evcc.yaml
-# - energy_dashboard_foxess.yaml
-# - energy_dashboard_battery_optimizer.yaml
-# - energy_dashboard_notifications.yaml
-# - energy_dashboard_prices.yaml
+# Install to:
+#   /config/packages/energy_dashboard_foxess.yaml
 #
-# Do not load this legacy file together with the split packages, because it
-# defines overlapping entities, scripts, automations, and sensors.
-
-input_datetime:
-  evcc_charge_start:
-    name: EVCC charge start
-    has_date: false
-    has_time: true
-
-  evcc_charge_end:
-    name: EVCC charge end
-    has_date: false
-    has_time: true
-
-input_boolean:
-  evcc_charge_plan_enabled:
-    name: EVCC charge plan enabled
-
-rest_command:
-  evcc_enable_charge:
-    url: "http://YOUR_INTERNAL_HOST:7070/api/loadpoints/1/mode/now"
-    method: POST
-
-  evcc_disable_charge:
-    url: "http://YOUR_INTERNAL_HOST:7070/api/loadpoints/1/mode/pv"
-    method: POST
+# Requires `foxess_api_key`, `foxess_device_sn`, and `foxess_api_domain` in
+# `/config/secrets.yaml`.
+#
+# Do not load this together with the legacy combined
+# `energy-dashboard-hakit.yaml` package.
 
 command_line:
-  - sensor:
-      name: Energy Dashboard Peak Rates
-      unique_id: energy_dashboard_peak_rates
-      command: >-
-        python3 -c "import json, urllib.request; url='http://YOUR_INTERNAL_HOST:1000/'; data=json.load(urllib.request.urlopen(url, timeout=15)); print(json.dumps({'count': len(data) if isinstance(data, list) else 0, 'prices': data if isinstance(data, list) else data.get('prices', data.get('windows', data.get('rates', []))) }))"
-      value_template: "{{ value_json.count }}"
-      json_attributes:
-        - prices
-      scan_interval: 900
-
-  - sensor:
-      name: Energy Dashboard EVCC Charge Sessions
-      unique_id: energy_dashboard_evcc_charge_sessions
-      command: >-
-        python3 -c "import json, urllib.request; url='http://YOUR_INTERNAL_HOST:7070/api/sessions'; data=json.load(urllib.request.urlopen(url, timeout=15)); sessions=data if isinstance(data, list) else data.get('sessions', data.get('items', data.get('data', []))); print(json.dumps({'count': len(sessions), 'sessions': sessions[:25]}))"
-      value_template: "{{ value_json.count }}"
-      json_attributes:
-        - sessions
-      scan_interval: 300
-
   - sensor:
       name: Energy Dashboard Fox Cloud Daily Totals
       unique_id: energy_dashboard_fox_cloud_daily_totals
@@ -77,15 +31,6 @@ command_line:
                 key, value = line.split(':', 1)
                 secrets[key.strip()] = value.strip().strip('"').strip("'")
             return secrets
-
-        def sum_values(values):
-            total = 0.0
-            for value in values or []:
-                try:
-                    total += float(str(value).replace(',', '.'))
-                except (TypeError, ValueError):
-                    continue
-            return round(total, 4)
 
         def get_bucket_value(payload, variable, index):
             for item in payload.get('result') or []:
@@ -194,7 +139,6 @@ command_line:
             grid = get_bucket_value(month_payload, 'gridConsumption', day_index)
             battery_charge = get_bucket_value(month_payload, 'chargeEnergyToTal', day_index)
             battery_discharge = get_bucket_value(month_payload, 'dischargeEnergyToTal', day_index)
-            # Mirror the Fox app's balance view rather than the raw public API fields.
             solar_to_load_and_battery = max(0.0, round(home - grid + battery_charge, 4))
             solar = round(solar_to_load_and_battery + feedin, 4)
             home_from_pv_and_battery = max(0.0, round(home - grid + battery_discharge, 4))
@@ -248,16 +192,6 @@ command_line:
         - source_date
       scan_interval: 300
 
-rest:
-  - resource: "http://YOUR_INTERNAL_HOST:7070/api/tariff/solar"
-    scan_interval: 900
-    sensor:
-      - name: Energy Dashboard Solar Forecast
-        unique_id: energy_dashboard_solar_forecast
-        value_template: "{{ value_json.rates | default([]) | count }}"
-        json_attributes:
-          - rates
-
 template:
   - sensor:
       - name: Energy Dashboard Solar Production Today
@@ -295,121 +229,3 @@ template:
         unique_id: energy_dashboard_battery_discharge_today
         unit_of_measurement: "kWh"
         state: "{{ state_attr('sensor.energy_dashboard_fox_cloud_daily_totals', 'battery_discharge_today') }}"
-
-script:
-  evcc_set_charge_plan:
-    alias: EVCC Set Charge Plan
-    mode: restart
-    fields:
-      charge_plan:
-        name: Charge plan
-        selector:
-          object:
-      plan:
-        name: Plan
-        selector:
-          object:
-    variables:
-      selected_plan: "{{ charge_plan if charge_plan is defined else (plan if plan is defined else {}) }}"
-      plan_enabled: "{{ selected_plan.enabled | default(selected_plan.active | default(true)) | bool }}"
-      plan_start_time: "{{ selected_plan.start_time | default(selected_plan.start | default(selected_plan.from | default('22:00'))) }}"
-      plan_end_time: "{{ selected_plan.end_time | default(selected_plan.end | default(selected_plan.to | default('06:00'))) }}"
-    sequence:
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.evcc_charge_start
-        data:
-          time: "{{ (plan_start_time | string) ~ ':00' if (plan_start_time | string | length) == 5 else plan_start_time }}"
-
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.evcc_charge_end
-        data:
-          time: "{{ (plan_end_time | string) ~ ':00' if (plan_end_time | string | length) == 5 else plan_end_time }}"
-
-      - choose:
-          - conditions: "{{ plan_enabled }}"
-            sequence:
-              - service: input_boolean.turn_on
-                target:
-                  entity_id: input_boolean.evcc_charge_plan_enabled
-        default:
-          - service: input_boolean.turn_off
-            target:
-              entity_id: input_boolean.evcc_charge_plan_enabled
-
-  evcc_add_repeating_plan:
-    alias: EVCC Add Repeating Plan Placeholder
-    mode: queued
-    fields:
-      plan:
-        selector:
-          object:
-    sequence:
-      - service: persistent_notification.create
-        data:
-          title: EVCC repeating plan
-          message: >-
-            The dashboard called evcc_add_repeating_plan, but repeating plans are
-            not wired in this package yet. Payload: {{ plan | tojson }}
-
-  evcc_set_repeating_plan:
-    alias: EVCC Set Repeating Plan Placeholder
-    mode: queued
-    fields:
-      plan:
-        selector:
-          object:
-      action:
-        selector:
-          text:
-    sequence:
-      - service: persistent_notification.create
-        data:
-          title: EVCC repeating plan
-          message: >-
-            The dashboard called evcc_set_repeating_plan, but repeating plans are
-            not wired in this package yet. Action: {{ action | default('set') }}.
-            Payload: {{ plan | tojson }}
-
-automation:
-  - id: energy_dashboard_evcc_start_planned_charging
-    alias: Energy Dashboard EVCC Start Planned Charging
-    mode: single
-    trigger:
-      - platform: time
-        at: input_datetime.evcc_charge_start
-    condition:
-      - condition: state
-        entity_id: input_boolean.evcc_charge_plan_enabled
-        state: "on"
-    action:
-      - service: select.select_option
-        continue_on_error: true
-        target:
-          entity_id: select.evcc_carport_mode
-        data:
-          option: now
-      - service: rest_command.evcc_enable_charge
-
-  - id: energy_dashboard_evcc_stop_planned_charging
-    alias: Energy Dashboard EVCC Stop Planned Charging
-    mode: single
-    trigger:
-      - platform: time
-        at: input_datetime.evcc_charge_end
-    condition:
-      - condition: state
-        entity_id: input_boolean.evcc_charge_plan_enabled
-        state: "on"
-    action:
-      - service: select.select_option
-        continue_on_error: true
-        target:
-          entity_id: select.evcc_carport_mode
-        data:
-          option: pv
-      - service: rest_command.evcc_disable_charge
-      - service: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.evcc_charge_plan_enabled

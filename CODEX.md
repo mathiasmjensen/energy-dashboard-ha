@@ -83,6 +83,20 @@ When changing UI, prefer:
 - Historical day switching lives in:
   - `src/hooks/useHistoricalEnergyDay.ts`
 
+## Home Assistant package layout
+
+Preferred split package files live under `home-assistant/`:
+
+- `energy_dashboard_helpers.yaml`
+- `energy_dashboard_evcc.yaml`
+- `energy_dashboard_foxess.yaml`
+- `energy_dashboard_battery_optimizer.yaml`
+- `energy_dashboard_notifications.yaml`
+- `energy_dashboard_prices.yaml`
+
+`energy-dashboard-hakit.yaml` is now the legacy combined package and should not
+be loaded together with the split files.
+
 ## Shared type layout
 
 Shared types are being centralized under `src/models`.

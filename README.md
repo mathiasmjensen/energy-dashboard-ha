@@ -210,7 +210,7 @@ update `weatherHome` in `src/data/energyEntities.ts`.
 
 Unknown, unavailable, or missing values render as `---`.
 
-## Home Assistant Package
+## Home Assistant Packages
 
 A complete drop-in package is available at
 `home-assistant/energy-dashboard-hakit.yaml`. Copy it to a valid Home Assistant
@@ -231,6 +231,41 @@ The package creates the helper entities, endpoint-backed sensors, EVCC REST
 commands, charge-plan script, and start/stop automations expected by the
 dashboard.
 
+### Recommended split package layout
+
+The repo now also includes a modular package split. This is the preferred setup.
+
+Copy these files into `/config/packages/`:
+
+```text
+energy_dashboard_helpers.yaml
+energy_dashboard_evcc.yaml
+energy_dashboard_foxess.yaml
+energy_dashboard_battery_optimizer.yaml
+energy_dashboard_notifications.yaml
+energy_dashboard_prices.yaml
+```
+
+Important:
+
+- use the split files **or** the legacy combined `energy-dashboard-hakit.yaml`
+- do **not** load both at the same time
+
+What each file does:
+
+- `energy_dashboard_helpers.yaml`
+  shared helpers such as EVCC charge-plan inputs
+- `energy_dashboard_evcc.yaml`
+  EVCC REST commands, charge sessions, solar forecast, EVCC scripts, and plan automations
+- `energy_dashboard_foxess.yaml`
+  Fox Cloud daily totals plus derived solar/grid/home/battery sensors
+- `energy_dashboard_battery_optimizer.yaml`
+  battery optimizer backend sensors, health, commands, and derived HA entities
+- `energy_dashboard_notifications.yaml`
+  push notification backend health, HA send script, and notification toggles
+- `energy_dashboard_prices.yaml`
+  DK1 / Stromligning peak-rate feed
+
 ### Notifications package
 
 Web-push notifications now have their own HA package at:
@@ -250,6 +285,13 @@ dashboard_notifications_publish_url: "http://YOUR_NOTIFICATIONS_BACKEND:8787/api
 dashboard_notifications_health_url: "http://YOUR_NOTIFICATIONS_BACKEND:8787/health"
 dashboard_notifications_publish_secret: "replace-with-your-shared-secret"
 dashboard_notifications_publish_authorization: "Bearer replace-with-your-shared-secret"
+battery_optimizer_status_url: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/status"
+battery_optimizer_plan_url: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/plan"
+battery_optimizer_settings_url: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/settings"
+battery_optimizer_health_url: "http://YOUR_OPTIMIZER_BACKEND:8090/health"
+battery_optimizer_base_url_refresh: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/refresh"
+battery_optimizer_base_url_pause: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/pause"
+battery_optimizer_base_url_apply_plan: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/apply-plan"
 ```
 
 This package adds:

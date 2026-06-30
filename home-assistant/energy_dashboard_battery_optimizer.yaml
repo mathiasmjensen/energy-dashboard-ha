@@ -1,0 +1,279 @@
+# Battery optimizer package for the Energy Dashboard.
+#
+# Install to:
+#   /config/packages/energy_dashboard_battery_optimizer.yaml
+#
+# Requires the battery optimizer backend URLs in /config/secrets.yaml.
+#
+# Do not load this together with the legacy combined
+# `energy-dashboard-hakit.yaml` package.
+
+rest_command:
+  battery_optimizer_refresh:
+    url: !secret battery_optimizer_base_url_refresh
+    method: POST
+
+  battery_optimizer_pause:
+    url: !secret battery_optimizer_base_url_pause
+    method: POST
+    content_type: "application/json"
+    payload: >
+      {
+        "untilIso": "{{ until_iso if until_iso is defined else '' }}"
+      }
+
+  battery_optimizer_apply_plan:
+    url: !secret battery_optimizer_base_url_apply_plan
+    method: POST
+    content_type: "application/json"
+    payload: >
+      {
+        "planRows": {{ plan_rows | default([]) | tojson }},
+        "settings": {{ settings | default({}) | tojson }}
+      }
+
+rest:
+  - resource: !secret battery_optimizer_status_url
+    scan_interval: 300
+    sensor:
+      - name: "Battery Optimizer Status Raw"
+        unique_id: battery_optimizer_status_raw
+        value_template: >
+          {{ value_json.recommendation | default('unknown') }}
+        json_attributes:
+          - batteryPowerKw
+          - estimatedProfitTodayDkk
+          - fullBuyPriceDkkPerKwh
+          - gridPowerKw
+          - mode
+          - recommendation
+          - sellPriceDkkPerKwh
+          - socPercent
+          - spotPriceDkkPerKwh
+          - updatedAt
+
+  - resource: !secret battery_optimizer_plan_url
+    scan_interval: 300
+    sensor:
+      - name: "Battery Optimizer Plan Raw"
+        unique_id: battery_optimizer_plan_raw
+        value_template: >
+          {{ (value_json.rows | default([])) | count }}
+        unit_of_measurement: "rows"
+        json_attributes:
+          - charts
+          - decisionSummary
+          - rows
+          - updatedAt
+
+  - resource: !secret battery_optimizer_settings_url
+    scan_interval: 300
+    sensor:
+      - name: "Battery Optimizer Settings Raw"
+        unique_id: battery_optimizer_settings_raw
+        value_template: >
+          {{ 'ok' }}
+        json_attributes:
+          - allowBatteryExport
+          - allowGridCharging
+          - autoMode
+          - dryRun
+          - maxGridChargeKwh
+          - minReservePercent
+          - pausedUntil
+
+  - resource: !secret battery_optimizer_health_url
+    scan_interval: 60
+    sensor:
+      - name: "Battery Optimizer Health Raw"
+        unique_id: battery_optimizer_health_raw
+        value_template: >
+          {{ 'ok' if value_json.ok else 'error' }}
+        json_attributes:
+          - cachedAt
+          - ok
+          - scheduler
+          - ml
+
+template:
+  - sensor:
+      - name: "Battery Optimizer Recommendation"
+        unique_id: battery_optimizer_recommendation
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'recommendation') | default('unknown') }}
+
+      - name: "Battery Optimizer Mode"
+        unique_id: battery_optimizer_mode
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'mode') | default('unknown') }}
+
+      - name: "Battery Optimizer Battery SoC"
+        unique_id: battery_optimizer_battery_soc
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'socPercent') | float(0) }}
+
+      - name: "Battery Optimizer Battery Power"
+        unique_id: battery_optimizer_battery_power
+        unit_of_measurement: "kW"
+        state_class: measurement
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'batteryPowerKw') | float(0) }}
+
+      - name: "Battery Optimizer Grid Power"
+        unique_id: battery_optimizer_grid_power
+        unit_of_measurement: "kW"
+        state_class: measurement
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'gridPowerKw') | float(0) }}
+
+      - name: "Battery Optimizer Spot Price"
+        unique_id: battery_optimizer_spot_price
+        unit_of_measurement: "DKK/kWh"
+        state_class: measurement
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'spotPriceDkkPerKwh') | float(0) }}
+
+      - name: "Battery Optimizer Full Buy Price"
+        unique_id: battery_optimizer_full_buy_price
+        unit_of_measurement: "DKK/kWh"
+        state_class: measurement
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'fullBuyPriceDkkPerKwh') | float(0) }}
+
+      - name: "Battery Optimizer Sell Price"
+        unique_id: battery_optimizer_sell_price
+        unit_of_measurement: "DKK/kWh"
+        state_class: measurement
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'sellPriceDkkPerKwh') | float(0) }}
+
+      - name: "Battery Optimizer Profit Today"
+        unique_id: battery_optimizer_profit_today
+        unit_of_measurement: "DKK"
+        state_class: measurement
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'estimatedProfitTodayDkk') | float(0) }}
+
+      - name: "Battery Optimizer Updated At"
+        unique_id: battery_optimizer_updated_at
+        state: >
+          {{ state_attr('sensor.battery_optimizer_status_raw', 'updatedAt') | default('unknown') }}
+
+      - name: "Battery Optimizer Best Sell Hours"
+        unique_id: battery_optimizer_best_sell_hours
+        state: >
+          {% set summary = state_attr('sensor.battery_optimizer_plan_raw', 'decisionSummary') %}
+          {{ (summary.bestSellHours | default([]) | join(', ')) if summary else 'unknown' }}
+
+      - name: "Battery Optimizer Best Buy Hours"
+        unique_id: battery_optimizer_best_buy_hours
+        state: >
+          {% set summary = state_attr('sensor.battery_optimizer_plan_raw', 'decisionSummary') %}
+          {{ (summary.bestBuyHours | default([]) | join(', ')) if summary else 'unknown' }}
+
+      - name: "Battery Optimizer Avoid Buy Hours"
+        unique_id: battery_optimizer_avoid_buy_hours
+        state: >
+          {% set summary = state_attr('sensor.battery_optimizer_plan_raw', 'decisionSummary') %}
+          {{ (summary.avoidBuyHours | default([]) | join(', ')) if summary else 'unknown' }}
+
+      - name: "Battery Optimizer Daily Arbitrage Profit"
+        unique_id: battery_optimizer_daily_arbitrage_profit
+        unit_of_measurement: "DKK"
+        state_class: measurement
+        state: >
+          {% set summary = state_attr('sensor.battery_optimizer_plan_raw', 'decisionSummary') %}
+          {{ (summary.expectedDailyArbitrageProfitDkk if summary else 0) | float(0) }}
+
+      - name: "Battery Optimizer House Reserve Advice"
+        unique_id: battery_optimizer_house_reserve_advice
+        state: >
+          {% set summary = state_attr('sensor.battery_optimizer_plan_raw', 'decisionSummary') %}
+          {{ summary.reserveForHouseUsage if summary else 'unknown' }}
+
+      - name: "Battery Optimizer EV Charging Advice"
+        unique_id: battery_optimizer_ev_charging_advice
+        state: >
+          {% set summary = state_attr('sensor.battery_optimizer_plan_raw', 'decisionSummary') %}
+          {{ summary.evChargingRecommendation if summary else 'unknown' }}
+
+      - name: "Battery Optimizer Auto Mode"
+        unique_id: battery_optimizer_auto_mode
+        state: >
+          {{ 'on' if state_attr('sensor.battery_optimizer_settings_raw', 'autoMode') else 'off' }}
+
+      - name: "Battery Optimizer Dry Run"
+        unique_id: battery_optimizer_dry_run
+        state: >
+          {{ 'on' if state_attr('sensor.battery_optimizer_settings_raw', 'dryRun') else 'off' }}
+
+      - name: "Battery Optimizer Allow Battery Export"
+        unique_id: battery_optimizer_allow_battery_export
+        state: >
+          {{ 'on' if state_attr('sensor.battery_optimizer_settings_raw', 'allowBatteryExport') else 'off' }}
+
+      - name: "Battery Optimizer Allow Grid Charging"
+        unique_id: battery_optimizer_allow_grid_charging
+        state: >
+          {{ 'on' if state_attr('sensor.battery_optimizer_settings_raw', 'allowGridCharging') else 'off' }}
+
+      - name: "Battery Optimizer Minimum Reserve"
+        unique_id: battery_optimizer_minimum_reserve
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: >
+          {{ state_attr('sensor.battery_optimizer_settings_raw', 'minReservePercent') | float(0) }}
+
+      - name: "Battery Optimizer Max Grid Charge"
+        unique_id: battery_optimizer_max_grid_charge
+        unit_of_measurement: "kWh"
+        state_class: measurement
+        state: >
+          {{ state_attr('sensor.battery_optimizer_settings_raw', 'maxGridChargeKwh') | float(0) }}
+
+      - name: "Battery Optimizer Paused Until"
+        unique_id: battery_optimizer_paused_until
+        state: >
+          {{ state_attr('sensor.battery_optimizer_settings_raw', 'pausedUntil') | default('not_paused', true) }}
+
+      - name: "Battery Optimizer Scheduler Last Run"
+        unique_id: battery_optimizer_scheduler_last_run
+        state: >
+          {% set scheduler = state_attr('sensor.battery_optimizer_health_raw', 'scheduler') %}
+          {{ scheduler.lastCompletedAt if scheduler else 'unknown' }}
+
+      - name: "Battery Optimizer Scheduler Next Run"
+        unique_id: battery_optimizer_scheduler_next_run
+        state: >
+          {% set scheduler = state_attr('sensor.battery_optimizer_health_raw', 'scheduler') %}
+          {{ scheduler.nextRunAt if scheduler else 'unknown' }}
+
+      - name: "Battery Optimizer Scheduler Last Error"
+        unique_id: battery_optimizer_scheduler_last_error
+        state: >
+          {% set scheduler = state_attr('sensor.battery_optimizer_health_raw', 'scheduler') %}
+          {{ scheduler.lastError if scheduler and scheduler.lastError else 'none' }}
+
+  - binary_sensor:
+      - name: "Battery Optimizer Healthy"
+        unique_id: battery_optimizer_healthy
+        state: >
+          {{ states('sensor.battery_optimizer_health_raw') == 'ok' }}
+
+      - name: "Battery Optimizer Scheduler Running"
+        unique_id: battery_optimizer_scheduler_running
+        state: >
+          {% set scheduler = state_attr('sensor.battery_optimizer_health_raw', 'scheduler') %}
+          {{ scheduler.running if scheduler else false }}
+
+      - name: "Battery Optimizer Data Stale"
+        unique_id: battery_optimizer_data_stale
+        state: >
+          {% set updated_at = state_attr('sensor.battery_optimizer_status_raw', 'updatedAt') %}
+          {% if not updated_at %}
+            true
+          {% else %}
+            {{ (as_timestamp(now()) - as_timestamp(updated_at)) > 1800 }}
+          {% endif %}

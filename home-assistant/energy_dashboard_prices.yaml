@@ -1,0 +1,18 @@
+# DK1 / Stromligning pricing package for the Energy Dashboard.
+#
+# Install to:
+#   /config/packages/energy_dashboard_prices.yaml
+#
+# Do not load this together with the legacy combined
+# `energy-dashboard-hakit.yaml` package.
+
+command_line:
+  - sensor:
+      name: Energy Dashboard Peak Rates
+      unique_id: energy_dashboard_peak_rates
+      command: >-
+        python3 -c "import json, urllib.request; url='http://YOUR_INTERNAL_HOST:1000/'; data=json.load(urllib.request.urlopen(url, timeout=15)); print(json.dumps({'count': len(data) if isinstance(data, list) else 0, 'prices': data if isinstance(data, list) else data.get('prices', data.get('windows', data.get('rates', []))) }))"
+      value_template: "{{ value_json.count }}"
+      json_attributes:
+        - prices
+      scan_interval: 900

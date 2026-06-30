@@ -1,0 +1,23 @@
+# Shared helper entities for the split Energy Dashboard packages.
+#
+# Install to:
+#   /config/packages/energy_dashboard_helpers.yaml
+#
+# Do not load this together with the legacy combined
+# `energy-dashboard-hakit.yaml` package, because they define overlapping
+# entities.
+
+input_datetime:
+  evcc_charge_start:
+    name: EVCC charge start
+    has_date: false
+    has_time: true
+
+  evcc_charge_end:
+    name: EVCC charge end
+    has_date: false
+    has_time: true
+
+input_boolean:
+  evcc_charge_plan_enabled:
+    name: EVCC charge plan enabled
