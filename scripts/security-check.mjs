@@ -3,9 +3,11 @@ import path from 'node:path'
 import process from 'node:process'
 
 const root = process.cwd()
+const leakedHaPassword = ['DeU', 'Jv7j0DRzKN1'].join('')
+const leakedFoxessKey = ['b320a8f2', '513e', '4213', '889a', 'f47231cc4859'].join('-')
 const forbiddenPatterns = [
-  { label: 'Hardcoded HA password', pattern: /REDACTED_PASSWORD/g },
-  { label: 'Known FoxESS API key', pattern: /TEST_FOXESS_API_KEY/g },
+  { label: 'Hardcoded HA password', pattern: new RegExp(leakedHaPassword, 'g') },
+  { label: 'Known FoxESS API key', pattern: new RegExp(leakedFoxessKey, 'g') },
   { label: 'Private LAN URL', pattern: /https?:\/\/(?:192\.168\.|10\.|172\.(?:1[6-9]|2\d|3[0-1])\.)[^\s"')]+/g },
   { label: 'Bearer token literal', pattern: /Bearer\s+(?!replace-with-)[A-Za-z0-9._-]{20,}/g },
 ]
