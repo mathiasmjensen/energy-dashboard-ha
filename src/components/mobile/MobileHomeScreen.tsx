@@ -8,7 +8,6 @@ import {
   MobileDataStateBadge,
   MobileIcon,
   MobileInsightControls,
-  NodeIcon,
   StatusChip,
 } from './MobilePrimitives'
 
@@ -81,7 +80,7 @@ function HomeHeroCard({
           </div>
         </div>
 
-        <div className="grid gap-4 px-3 pb-3 pt-4">
+        <div className="grid gap-3 px-3 pb-3 pt-4">
           <div className="flex justify-end">
             {overview.dataState ? <MobileDataStateBadge badge={overview.dataState} /> : null}
           </div>
@@ -90,7 +89,7 @@ function HomeHeroCard({
             <InfoStat icon="sun" label="Solar" tone="gold" value={overview.solarPower} />
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2.5">
             <MetricTile icon="grid" label="Grid" tone="blue" value={overview.gridPower} subValue={overview.gridMeta} />
             <MetricTile icon="battery" label="Battery" tone="green" value={overview.batteryPower} subValue={battery.soc} />
             <MetricTile icon="home" label="Home" tone="purple" value={overview.homePower} />
@@ -141,7 +140,7 @@ function MetricTile({
   return (
     <div
       className={cn(
-        'min-w-0 rounded-[18px] border px-3 py-2.5 shadow-[0_16px_34px_rgba(0,0,0,0.2)] backdrop-blur-md',
+        'min-w-0 rounded-[18px] border px-2.5 py-2.5 shadow-[0_16px_34px_rgba(0,0,0,0.2)] backdrop-blur-md',
         tone === 'green'
           ? 'border-emerald-400/20 bg-emerald-400/[0.08]'
           : tone === 'purple'
@@ -149,14 +148,26 @@ function MetricTile({
             : 'border-sky-400/20 bg-sky-400/[0.08]',
       )}
     >
-      <div className="flex items-center gap-2">
-        <NodeIcon tone={tone === 'green' ? 'green' : tone === 'purple' ? 'neutral' : 'blue'}>
-          <MobileIcon name={icon} />
-        </NodeIcon>
+      <div className="grid min-h-[74px] grid-rows-[auto_1fr] gap-2">
+        <div className="flex items-center gap-2">
+          <div
+            className={cn(
+              'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-black/28',
+              tone === 'green'
+                ? 'border-emerald-400/18 text-emerald-300'
+                : tone === 'purple'
+                  ? 'border-violet-300/16 text-white/82'
+                  : 'border-sky-400/18 text-sky-300',
+            )}
+          >
+            <MobileIcon className="h-4 w-4" name={icon} />
+          </div>
+          <span className="min-w-0 truncate text-[10px] font-medium uppercase tracking-[0.14em] text-white/55">{label}</span>
+        </div>
+
         <div className="min-w-0">
-          <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-white/55">{label}</span>
-          <strong className="block truncate text-[12px] font-semibold text-white">{value}</strong>
-          {subValue ? <small className="block truncate text-[10px] text-white/62">{subValue}</small> : null}
+          <strong className="block truncate text-[18px] font-semibold leading-none text-white">{value}</strong>
+          {subValue ? <small className="mt-1 block truncate text-[10px] leading-4 text-white/62">{subValue}</small> : null}
         </div>
       </div>
     </div>
