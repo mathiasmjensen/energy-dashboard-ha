@@ -217,7 +217,7 @@ function EvChargerRates({
       </header>
       <img
         className="charger-card__image"
-        src={assetPath('/energy-dashboard/charger.png')}
+        src={assetPath('/new-energy-dashboard/charger.png')}
         alt="Wall mounted EV charger"
       />
       <div className="charger-card__status">{status}</div>

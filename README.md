@@ -3,7 +3,7 @@
 Standalone React + TypeScript + Vite dashboard for Home Assistant, built with
 HAKit (`@hakit/core` and `@hakit/components`).
 
-The dashboard uses `public/energy-dashboard/background.png` as the scene image
+The dashboard uses `public/new-energy-dashboard/background.png` as the scene image
 inside a 1536x864 design canvas, then overlays glass metric cards, central
 power-flow callouts, SVG flow lines, a battery detail panel, and bottom
 analytics cards.
