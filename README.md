@@ -1,27 +1,20 @@
 # Energy Dashboard HAKit
 
-Standalone React + TypeScript + Vite dashboard for Home Assistant, built with
-HAKit (`@hakit/core` and `@hakit/components`).
+A React + TypeScript + Vite dashboard for Home Assistant built with HAKit.
 
-The dashboard uses `public/new-energy-dashboard/background.png` as the scene image
-inside a 1536x864 design canvas, then overlays glass metric cards, central
-power-flow callouts, SVG flow lines, a battery detail panel, and bottom
-analytics cards.
+The project provides:
+- a desktop dashboard with energy flow, battery, solar, EV, pricing, and notifications
+- a mobile dashboard with dedicated Home, Solar, Battery, EV, and Notifications screens
+- Home Assistant package files for EVCC, FoxESS, pricing, battery optimizer, helpers, and notifications
+- optional standalone backend services for notifications and battery optimization
 
-The current Overview redesign uses the assets in
-`public/new-energy-dashboard/` inside a 1672x941 dark-mode canvas with a left
-sidebar, central energy-flow scene, right detail rail, and bottom analytics row.
+## Requirements
 
-The Battery surfaces now include a battery optimizer layer:
-- mobile Battery tab: summary + history + optimizer stack
-- desktop Battery page: summary + history + optimizer workspace
+- Node.js 20.19+ or 22.12+
+- npm
+- Home Assistant
 
-The UI is currently being migrated away from a monolithic stylesheet toward
-Tailwind utility classes and shared presentational primitives. The design should
-stay visually the same during this refactor, but new work should prefer
-Tailwind-first components over adding more one-off CSS rules.
-
-## Setup
+## Development
 
 ```bash
 npm install
@@ -29,20 +22,7 @@ cp .env.example .env
 npm run dev -- --host 0.0.0.0
 ```
 
-Set `VITE_HA_URL` in `.env` to your Home Assistant URL. `VITE_HA_TOKEN` is
-optional; leaving it blank lets HAKit use the normal Home Assistant login flow.
-
-If you run the standalone notifications/web-push service, also set:
-
-```bash
-VITE_NOTIFICATIONS_BASE_URL=http://YOUR_NOTIFICATIONS_HOST:PORT
-```
-
-The frontend now registers `public/notifications-sw.js` and keeps a typed
-notifications client/hook ready for a future notifications tab. It does not add
-new dashboard UI chrome in this pass.
-
-## Scripts
+Useful scripts:
 
 ```bash
 npm run typecheck
@@ -50,733 +30,259 @@ npm run lint
 npm run build
 npm run build:ha
 npm run test:e2e
+npm run security:check
 ```
 
-## Frontend Styling
+## Environment
 
-Tailwind CSS is configured through:
-
-- `tailwind.config.ts`
-- `postcss.config.js`
-- `src/index.css`
-
-Shared primitives already moved to Tailwind live in:
-
-- `src/components/dashboard/desktop/DesktopShared.tsx`
-- `src/components/dashboard/desktop/DesktopFlow.tsx`
-- `src/components/dashboard/desktop/DesktopDashboard.tsx`
-- `src/components/dashboard/desktop/DesktopPanels.tsx`
-- `src/components/mobile/MobilePrimitives.tsx`
-- `src/components/mobile/MobileHomeScreen.tsx`
-- `src/components/mobile/MobileSolarScreen.tsx`
-- `src/components/mobile/MobileDashboard.tsx`
-- `src/components/battery/BatteryOptimizerSections.tsx`
-- `src/components/BatteryStatusModal.tsx`
-- `src/components/ev/EvChargerContent.tsx`
-- `src/components/mobile/MobileEvScreen.tsx`
-- `src/components/shared/BatteryVisual.tsx`
-
-The remaining `src/components/EnergyDashboard.css` file still contains layout
-and specialty styles that have not been fully migrated yet. After the current
-pass it is effectively limited to the desktop/mobile SVG flow pulse animation
-rules and their reduced-motion fallback. The shared battery illustration has
-been moved into a React component so it no longer depends on stylesheet
-pseudo-elements.
-
-### Styling rules for future changes
-
-1. Prefer inline Tailwind utilities or shared helpers like `cn(...)`.
-2. Reuse the shared glass surfaces (`dashboard-glass-panel`,
-   `dashboard-glass-card`) from `src/index.css`.
-3. Keep theme tokens in Tailwind config under `theme.extend.colors.dashboard`.
-4. Only add new CSS to `EnergyDashboard.css` when the effect is hard to express
-   with utilities alone, such as SVG animation paths or highly specific scene
-   positioning.
-
-## Node / Build Notes
-
-This repo uses Vite 8 and should be built with **Node 20.19+** or **22.12+**.
-
-If `npm run build` fails with a Vite engine error, check:
-
-```bash
-node -v
-which node
-```
-
-In this automation shell, `typecheck` passed during the Tailwind migration, but full
-`build` was blocked by the runtime resolving to Node 18 instead of the newer Node
-installed in your environment.
-
-## Project Structure
-
-- `src/components/EnergyDashboard.tsx`
-  Orchestrates desktop vs mobile rendering and wires shared view-model data.
-- `src/components/dashboard/desktop/*`
-  Desktop overview shell, panels, and flow scene.
-- `src/components/mobile/*`
-  Mobile screens, shell, and mobile-specific presentational blocks.
-- `src/components/battery/*`
-  Battery optimizer UI sections shared between mobile Battery and desktop modal.
-- `src/components/ev/*`
-  EV charger content shared between desktop modal and mobile EV screens.
-- `src/hooks/*`
-  Data orchestration for HA, EVCC, price feeds, historical views, and optimizer.
-- `src/models/*`
-  Shared domain types for optimizer state, prices, forecasts, EV planning, and
-  HA-facing data shapes.
-- `src/services/*`
-  Formatting, adapters, API clients, and pure data normalization logic.
-- `src/hooks/useNotifications.ts`
-  Browser push registration and backend subscription syncing.
-- `src/hooks/useNotificationPreferences.ts`
-  Local per-device alert preferences used by the notifications screens.
-- `src/services/notificationsClient.ts`
-  Typed client for the standalone notifications backend.
-- `src/models/notifications.ts`
-  Shared notifications models for client state and backend payloads.
-- `src/components/notifications/NotificationsScreen.tsx`
-  Shared desktop/mobile notifications UI.
-
-## Type Organization
-
-Shared app/domain types now live in `src/models` instead of being declared
-inside services and hooks.
-
-Use this rule going forward:
-
-1. Put shared domain types in `src/models/*`
-2. Keep services focused on normalization, formatting, and side-effect helpers
-3. Keep hooks focused on orchestration and React state
-4. Leave tiny component-private prop types local only when they are not shared
-
-## Deploy To Home Assistant Docker
-
-For Home Assistant running in Docker, find the host host path mounted into
-the container as `/config`. The dashboard should be copied to that mount under
-`www/energy-dashboard-hakit`, which Home Assistant serves at
-`/local/energy-dashboard-hakit/`.
-
-1. Optionally set your HA URL for the browser that will open the dashboard:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` only if you need to override the URL or explicitly allow direct browser backends:
+The default production-safe environment is in `.env.example`.
 
 ```bash
 VITE_HA_URL=
 VITE_HA_TOKEN=
 VITE_ENABLE_DIRECT_BROWSER_APIS=false
+VITE_BATTERY_OPTIMIZER_MODE=ha-proxy
+VITE_BATTERY_OPTIMIZER_BASE_URL=
+VITE_NOTIFICATIONS_BASE_URL=
+VITE_PEAK_RATE_URL=disabled
+VITE_EVCC_URL=
+VITE_EVCC_SOLAR_FORECAST_URL=disabled
+VITE_EVCC_SESSIONS_URL=disabled
 ```
 
-When the dashboard is opened from Home Assistant at `/local/...`, the production
-build defaults to the same browser origin. Set `VITE_HA_URL` only if you deploy
-the dashboard somewhere else or need a specific HTTPS/reverse-proxy URL. Keep
-`VITE_HA_TOKEN` empty in production. Browser-side direct backends are disabled
-by default in production unless `VITE_ENABLE_DIRECT_BROWSER_APIS=true` is set
-intentionally.
+Guidelines:
+- keep `VITE_HA_TOKEN` empty in production
+- keep `VITE_ENABLE_DIRECT_BROWSER_APIS=false` in production
+- prefer Home Assistant as the integration layer for EVCC, pricing, optimizer, and notifications
+- only enable direct browser APIs deliberately for controlled environments
 
-2. Build for Home Assistant's `/local` path:
+## Production Deployment
+
+Build for Home Assistant:
 
 ```bash
 npm run build:ha
 ```
 
-3. Copy the build output into the HA config mount. Replace the destination with
-your host deployment path:
+Copy the built files into Home Assistant's `www` directory:
 
 ```bash
-mkdir -p /path/to/homeassistant/config/www/energy-dashboard-hakit
-rsync -a --delete dist/ /path/to/homeassistant/config/www/energy-dashboard-hakit/
+mkdir -p /path/to/home-assistant/config/www/energy-dashboard-hakit
+rsync -a --delete dist/ /path/to/home-assistant/config/www/energy-dashboard-hakit/
 ```
 
-4. Open the dashboard:
+Open the dashboard at:
 
 ```text
-http://YOUR_HA_HOST_OR_IP:8123/local/energy-dashboard-hakit/index.html
+https://YOUR_HOME_ASSISTANT_HOST/local/energy-dashboard-hakit/index.html
 ```
 
-If you host the dashboard outside Home Assistant, set `VITE_HA_URL` to the HA
-origin that the browser can reach before building.
+If the dashboard is hosted outside Home Assistant, set `VITE_HA_URL` to the Home Assistant origin reachable by the browser before building.
 
-## Entity Mapping
+## Security
 
-Entity placeholders live in `src/data/energyEntities.ts`. Replace those sensor
-IDs with the real entities from your Home Assistant instance.
+The repo is configured for a Home-Assistant-first deployment model.
 
-Weather is read from `weather.forecast_home` or `weather.home` by default for
-the dashboard status chips. If your weather integration uses another entity ID,
-update `weatherHome` in `src/data/energyEntities.ts`.
+Recommended production setup:
+- let Home Assistant provide auth/session access
+- keep FoxESS keys, optimizer tokens, and notification secrets server-side only
+- use Home Assistant REST sensors, scripts, and package files for backend integrations
+- do not commit real `.env` files or `/config/secrets.yaml`
 
-Unknown, unavailable, or missing values render as `---`.
+Run the repository safety check before pushing:
+
+```bash
+npm run security:check
+```
+
+This checks for:
+- tracked `.env` files
+- tracked `home-assistant/secrets.yaml`
+- known secret patterns
+- private LAN URLs that should be placeholders in committed files
 
 ## Home Assistant Packages
 
-A complete drop-in package is available at
-`home-assistant/energy-dashboard-hakit.yaml`. Copy it to a valid Home Assistant
-package slug path:
+Preferred split package layout:
 
 ```text
-/config/packages/energy_dashboard_hakit.yaml
+home-assistant/
+  energy_dashboard_helpers.yaml
+  energy_dashboard_evcc.yaml
+  energy_dashboard_foxess.yaml
+  energy_dashboard_battery_optimizer.yaml
+  energy_dashboard_notifications.yaml
+  energy_dashboard_prices.yaml
 ```
 
-Then ensure `configuration.yaml` has packages enabled:
+Copy these files to `/config/packages/` and enable package loading in `configuration.yaml`:
 
 ```yaml
 homeassistant:
   packages: !include_dir_named packages
 ```
 
-The package creates the helper entities, endpoint-backed sensors, EVCC REST
-commands, charge-plan script, and start/stop automations expected by the
-dashboard.
-
-### Recommended split package layout
-
-The repo now also includes a modular package split. This is the preferred setup.
-
-Copy these files into `/config/packages/`:
-
-```text
-energy_dashboard_helpers.yaml
-energy_dashboard_evcc.yaml
-energy_dashboard_foxess.yaml
-energy_dashboard_battery_optimizer.yaml
-energy_dashboard_notifications.yaml
-energy_dashboard_prices.yaml
-```
-
 Important:
+- use the split package files or the legacy combined package, not both
+- the combined file `home-assistant/energy-dashboard-hakit.yaml` is legacy only
 
-- use the split files **or** the legacy combined `energy-dashboard-hakit.yaml`
-- do **not** load both at the same time
+### Secrets
 
-What each file does:
-
-- `energy_dashboard_helpers.yaml`
-  shared helpers such as EVCC charge-plan inputs
-- `energy_dashboard_evcc.yaml`
-  EVCC REST commands, charge sessions, solar forecast, EVCC scripts, and plan automations
-- `energy_dashboard_foxess.yaml`
-  Fox Cloud daily totals plus derived solar/grid/home/battery sensors
-- `energy_dashboard_battery_optimizer.yaml`
-  battery optimizer backend sensors, health, commands, and derived HA entities
-- `energy_dashboard_notifications.yaml`
-  push notification backend health, HA send script, and notification toggles
-- `energy_dashboard_prices.yaml`
-  DK1 / Stromligning peak-rate feed
-
-### Notifications package
-
-Web-push notifications now have their own HA package at:
-
-`home-assistant/energy_dashboard_notifications.yaml`
-
-Copy it to:
+Use the example file:
 
 ```text
-/config/packages/energy_dashboard_notifications.yaml
+home-assistant/secrets.example.yaml
 ```
 
-Add these secrets to `/config/secrets.yaml`:
-
-```yaml
-dashboard_notifications_publish_url: "http://YOUR_NOTIFICATIONS_BACKEND:8787/api/notifications/publish"
-dashboard_notifications_health_url: "http://YOUR_NOTIFICATIONS_BACKEND:8787/health"
-dashboard_notifications_publish_secret: "replace-with-your-shared-secret"
-dashboard_notifications_publish_authorization: "Bearer replace-with-your-shared-secret"
-battery_optimizer_status_url: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/status"
-battery_optimizer_plan_url: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/plan"
-battery_optimizer_settings_url: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/settings"
-battery_optimizer_health_url: "http://YOUR_OPTIMIZER_BACKEND:8090/health"
-battery_optimizer_base_url_refresh: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/refresh"
-battery_optimizer_base_url_pause: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/pause"
-battery_optimizer_base_url_apply_plan: "http://YOUR_OPTIMIZER_BACKEND:8090/api/battery/apply-plan"
-```
-
-This package adds:
-
-- `rest_command.dashboard_web_push`
-- `script.dashboard_send_notification`
-- notification enable/disable helper booleans
-- a backend health sensor and binary sensor
-
-The intended flow is:
-
-1. the dashboard subscribes the browser/device to the notifications backend
-2. Home Assistant decides when an alert should be sent
-3. HA calls `rest_command.dashboard_web_push`
-4. the backend delivers the push notification and stores it in history
-
-The package does not force live automations on you yet. It includes commented
-examples for battery-low and cheap-power alerts that you can adapt to your own
-entities.
-
-It also creates normalized Fox Cloud day-total sensors for the energy
-distribution cards by polling the official Fox Cloud API from Home Assistant:
-`sensor.energy_dashboard_solar_production_today`,
-`sensor.energy_dashboard_solar_production_feed`,
-`sensor.energy_dashboard_home_consumption_today`,
-`sensor.energy_dashboard_grid_import_today`,
-`sensor.energy_dashboard_battery_charge_today`, and
-`sensor.energy_dashboard_battery_discharge_today`.
-
-Add these secrets in `/config/secrets.yaml` before reloading Home Assistant:
-
-```yaml
-foxess_api_key: your_fox_cloud_api_key
-foxess_device_sn: your_fox_inverter_serial_number
-foxess_api_domain: https://www.foxesscloud.com
-```
-
-`foxess_api_domain` is optional and defaults to `https://www.foxesscloud.com`.
-A placeholder template is included at
-`home-assistant/secrets.example.yaml`. Copy it to your private
-`/config/secrets.yaml` inside Home Assistant; do not commit the real secrets file.
-
-
-## Production Safety
-
-The repo is now wired for a Home-Assistant-first production setup:
-
-- keep `VITE_HA_TOKEN` empty in production
-- keep `VITE_ENABLE_DIRECT_BROWSER_APIS=false` in production
-- prefer HA REST sensors / packages over direct browser calls to EVCC, price feeds, or optimizer backends
-- keep FoxESS keys, backend URLs, and publish secrets only in Home Assistant or server-side env files
-
-Run a local leak check before pushing:
-
-```bash
-npm run security:check
-```
-
-This scans the repo for committed `.env` files, tracked `home-assistant/secrets.yaml`, known secret patterns, and private LAN URLs that should be turned into placeholders before publishing.
-
-## Peak Rates
-
-For phone/mobile-internet access, Home Assistant should fetch the price endpoint
-and expose the result as an entity attribute. The dashboard reads
-`sensor.energy_dashboard_peak_rates` first and only uses browser fetching if you
-explicitly set `VITE_PEAK_RATE_URL`.
-
-Recommended HA entity shape:
-
-```yaml
-sensor.energy_dashboard_peak_rates
-  attributes:
-    prices:
-      - start: "2026-06-10T22:00:00.000Z"
-        end: "2026-06-10T23:00:00.000Z"
-        price: 1.2079
-```
-
-Example using HA `command_line` to wrap an array endpoint into a `prices`
-attribute:
-
-```yaml
-command_line:
-  - sensor:
-      name: Energy Dashboard Peak Rates
-      unique_id: energy_dashboard_peak_rates
-      command: >-
-        python3 -c "import json, urllib.request; data=json.load(urllib.request.urlopen('http://ENERGY_PRICE_PROXY_HOST:1000/', timeout=10)); print(json.dumps({'count': len(data), 'prices': data}))"
-      value_template: "{{ value_json.count }}"
-      json_attributes:
-        - prices
-      scan_interval: 900
-```
-
-Optional browser fallback:
-
-```bash
-VITE_PEAK_RATE_URL=http://ENERGY_PRICE_PROXY_HOST:1000/
-```
-
-The feed should return an array of hourly windows:
-
-```json
-[{ "start": "2026-06-10T22:00:00.000Z", "end": "2026-06-10T23:00:00.000Z", "price": 1.2079 }]
-```
-
-The dashboard shows the current active price and the highest upcoming price in
-the next 24 hours. Keep `VITE_PEAK_RATE_URL=disabled` for normal HA-hosted
-deployments so phones never try to fetch private LAN endpoints directly.
-
-## Solar Forecast
-
-For phone/mobile-internet access, Home Assistant should fetch EVCC's solar
-forecast endpoint and expose it as `sensor.energy_dashboard_solar_forecast`.
-The dashboard reads this entity first.
-
-Example HA REST sensor:
-
-```yaml
-rest:
-  - resource: http://EVCC_HOST:7070/api/tariff/solar
-    scan_interval: 900
-    sensor:
-      - name: Energy Dashboard Solar Forecast
-        unique_id: energy_dashboard_solar_forecast
-        value_template: "{{ value_json.rates | count }}"
-        json_attributes:
-          - rates
-```
-
-Optional browser fallback:
-
-```bash
-VITE_EVCC_URL=http://YOUR_SERVICE_HOST:7070
-VITE_EVCC_SOLAR_FORECAST_URL=http://EVCC_HOST:7070/api/tariff/solar
-```
-
-EVCC returns forecast power in 15-minute windows. The dashboard integrates each
-window into kWh:
+Copy it to your private Home Assistant secrets file and fill in real values:
 
 ```text
-window kWh = max(0, value) * window_hours / 1000
+/config/secrets.yaml
 ```
 
-The value shown for today is the remaining EVCC forecast for the rest of the
-day, matching EVCC's "remaining" semantics. The chart still shows a 24-hour
-shape for the day. EVCC forecast data is cached in `localStorage` for 30 minutes
-and stale cached data is reused if EVCC is temporarily unavailable.
+Never commit the real secrets file.
 
-Set this to skip EVCC and use the Open-Meteo fallback:
+## Service Integration Overview
 
-```bash
-VITE_EVCC_SOLAR_FORECAST_URL=disabled
-```
+### EVCC
 
-The Open-Meteo fallback uses `global_tilted_irradiance` and the configured panel
-capacity:
+Handled through the Home Assistant EVCC package:
+- charge mode changes
+- charge plan helpers and scripts
+- charge sessions
+- EVCC solar tariff/forecast feed
 
-```bash
-VITE_SOLAR_FORECAST_LATITUDE=55.493
-VITE_SOLAR_FORECAST_LONGITUDE=10.2046
-VITE_SOLAR_FORECAST_TILT=30
-VITE_SOLAR_FORECAST_AZIMUTH=0
-VITE_SOLAR_PANEL_CAPACITY_KW=10
-VITE_SOLAR_FORECAST_TIMEZONE=Europe/Copenhagen
-```
+Primary package file:
+- `home-assistant/energy_dashboard_evcc.yaml`
 
-## EVCC Charge History
+### FoxESS
 
-For phone/mobile-internet access, Home Assistant should fetch EVCC charge
-sessions and expose them as `sensor.energy_dashboard_evcc_charge_sessions`.
-The dashboard reads this entity first and only uses browser-side EVCC fetching
-if `VITE_EVCC_SESSIONS_URL` or `VITE_EVCC_URL` is explicitly configured.
+Handled through the Home Assistant FoxESS package:
+- daily totals
+- derived solar/grid/home/battery sensors
+- Fox Cloud API polling from Home Assistant
 
-Example HA `command_line` sensor wrapping EVCC's root array response:
+Primary package file:
+- `home-assistant/energy_dashboard_foxess.yaml`
 
-```yaml
-command_line:
-  - sensor:
-      name: Energy Dashboard EVCC Charge Sessions
-      unique_id: energy_dashboard_evcc_charge_sessions
-      command: >-
-        python3 -c "import json, urllib.request; data=json.load(urllib.request.urlopen('http://EVCC_HOST:7070/api/sessions', timeout=10)); print(json.dumps({'count': len(data), 'sessions': data[:25]}))"
-      value_template: "{{ value_json.count }}"
-      json_attributes:
-        - sessions
-      scan_interval: 300
-```
+### Pricing
 
-Optional browser fallback:
+Handled through the Home Assistant pricing package:
+- hourly electricity prices
+- dashboard price attributes
 
-```bash
-VITE_EVCC_SESSIONS_URL=http://EVCC_HOST:7070/api/sessions
-```
+Primary package file:
+- `home-assistant/energy_dashboard_prices.yaml`
 
-## Battery Optimizer
+### Battery optimizer
 
-The battery optimizer UI is intentionally separated from the existing live
-entity mapping so we can swap the backend later without rewriting the screens.
+The UI supports:
+- optimizer status
+- plan table
+- controls
+- charts
 
-### Frontend modes
+Recommended production mode:
+- `VITE_BATTERY_OPTIMIZER_MODE=ha-proxy`
 
-```bash
-VITE_BATTERY_OPTIMIZER_MODE=mock
-VITE_BATTERY_OPTIMIZER_BASE_URL=
-```
-
-Supported modes:
-
-- `ha-proxy` (default): calls same-origin Home Assistant hosted endpoints
-- `mock`: renders deterministic optimizer data without any backend
-- `direct-api`: calls `VITE_BATTERY_OPTIMIZER_BASE_URL` directly
-
-For the new standalone Node backend in this repo, use:
-
-```bash
-VITE_BATTERY_OPTIMIZER_MODE=direct-api
-VITE_BATTERY_OPTIMIZER_BASE_URL=http://YOUR_SERVER:8090
-```
-
-### Built-in backend service
-
-This repo now includes a lightweight Node service:
-
-```bash
-npm run optimizer:start
-```
-
-It serves:
-
-```text
-GET  /api/battery/status
-GET  /api/battery/plan
-GET  /api/battery/settings
-POST /api/battery/refresh
-POST /api/battery/apply-plan
-POST /api/battery/settings
-POST /api/battery/pause
-GET  /health
-```
-
-Example environment is included at:
-
-```text
-server/battery-optimizer.env.example
-```
-
-The service persists its state in:
-
-```text
-server-data/battery-optimizer-state.json
-```
-
-unless you override `BATTERY_OPTIMIZER_STATE_PATH`.
-
-### Expected optimizer endpoints
-
-The UI expects these routes:
-
-```text
-GET  /api/battery/status
-GET  /api/battery/plan
-GET  /api/battery/settings
-POST /api/battery/refresh
-POST /api/battery/apply-plan
-POST /api/battery/settings
-POST /api/battery/pause
-```
-
-Recommended HA setup is to expose those through a Home Assistant proxy or small
-same-origin backend so phones do not need direct access to private LAN services.
-
-If you do not proxy it through Home Assistant, point the frontend at the service
-with `VITE_BATTERY_OPTIMIZER_MODE=direct-api`.
-
-### Source-of-truth wiring
-
-- FoxESS live battery SoC / battery power / grid now:
-  existing Home Assistant entity mapping in `src/hooks/useEnergyData.ts`
-- EVCC charger status / sessions / charge modes:
-  existing EV controller and EVCC history pipeline
-- DK1 optimizer economics:
-  optimizer API payload first, existing peak-rate hook as fallback
-- Solar surplus forecast:
-  existing solar forecast hook first, optimizer payload can override
-- EMHASS / FoxESS control:
-  keep behind the optimizer backend or HA proxy, not in browser-side React
-
-The new optimizer frontend files are:
-
+Primary files:
+- `src/hooks/useBatteryOptimizer.ts`
 - `src/services/batteryOptimizer.ts`
 - `src/services/batteryOptimizerClient.ts`
-- `src/services/batteryOptimizerFormatting.ts`
-- `src/hooks/useBatteryOptimizer.ts`
-- `src/components/battery/BatteryOptimizerSections.tsx`
+- `home-assistant/energy_dashboard_battery_optimizer.yaml`
 
-## EVCC Controls
+### Notifications
 
-The EV charger popup is wired for EVCC semantics:
+Notifications use:
+- browser push subscription in the frontend
+- a standalone notifications backend
+- Home Assistant scripts/rest commands as the source of truth for sending alerts
 
-- Charge mode uses EVCC loadpoint modes: `off`, `pv`, `minpv`, and `now`.
-- Max charging current is not edited from this dashboard; keep that in EVCC.
-- Plan charge loads the current HA plan, lets you edit from/to times, turns the
-  current plan on/off, and shows an interactive energy-price chart below the
-  controls.
-- Planned charging starts in EVCC Fast mode (`now`) and returns to Solar mode
-  (`pv`) at the end of the window or when the plan is disabled.
+Primary files:
+- `src/hooks/useNotifications.ts`
+- `src/services/notificationsClient.ts`
+- `src/components/notifications/NotificationsScreen.tsx`
+- `home-assistant/energy_dashboard_notifications.yaml`
 
-Update these placeholders in `src/data/energyEntities.ts` to match your EVCC
-entities:
+## Entity Mapping
 
-```ts
-evccLoadpointMode: 'select.evcc_loadpoint_mode'
-evccChargePlanEnabled: 'input_boolean.evcc_charge_plan_enabled'
-evccChargePlanStart: 'input_datetime.evcc_charge_start'
-evccChargePlanEnd: 'input_datetime.evcc_charge_end'
-evccSetChargePlanScript: 'script.evcc_set_charge_plan'
+Entity placeholders live in:
+
+- `src/data/energyEntities.ts`
+
+Update those mappings to match your Home Assistant entities.
+
+Unknown, unavailable, or missing values render as `---`.
+
+## Project Structure
+
+```text
+src/
+  components/
+    battery/
+    dashboard/desktop/
+    ev/
+    mobile/
+    notifications/
+    shared/
+  hooks/
+  models/
+  services/
+  data/
+home-assistant/
+public/
+server/
+tests/
 ```
 
-For plan-charge changes, the UI calls this HA script:
+High-level responsibility split:
+- `src/components/*`: presentational UI
+- `src/hooks/*`: orchestration and state
+- `src/models/*`: shared domain types
+- `src/services/*`: normalization, adapters, pure helpers, and API clients
+- `home-assistant/*`: package files and examples
+- `server/*`: optional standalone backend services
 
-```ts
-evccSetChargePlanScript: 'script.evcc_set_charge_plan'
-```
+## Frontend Styling
 
-The popup calls it through `script.turn_on` with this variable payload:
+The UI is primarily Tailwind-based, with a small remaining CSS layer for specialized flow animation and scene behavior.
 
-```yaml
-charge_plan:
-  active: true
-  enabled: true
-  from: "22:00"
-  start: "22:00"
-  start_time: "22:00"
-  to: "06:00"
-  end: "06:00"
-  end_time: "06:00"
-  mode_at_start: "now"
-  mode_at_end: "pv"
-plan:
-  active: true
-  enabled: true
-  id: manual-charge-window
-  from: "22:00"
-  start: "22:00"
-  start_time: "22:00"
-  to: "06:00"
-  end: "06:00"
-  end_time: "06:00"
-  mode_at_start: "now"
-  mode_at_end: "pv"
-```
+Core styling files:
+- `tailwind.config.ts`
+- `postcss.config.js`
+- `src/index.css`
+- `src/components/EnergyDashboard.css`
 
-Mode changes call `select.select_option` on `select.evcc_carport_mode`.
-Turning the current plan off also calls `rest_command.evcc_disable_charge` and
-sets EVCC mode back to `pv`.
+Guidelines for future changes:
+- prefer Tailwind utilities and shared primitives
+- reuse shared glass surface styles where possible
+- keep special-purpose CSS limited to effects that are awkward in utilities alone
 
-### EV Charger History in Home Assistant
+## Testing
 
-The charger popup history tab now builds recent sessions from Home Assistant's
-recorder history instead of calling EVCC directly. Make sure these EVCC entities
-exist in HA and are included in `recorder`:
+Automated coverage includes:
+- unit tests for data shaping and helpers
+- Playwright end-to-end coverage
+- optional live integration tests when external credentials are explicitly provided
 
-- `binary_sensor.evcc_carport_charging`
-- `sensor.evcc_carport_session_energy`
-- `sensor.evcc_carport_charge_duration`
-- `sensor.evcc_carport_vehicle_soc` (optional, used for a friendlier vehicle label)
-
-Example recorder setup:
-
-```yaml
-recorder:
-  include:
-    entities:
-      - binary_sensor.evcc_carport_charging
-      - sensor.evcc_carport_session_energy
-      - sensor.evcc_carport_charge_duration
-      - sensor.evcc_carport_vehicle_soc
-```
-
-The dashboard reconstructs session windows from `binary_sensor.evcc_carport_charging`
-and uses `sensor.evcc_carport_session_energy` to capture delivered energy for each
-session. If recorder excludes those entities, the history tab will stay empty.
-
-Example Home Assistant helpers, REST commands, script, and automations:
-
-```yaml
-input_datetime:
-  evcc_charge_start:
-    name: EVCC charge start
-    has_date: false
-    has_time: true
-  evcc_charge_end:
-    name: EVCC charge end
-    has_date: false
-    has_time: true
-
-input_boolean:
-  evcc_charge_plan_enabled:
-    name: EVCC charge plan enabled
-
-rest_command:
-  evcc_enable_charge:
-    url: "http://YOUR_EVCC_HOST/api/loadpoints/1/mode/now"
-    method: POST
-  evcc_disable_charge:
-    url: "http://YOUR_EVCC_HOST/api/loadpoints/1/mode/pv"
-    method: POST
-
-script:
-  evcc_set_charge_plan:
-    alias: EVCC Set Charge Plan
-    mode: restart
-    fields:
-      charge_plan:
-        selector:
-          object:
-    sequence:
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.evcc_charge_start
-        data:
-          time: "{{ charge_plan.from }}:00"
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.evcc_charge_end
-        data:
-          time: "{{ charge_plan.to }}:00"
-      - choose:
-          - conditions: "{{ charge_plan.enabled | bool }}"
-            sequence:
-              - service: input_boolean.turn_on
-                target:
-                  entity_id: input_boolean.evcc_charge_plan_enabled
-        default:
-          - service: input_boolean.turn_off
-            target:
-              entity_id: input_boolean.evcc_charge_plan_enabled
-
-automation:
-  - alias: EVCC Start Planned Charging
-    trigger:
-      - platform: time
-        at: input_datetime.evcc_charge_start
-    condition:
-      - condition: state
-        entity_id: input_boolean.evcc_charge_plan_enabled
-        state: "on"
-    action:
-      - service: select.select_option
-        target:
-          entity_id: select.evcc_carport_mode
-        data:
-          option: now
-      - service: rest_command.evcc_enable_charge
-
-  - alias: EVCC Stop Planned Charging
-    trigger:
-      - platform: time
-        at: input_datetime.evcc_charge_end
-    condition:
-      - condition: state
-        entity_id: input_boolean.evcc_charge_plan_enabled
-        state: "on"
-    action:
-      - service: select.select_option
-        target:
-          entity_id: select.evcc_carport_mode
-        data:
-          option: pv
-      - service: rest_command.evcc_disable_charge
-      - service: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.evcc_charge_plan_enabled
-```
-
-## Playwright Screenshots
-
-Playwright is installed as a dev dependency for visual QA. On this WSL machine,
-Chromium needs Homebrew libraries on the runtime path:
+The FoxESS integration test is opt-in and only runs when these environment variables are set:
 
 ```bash
-export LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:$LD_LIBRARY_PATH
-npm run test:e2e
-npx playwright screenshot --viewport-size=1536,864 http://localhost:5173/ /tmp/energy-dashboard.png
+TEST_FOXESS_API_KEY=...
+TEST_FOXESS_DEVICE_SN=...
+TEST_FOXESS_API_DOMAIN=https://www.foxesscloud.com
+TEST_FOXESS_TIMEZONE=Europe/Copenhagen
 ```
+
+## Assets
+
+Primary dashboard assets live in:
+- `public/new-energy-dashboard/`
+- `public/mobile-dashboard/`
+
+The active desktop scene uses:
+- `public/new-energy-dashboard/background.png`
+
+## License / Usage
+
+Review and add your preferred project license before public distribution if one is not already in place.
