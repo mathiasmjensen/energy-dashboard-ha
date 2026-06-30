@@ -670,7 +670,7 @@ automation:
 
 ## Playwright Screenshots
 
-Playwright is installed as a dev dependency for visual QA. On this WSL machine,
+Playwright is installed as a dev dependency for visual QA. If this a WSL machine,
 Chromium needs Homebrew libraries on the runtime path:
 
 ```bash
