@@ -208,11 +208,11 @@ export function DesktopDashboard({
                   evChargePowerValue={charger.powerValue}
                   gridPowerValue={grid.powerValue}
                 />
-                <FlowNode className="left-[92px] top-[382px]" label="Solar" tone="sun" unit="kW" value={solar.power} />
-                <FlowNode className="left-[92px] top-[466px]" label="Grid" meta={grid.status} tone="purple" unit="kW" value={grid.power} />
-                <FlowNode className="left-[390px] top-[424px]" label="Home" tone="blue" unit="kW" value={homePower} />
+                <FlowNode className="left-[80px] top-[368px]" label="Solar" tone="sun" unit="kW" value={solar.power} />
+                <FlowNode className="left-[80px] top-[466px]" label="Grid" meta={grid.status} tone="purple" unit="kW" value={grid.power} />
+                <FlowNode className="left-[384px] top-[412px]" label="Home" tone="blue" unit="kW" value={homePower} />
                 <FlowNode
-                  className="left-[690px] top-[382px]"
+                  className="left-[698px] top-[368px]"
                   label="Battery"
                   badge={battery.soc}
                   meta={battery.status}
@@ -221,7 +221,7 @@ export function DesktopDashboard({
                   value={battery.power}
                 />
                 <FlowNode
-                  className="left-[690px] top-[466px]"
+                  className="left-[698px] top-[466px]"
                   label="EV"
                   meta={charger.status}
                   tone="muted"

@@ -14,11 +14,11 @@ export function EnergyFlowMap({
   const evState = evChargePowerValue !== null && Math.abs(evChargePowerValue) > 0.05 ? 'active' : 'idle'
 
   return (
-    <svg className="absolute left-[42px] top-[386px] h-[158px] w-[846px] overflow-visible" viewBox="0 0 846 158" aria-hidden="true">
-      <FlowPath color="#f5a623" d="M186 28H300Q330 28 348 58" />
-      <FlowPath color="#33d66b" d="M484 58Q508 28 548 28H648" reverse={batteryDirection === 'reverse'} />
-      <FlowPath color="#a64df5" d="M186 112H300Q330 112 348 86" reverse={gridDirection === 'reverse'} />
-      <FlowPath color="#a6adb6" d="M484 86Q508 112 548 112H648" state={evState} />
+    <svg className="absolute left-[42px] top-[372px] h-[176px] w-[860px] overflow-visible" viewBox="0 0 860 176" aria-hidden="true">
+      <FlowPath color="#f5a623" d="M204 32H300Q326 32 342 62" />
+      <FlowPath color="#33d66b" d="M506 62Q524 32 558 32H658" reverse={batteryDirection === 'reverse'} />
+      <FlowPath color="#a64df5" d="M204 130H300Q326 130 342 98" reverse={gridDirection === 'reverse'} />
+      <FlowPath color="#a6adb6" d="M506 98Q524 130 558 130H658" state={evState} />
     </svg>
   )
 }
@@ -55,24 +55,24 @@ export function FlowNode({
 
   const content = (
     <>
-      <span className="mt-[7px] h-2 w-2 self-start rounded-full bg-current shadow-[0_0_12px_currentColor]" aria-hidden="true" />
+      <span className="mt-[6px] h-2.5 w-2.5 self-start rounded-full bg-current shadow-[0_0_14px_currentColor]" aria-hidden="true" />
       <div className="min-w-0">
-        <span className="block text-[11px] text-current">{label}</span>
-        <strong className="mt-0.5 block text-[14px] leading-[1.05] text-dashboard-text">
+        <span className="block text-[11px] font-medium uppercase tracking-[0.12em] text-current/90">{label}</span>
+        <strong className="mt-1 block text-[20px] font-semibold leading-none text-dashboard-text">
           {value}
-          <small className="text-[12px]"> {unit}</small>
+          <small className="text-[12px] font-semibold text-dashboard-soft"> {unit}</small>
         </strong>
         {meta || badge ? (
-          <div className="mt-[3px] flex min-h-[14px] items-center justify-between gap-2">
+          <div className="mt-2 flex min-h-[18px] items-center justify-between gap-2">
             {meta ? (
-              <em className="inline-flex min-w-0 max-w-full items-center justify-start overflow-hidden text-ellipsis whitespace-nowrap rounded-full border px-1.5 text-[10px] not-italic leading-none text-[color-mix(in_srgb,currentColor_92%,white_8%)] [background:color-mix(in_srgb,currentColor_16%,rgba(8,12,18,0.92))] [border-color:color-mix(in_srgb,currentColor_24%,rgba(255,255,255,0.1))] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.04)]">
+              <em className="inline-flex min-w-0 max-w-full items-center justify-start overflow-hidden text-ellipsis whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-medium not-italic leading-none text-[color-mix(in_srgb,currentColor_90%,white_10%)] [background:color-mix(in_srgb,currentColor_14%,rgba(8,12,18,0.96))] [border-color:color-mix(in_srgb,currentColor_22%,rgba(255,255,255,0.12))] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.05)]">
                 {meta}
               </em>
             ) : (
               <span />
             )}
             {badge ? (
-              <bdi className="inline-flex h-4 min-w-[36px] shrink-0 items-center justify-center rounded-full border border-white/14 bg-white/8 px-1.5 text-[10px] font-bold leading-none text-[#edf6ef]">
+              <bdi className="inline-flex h-5 min-w-[40px] shrink-0 items-center justify-center rounded-full border border-white/14 bg-white/8 px-2 text-[10px] font-bold leading-none text-[#edf6ef]">
                 {badge}
               </bdi>
             ) : null}
@@ -93,7 +93,7 @@ export function FlowNode({
       <button
         aria-label={`Open ${label} details`}
         className={cn(
-          'dashboard-glass-card absolute grid min-h-12 w-[136px] cursor-pointer grid-cols-[10px_1fr] items-center gap-2.5 rounded-[9px] border px-2.5 py-2 text-left text-dashboard-text shadow-glass [text-shadow:0_1px_4px_rgba(0,0,0,0.6)] transition hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_16px_36px_rgba(0,0,0,0.24)] focus-visible:-translate-y-0.5 focus-visible:brightness-105',
+          'dashboard-glass-card absolute grid min-h-[74px] w-[166px] cursor-pointer grid-cols-[12px_1fr] items-start gap-3 rounded-[14px] border px-3.5 py-3 text-left text-dashboard-text shadow-[0_18px_42px_rgba(0,0,0,0.24)] [text-shadow:0_1px_4px_rgba(0,0,0,0.55)] transition hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_18px_40px_rgba(0,0,0,0.28)] focus-visible:-translate-y-0.5 focus-visible:brightness-105',
           toneClassName,
           className,
         )}
@@ -108,7 +108,7 @@ export function FlowNode({
   return (
     <div
       className={cn(
-        'dashboard-glass-card absolute grid min-h-12 w-[136px] grid-cols-[10px_1fr] items-center gap-2.5 rounded-[9px] border px-2.5 py-2 text-left text-dashboard-text shadow-glass [text-shadow:0_1px_4px_rgba(0,0,0,0.6)]',
+        'dashboard-glass-card absolute grid min-h-[74px] w-[166px] grid-cols-[12px_1fr] items-start gap-3 rounded-[14px] border px-3.5 py-3 text-left text-dashboard-text shadow-[0_18px_42px_rgba(0,0,0,0.24)] [text-shadow:0_1px_4px_rgba(0,0,0,0.55)]',
         toneClassName,
         className,
       )}
