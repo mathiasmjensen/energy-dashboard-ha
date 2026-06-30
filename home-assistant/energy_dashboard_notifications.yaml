@@ -1,0 +1,168 @@
+# Home Assistant package for Energy Dashboard web-push notifications.
+#
+# Install:
+# 1. Copy this file to /config/packages/energy_dashboard_notifications.yaml
+# 2. Copy the secrets below into /config/secrets.yaml
+# 3. Ensure configuration.yaml contains:
+#      homeassistant:
+#        packages: !include_dir_named packages
+# 4. Restart Home Assistant.
+#
+# This package keeps Home Assistant as the source of truth:
+# - the dashboard/browser subscribes devices to the notifications backend
+# - Home Assistant decides when to send alerts
+# - HA calls the backend through rest_command.dashboard_web_push
+
+input_boolean:
+  energy_dashboard_notifications_enabled:
+    name: Energy Dashboard notifications enabled
+    icon: mdi:bell-badge-outline
+
+  energy_dashboard_notify_battery_optimizer:
+    name: Energy Dashboard battery optimizer alerts
+    icon: mdi:battery-heart-variant
+
+  energy_dashboard_notify_ev_charging:
+    name: Energy Dashboard EV charging alerts
+    icon: mdi:car-electric
+
+  energy_dashboard_notify_price_drops:
+    name: Energy Dashboard price drop alerts
+    icon: mdi:cash-fast
+
+  energy_dashboard_notify_solar_surplus:
+    name: Energy Dashboard solar surplus alerts
+    icon: mdi:weather-sunny-alert
+
+rest_command:
+  dashboard_web_push:
+    url: !secret dashboard_notifications_publish_url
+    method: POST
+    headers:
+      Authorization: !secret dashboard_notifications_publish_authorization
+      Content-Type: "application/json"
+    payload: >-
+      {
+        "title": {{ title | tojson }},
+        "body": {{ message | tojson }},
+        "tag": {{ (tag | default('energy-dashboard')) | tojson }},
+        "url": {{ (url | default('/local/energy-dashboard-hakit/index.html')) | tojson }},
+        "requireInteraction": {{ require_interaction | default(false) | tojson }},
+        "data": {{ data | default({"source": "home-assistant"}) | tojson }}
+      }
+
+rest:
+  - resource: !secret dashboard_notifications_health_url
+    scan_interval: 300
+    sensor:
+      - name: Energy Dashboard Notifications Backend
+        unique_id: energy_dashboard_notifications_backend
+        value_template: "{{ 'online' if value_json.ok else 'offline' }}"
+        json_attributes:
+          - history
+          - subscriptions
+          - time
+          - vapidKeySource
+
+template:
+  - binary_sensor:
+      - name: Energy Dashboard Notifications Online
+        unique_id: energy_dashboard_notifications_online
+        state: "{{ states('sensor.energy_dashboard_notifications_backend') == 'online' }}"
+        icon: >-
+          {% if is_state('sensor.energy_dashboard_notifications_backend', 'online') %}
+            mdi:bell-check-outline
+          {% else %}
+            mdi:bell-cancel-outline
+          {% endif %}
+
+script:
+  dashboard_send_notification:
+    alias: Dashboard Send Notification
+    mode: parallel
+    description: Send a web-push notification through the dashboard notifications backend.
+    fields:
+      title:
+        required: true
+        selector:
+          text:
+      message:
+        required: true
+        selector:
+          text:
+      category:
+        selector:
+          select:
+            options:
+              - general
+              - battery_optimizer
+              - ev_charging
+              - price_drops
+              - solar_surplus
+      tag:
+        selector:
+          text:
+      url:
+        selector:
+          text:
+      require_interaction:
+        selector:
+          boolean:
+    sequence:
+      - variables:
+          category_key: "{{ category | default('general') }}"
+          notifications_enabled: "{{ is_state('input_boolean.energy_dashboard_notifications_enabled', 'on') }}"
+          category_enabled: >-
+            {% if category_key == 'battery_optimizer' %}
+              {{ is_state('input_boolean.energy_dashboard_notify_battery_optimizer', 'on') }}
+            {% elif category_key == 'ev_charging' %}
+              {{ is_state('input_boolean.energy_dashboard_notify_ev_charging', 'on') }}
+            {% elif category_key == 'price_drops' %}
+              {{ is_state('input_boolean.energy_dashboard_notify_price_drops', 'on') }}
+            {% elif category_key == 'solar_surplus' %}
+              {{ is_state('input_boolean.energy_dashboard_notify_solar_surplus', 'on') }}
+            {% else %}
+              true
+            {% endif %}
+      - condition: template
+        value_template: "{{ notifications_enabled and category_enabled }}"
+      - service: rest_command.dashboard_web_push
+        data:
+          title: "{{ title }}"
+          message: "{{ message }}"
+          tag: "{{ tag | default(category_key) }}"
+          url: "{{ url | default('/local/energy-dashboard-hakit/index.html') }}"
+          require_interaction: "{{ require_interaction | default(false) }}"
+          data:
+            source: "home-assistant"
+            category: "{{ category_key }}"
+
+# Example automations to adapt later:
+#
+# automation:
+#   - alias: Dashboard Notification - Battery Low
+#     trigger:
+#       - platform: numeric_state
+#         entity_id: sensor.evcc_battery_soc
+#         below: 15
+#     action:
+#       - service: script.dashboard_send_notification
+#         data:
+#           title: "Battery low"
+#           message: "Battery state of charge dropped below 15%."
+#           category: battery_optimizer
+#           tag: battery-low
+#           require_interaction: true
+#
+#   - alias: Dashboard Notification - Cheap Power Window
+#     trigger:
+#       - platform: numeric_state
+#         entity_id: sensor.electricity_current_price
+#         below: 1.00
+#     action:
+#       - service: script.dashboard_send_notification
+#         data:
+#           title: "Cheap power now"
+#           message: "Spot price dropped below 1.00 DKK/kWh."
+#           category: price_drops
+#           tag: cheap-power

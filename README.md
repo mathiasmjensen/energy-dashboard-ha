@@ -231,6 +231,45 @@ The package creates the helper entities, endpoint-backed sensors, EVCC REST
 commands, charge-plan script, and start/stop automations expected by the
 dashboard.
 
+### Notifications package
+
+Web-push notifications now have their own HA package at:
+
+`home-assistant/energy_dashboard_notifications.yaml`
+
+Copy it to:
+
+```text
+/config/packages/energy_dashboard_notifications.yaml
+```
+
+Add these secrets to `/config/secrets.yaml`:
+
+```yaml
+dashboard_notifications_publish_url: "http://YOUR_NOTIFICATIONS_BACKEND:8787/api/notifications/publish"
+dashboard_notifications_health_url: "http://YOUR_NOTIFICATIONS_BACKEND:8787/health"
+dashboard_notifications_publish_secret: "replace-with-your-shared-secret"
+dashboard_notifications_publish_authorization: "Bearer replace-with-your-shared-secret"
+```
+
+This package adds:
+
+- `rest_command.dashboard_web_push`
+- `script.dashboard_send_notification`
+- notification enable/disable helper booleans
+- a backend health sensor and binary sensor
+
+The intended flow is:
+
+1. the dashboard subscribes the browser/device to the notifications backend
+2. Home Assistant decides when an alert should be sent
+3. HA calls `rest_command.dashboard_web_push`
+4. the backend delivers the push notification and stores it in history
+
+The package does not force live automations on you yet. It includes commented
+examples for battery-low and cheap-power alerts that you can adapt to your own
+entities.
+
 It also creates normalized Fox Cloud day-total sensors for the energy
 distribution cards by polling the official Fox Cloud API from Home Assistant:
 `sensor.energy_dashboard_solar_production_today`,

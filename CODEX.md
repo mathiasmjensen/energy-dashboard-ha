@@ -77,6 +77,9 @@ When changing UI, prefer:
   - `src/models/notifications.ts`
   - `src/components/notifications/NotificationsScreen.tsx`
   - `public/notifications-sw.js`
+- Home Assistant notifications package:
+  - `home-assistant/energy_dashboard_notifications.yaml`
+  - `home-assistant/secrets.yaml`
 - Historical day switching lives in:
   - `src/hooks/useHistoricalEnergyDay.ts`
 
