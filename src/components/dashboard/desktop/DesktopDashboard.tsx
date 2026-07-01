@@ -190,7 +190,7 @@ export function DesktopDashboard({
                   <h1 className="m-0 text-[24px] leading-[1.1] text-white">Overview</h1>
                   <p className="mt-[7px] text-[15px] text-[#d7dbe1]">Live overview of your home energy system</p>
                 </div>
-                <div className="fixed left-[1196px] top-[31px] z-[3] grid grid-cols-[126px_146px_142px] gap-6">
+                <div className="fixed left-[1196px] top-[24px] z-[3] grid grid-cols-[120px_138px_138px] gap-5">
                   <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
                   <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />
                   <StatusPill primary="All systems" secondary="Normal" tone="ok" />
@@ -212,7 +212,7 @@ export function DesktopDashboard({
                 <FlowNode className="left-[80px] top-[466px]" label="Grid" meta={grid.status} tone="purple" unit="kW" value={grid.power} />
                 <FlowNode className="left-[384px] top-[412px]" label="Home" tone="blue" unit="kW" value={homePower} />
                 <FlowNode
-                  className="left-[698px] top-[368px]"
+                  className="left-[706px] top-[352px]"
                   label="Battery"
                   badge={battery.soc}
                   meta={battery.status}
@@ -221,7 +221,7 @@ export function DesktopDashboard({
                   value={battery.power}
                 />
                 <FlowNode
-                  className="left-[698px] top-[466px]"
+                  className="left-[706px] top-[500px]"
                   label="EV"
                   meta={charger.status}
                   tone="muted"
@@ -246,7 +246,7 @@ export function DesktopDashboard({
               </section>
             </section>
 
-            <aside className="absolute right-4 top-[92px] grid w-[484px] gap-[9px]" aria-label="Energy details">
+            <aside className="absolute right-4 top-[108px] grid w-[484px] gap-[14px]" aria-label="Energy details">
               <EnergyDistributionPanel
                 battery={distribution.battery}
                 batteryCharge={distribution.batteryCharge}

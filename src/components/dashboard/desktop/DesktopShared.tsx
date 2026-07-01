@@ -79,12 +79,12 @@ export function PanelHeader({
   title: string
 }) {
   return (
-    <header className="flex items-start justify-between gap-3">
+    <header className="flex items-start justify-between gap-2">
       <div className="flex min-w-0 items-center gap-2">
-        <h2 className="text-[22px] font-semibold leading-none tracking-[-0.01em] text-white">{title}</h2>
+        <h2 className="truncate whitespace-nowrap text-[17px] font-[760] leading-none tracking-[-0.01em] text-white">{title}</h2>
         {badge ? <DataStateBadge badge={badge} /> : null}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {controls ? (
           controls
         ) : showPeriod ? (
@@ -142,7 +142,7 @@ export function InsightWindowControls({
     <div className="inline-flex shrink-0 items-center gap-1.5" role="group" aria-label="Insight time range controls">
       <button
         aria-label="Show previous insight window"
-        className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border border-white/10 bg-black/25 text-[18px] leading-none text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a] disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-md border border-white/10 bg-black/25 text-[18px] leading-none text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a] disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!canGoPrevious}
         type="button"
         onClick={onPrevious}
@@ -151,7 +151,7 @@ export function InsightWindowControls({
       </button>
       <button
         aria-label={`Switch to ${mode === 'today' ? 'timeline' : 'today overview'}`}
-        className="inline-flex h-[30px] min-w-[118px] items-center justify-center rounded-md border border-white/10 bg-black/25 px-2.5 text-[11px] font-[650] text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a]"
+        className="inline-flex h-[28px] min-w-[96px] items-center justify-center rounded-md border border-white/10 bg-black/25 px-2 text-[10px] font-[650] text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a]"
         type="button"
         onClick={onToggleMode}
       >
@@ -159,7 +159,7 @@ export function InsightWindowControls({
       </button>
       <button
         aria-label="Show next insight window"
-        className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border border-white/10 bg-black/25 text-[18px] leading-none text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a] disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-md border border-white/10 bg-black/25 text-[18px] leading-none text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a] disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!canGoNext}
         type="button"
         onClick={onNext}
@@ -181,19 +181,19 @@ export function DayWindowControls({
     <div className="inline-flex shrink-0 items-center gap-1.5" role="group" aria-label="Historical energy day controls">
       <button
         aria-label="Show previous energy day"
-        className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border border-white/10 bg-black/25 text-[18px] leading-none text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a] disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-md border border-white/10 bg-black/25 text-[18px] leading-none text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a] disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!canGoPrevious}
         type="button"
         onClick={onPrevious}
       >
         ‹
       </button>
-      <div className="inline-flex h-[30px] min-w-[118px] items-center justify-center rounded-md border border-white/10 bg-black/25 px-2.5 text-[11px] font-[650] text-[#e7ecf3]">
+      <div className="inline-flex h-[28px] min-w-[96px] items-center justify-center rounded-md border border-white/10 bg-black/25 px-2 text-[10px] font-[650] text-[#e7ecf3]">
         {label}
       </div>
       <button
         aria-label="Show next energy day"
-        className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border border-white/10 bg-black/25 text-[18px] leading-none text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a] disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-md border border-white/10 bg-black/25 text-[18px] leading-none text-[#e7ecf3] transition hover:border-white/20 hover:bg-[#0a111a] disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!canGoNext}
         type="button"
         onClick={onNext}
