@@ -221,7 +221,7 @@ export function DesktopDashboard({
                   value={battery.power}
                 />
                 <FlowNode
-                  className="left-[706px] top-[500px]"
+                  className="left-[706px] top-[462px]"
                   label="EV"
                   meta={charger.status}
                   tone="muted"

@@ -18,7 +18,7 @@ export function EnergyFlowMap({
       <FlowPath color="#f5a623" d="M204 32H300Q326 32 342 62" />
       <FlowPath color="#33d66b" d="M506 62Q522 24 566 24H674" reverse={batteryDirection === 'reverse'} />
       <FlowPath color="#a64df5" d="M204 130H300Q326 130 342 98" reverse={gridDirection === 'reverse'} />
-      <FlowPath color="#a6adb6" d="M506 106Q520 160 566 160H674" state={evState} />
+      <FlowPath color="#a6adb6" d="M506 102Q520 126 564 126H674" state={evState} />
     </svg>
   )
 }
