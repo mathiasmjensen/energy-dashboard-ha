@@ -104,12 +104,14 @@ export function AnalyticsCard({
 }) {
   return (
     <GlassCard className="mobile-analytics-card p-5" data-accent={accent}>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
+      <div className="mb-3 grid gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <h2 className="text-[clamp(18px,4.8vw,22px)] font-semibold tracking-[-0.02em] text-white">{title}</h2>
           {badge ? <MobileDataStateBadge badge={badge} /> : null}
         </div>
-        {controlsNode ? controlsNode : controls ? <MobileInsightControls controls={controls} /> : <MobileCardAction label={actionLabel ?? 'Today'} />}
+        <div className="min-w-0">
+          {controlsNode ? controlsNode : controls ? <MobileInsightControls controls={controls} /> : <MobileCardAction label={actionLabel ?? 'Today'} />}
+        </div>
       </div>
 
       {windowLabel ? <div className="mobile-window-chip mb-4 inline-flex min-h-6 items-center rounded-chip border border-white/10 bg-white/[0.035] px-2.5 text-[10px] font-medium text-dashboard-soft">{windowLabel}</div> : null}
@@ -142,10 +144,10 @@ export function MobileInsightControls({ controls }: { controls: InsightHeaderCon
   const activeLabel = useMemo(() => (controls.mode === 'today' ? 'Today overview' : 'Timeline'), [controls.mode])
 
   return (
-    <div className="mobile-insight-controls flex items-center gap-2">
+    <div className="mobile-insight-controls flex w-full items-center gap-2">
       <button
         aria-label="Show previous insight window"
-        className="mobile-insight-controls__arrow inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-white transition disabled:opacity-40"
+        className="mobile-insight-controls__arrow inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-white transition disabled:opacity-40"
         disabled={!controls.canGoPrevious}
         type="button"
         onClick={controls.onPrevious}
@@ -153,11 +155,11 @@ export function MobileInsightControls({ controls }: { controls: InsightHeaderCon
         <MobileIcon name="chevronLeft" />
       </button>
 
-      <div className="relative">
+      <div className="relative min-w-0 flex-1">
         <button
           aria-expanded={isOpen}
           aria-haspopup="menu"
-          className="inline-flex h-10 min-w-[142px] items-center justify-center gap-1 rounded-2xl border border-white/10 bg-black/25 px-4 text-[13px] font-medium text-white"
+          className="inline-flex h-10 w-full min-w-0 items-center justify-center gap-1 rounded-2xl border border-white/10 bg-black/25 px-3 text-[12px] font-medium text-white"
           type="button"
           onClick={() => setIsOpen((current) => !current)}
         >
@@ -166,7 +168,7 @@ export function MobileInsightControls({ controls }: { controls: InsightHeaderCon
         </button>
 
         {isOpen ? (
-          <div className="mobile-insight-controls__dropdown absolute left-0 top-full z-20 mt-2 min-w-full rounded-2xl border border-white/10 bg-[#0b1118]/95 p-1 shadow-[0_20px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl" role="menu">
+          <div className="mobile-insight-controls__dropdown absolute left-0 right-0 top-full z-20 mt-2 rounded-2xl border border-white/10 bg-[#0b1118]/95 p-1 shadow-[0_20px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl" role="menu">
             {[
               { label: 'Today overview', mode: 'today' },
               { label: 'Timeline', mode: 'timeline' },
@@ -197,7 +199,7 @@ export function MobileInsightControls({ controls }: { controls: InsightHeaderCon
 
       <button
         aria-label="Show next insight window"
-        className="mobile-insight-controls__arrow inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-white transition disabled:opacity-40"
+        className="mobile-insight-controls__arrow inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-white transition disabled:opacity-40"
         disabled={!controls.canGoNext}
         type="button"
         onClick={controls.onNext}
@@ -210,7 +212,7 @@ export function MobileInsightControls({ controls }: { controls: InsightHeaderCon
 
 function MobileCardAction({ label }: { label: string }) {
   return (
-    <button className="inline-flex h-10 min-w-[92px] items-center justify-center gap-1 rounded-2xl border border-white/10 bg-black/25 px-4 text-[13px] font-medium text-white" type="button">
+    <button className="inline-flex h-10 min-w-[96px] items-center justify-center gap-1 rounded-2xl border border-white/10 bg-black/25 px-4 text-[12px] font-medium text-white" type="button">
       {label}
       <MobileIcon name="chevronDown" className="h-[14px] w-[14px]" />
     </button>

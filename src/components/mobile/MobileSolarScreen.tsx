@@ -98,22 +98,22 @@ export function MobileSolarScreen({
 
 function MobileDayControls({ controls }: { controls: MobileDashboardProps['energyDayControls'] }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full items-center gap-2">
       <button
         aria-label="Show previous energy day"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!controls.canGoPrevious}
         type="button"
         onClick={controls.onPrevious}
       >
         <MobileIcon name="chevronLeft" />
       </button>
-      <div className="inline-flex min-h-10 items-center rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-medium text-dashboard-text">
+      <div className="inline-flex min-h-10 min-w-0 flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 text-center text-sm font-medium text-dashboard-text">
         {controls.label}
       </div>
       <button
         aria-label="Show next energy day"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!controls.canGoNext}
         type="button"
         onClick={controls.onNext}
@@ -136,7 +136,7 @@ function SolarFlowDiagram({
   const evDirection = overview.evMeta.toLowerCase().includes('charg') ? 'forward' : 'reverse'
 
   return (
-    <div className="relative grid min-h-[272px] grid-cols-[96px_1fr_96px] grid-rows-[auto_1fr_auto] gap-y-5">
+    <div className="relative min-h-[360px] overflow-hidden rounded-[22px] border border-white/6 bg-[radial-gradient(circle_at_50%_48%,rgba(255,255,255,0.03),transparent_48%)] px-3 py-4">
       <div className={flowNodeClassName('solar')}>
         <NodeIcon tone="gold">
           <MobileIcon name="solar" />
@@ -157,7 +157,7 @@ function SolarFlowDiagram({
         </div>
       </div>
 
-      <div className="col-start-2 row-start-2 grid place-self-center rounded-[22px] border border-white/12 bg-[#0a111b]/92 px-4 py-3 text-center shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
+      <div className="absolute left-1/2 top-[122px] z-[2] grid w-[112px] -translate-x-1/2 rounded-[22px] border border-white/16 bg-[#0a111b]/92 px-4 py-3 text-center shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
         <NodeIcon tone="white">
           <MobileIcon name="home" />
         </NodeIcon>
@@ -185,11 +185,11 @@ function SolarFlowDiagram({
         <strong className="text-sm font-semibold text-dashboard-text">{distribution.ev} kWh</strong>
       </div>
 
-      <svg className="pointer-events-none absolute inset-x-0 top-6 h-[160px] w-full overflow-visible" viewBox="0 0 320 170" aria-hidden="true">
-        <FlowPath color="#f7b62f" direction="forward" path="M74 38 H122 C144 38 150 52 150 72" />
-        <FlowPath color="#9a5cff" direction={gridDirection} path="M74 118 H126 C146 118 150 104 150 88" />
-        <FlowPath color="#57dd70" direction={batteryDirection} path="M170 72 C174 54 184 40 206 40 H252" />
-        <FlowPath color="#707788" direction={evDirection} path="M170 88 C174 108 184 122 206 122 H252" />
+      <svg className="pointer-events-none absolute inset-x-0 top-[22px] h-[248px] w-full overflow-visible" viewBox="0 0 320 248" aria-hidden="true">
+        <FlowPath color="#f7b62f" direction="forward" path="M82 44 H126 C148 44 154 58 154 84" />
+        <FlowPath color="#9a5cff" direction={gridDirection} path="M82 196 H126 C148 196 154 182 154 156" />
+        <FlowPath color="#57dd70" direction={batteryDirection} path="M166 84 C172 58 182 44 206 44 H238" />
+        <FlowPath color="#707788" direction={evDirection} path="M166 156 C172 182 182 196 206 196 H238" />
       </svg>
     </div>
   )
@@ -197,10 +197,10 @@ function SolarFlowDiagram({
 
 function flowNodeClassName(tone: 'battery' | 'ev' | 'grid' | 'solar') {
   return cn(
-    'grid w-[92px] gap-1 rounded-[20px] border bg-[#0a111b]/92 px-3 py-3 shadow-[0_18px_44px_rgba(0,0,0,0.22)]',
-    tone === 'solar' && 'col-start-1 row-start-1 place-self-start border-dashboard-orange/25',
-    tone === 'grid' && 'col-start-1 row-start-3 place-self-start border-dashboard-purple/25',
-    tone === 'battery' && 'col-start-3 row-start-1 place-self-end border-dashboard-green/25',
-    tone === 'ev' && 'col-start-3 row-start-3 place-self-end border-white/15',
+    'absolute z-[2] grid w-[96px] gap-1 rounded-[20px] border bg-[#0a111b]/92 px-3 py-3 shadow-[0_18px_44px_rgba(0,0,0,0.22)]',
+    tone === 'solar' && 'left-0 top-2 border-dashboard-orange/25',
+    tone === 'grid' && 'bottom-2 left-0 border-dashboard-purple/25',
+    tone === 'battery' && 'right-0 top-2 border-dashboard-green/25',
+    tone === 'ev' && 'bottom-2 right-0 border-white/15',
   )
 }

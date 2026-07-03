@@ -2,6 +2,16 @@
 
 A React + TypeScript + Vite dashboard for Home Assistant built with HAKit.
 
+## Preview
+
+### Desktop
+
+![Desktop overview](docs/screenshots/desktop-overview.png)
+
+### Mobile
+
+![Mobile home screen](docs/screenshots/mobile-home.png)
+
 The project provides:
 - a desktop dashboard with energy flow, battery, solar, EV, pricing, and notifications
 - a mobile dashboard with dedicated Home, Solar, Battery, EV, and Notifications screens
