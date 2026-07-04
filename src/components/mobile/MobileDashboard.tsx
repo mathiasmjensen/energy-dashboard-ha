@@ -44,14 +44,14 @@ export function MobileDashboard({
       style={
         {
           ['--mobile-nav-height' as string]: '76px',
-          ['--mobile-nav-gap' as string]: '12px',
-          ['--mobile-bottom-space' as string]: 'calc(var(--mobile-nav-height) + var(--mobile-nav-gap) + env(safe-area-inset-bottom))',
+          ['--mobile-nav-gap' as string]: '18px',
+          ['--mobile-bottom-space' as string]: 'calc(var(--mobile-nav-height) + var(--mobile-nav-gap) + 36px + env(safe-area-inset-bottom))',
         }
       }
     >
       <div className="relative mx-auto block min-h-screen min-h-dvh w-full max-w-[430px] overflow-visible px-[max(14px,env(safe-area-inset-right))] pb-0 pl-[max(14px,env(safe-area-inset-left))] pr-[max(14px,env(safe-area-inset-right))] pt-[max(14px,env(safe-area-inset-top))]">
         <section
-          className="min-h-screen min-h-dvh overflow-visible pb-[var(--mobile-bottom-space)] pr-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="min-h-screen min-h-dvh overflow-visible pb-[var(--mobile-bottom-space)] pr-0.5 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           data-tab={activeTab}
           data-testid={`mobile-tab-${activeTab}`}
           key={activeTab}

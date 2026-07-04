@@ -81,7 +81,7 @@ export function BatteryOptimizerStatusCard({
     variant,
     'Battery optimizer status',
     <>
-      <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-4' : 'grid-cols-2')}>
+      <div className={cn('grid gap-2.5', variant === 'desktop' ? 'grid-cols-4' : 'grid-cols-2')}>
         <StatusMetric label="Battery SoC" value={formatOptimizerPercent(status.socPercent)} />
         <StatusMetric label="Battery mode" value={getOptimizerModeLabel(status.mode)} />
         <StatusMetric label="Battery power" value={formatOptimizerPower(status.batteryPowerKw)} />
@@ -92,7 +92,7 @@ export function BatteryOptimizerStatusCard({
         <StatusMetric label="Profit today" value={formatOptimizerCurrency(status.estimatedProfitTodayDkk)} />
       </div>
 
-      <div className={cn('flex items-center gap-3', variant === 'desktop' ? 'flex-wrap justify-between' : 'flex-wrap')}>
+      <div className={cn('flex items-center gap-3', variant === 'desktop' ? 'flex-wrap justify-between' : 'flex-col items-start gap-2')}>
         <RecommendationBadge recommendation={status.recommendation} tone={recommendationTone} variant={variant} />
         <div className="flex flex-wrap items-center gap-2 text-xs text-dashboard-soft">
           <small className="text-xs text-dashboard-soft">Updated {formatOptimizerUpdatedAt(status.updatedAt)}</small>
@@ -124,7 +124,7 @@ export function BatteryOptimizerDecisionSummary({
   return wrapVariantCard(
     variant,
     'Decision summary',
-    <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2')}>
+    <div className={cn('grid gap-2.5', variant === 'desktop' ? 'grid-cols-2' : 'grid-cols-1')}>
       <SummaryBlock compact={variant === 'desktop'} label="Best hours to sell" value={joinWindowLabels(summary.bestSellHours, variant)} />
       <SummaryBlock compact={variant === 'desktop'} label="Best hours to buy" value={joinWindowLabels(summary.bestBuyHours, variant)} />
       <SummaryBlock compact={variant === 'desktop'} label="Avoid buying" value={joinWindowLabels(summary.avoidBuyHours, variant)} />
@@ -162,7 +162,7 @@ export function BatteryOptimizerControlsCard({
     variant,
     'Optimizer controls',
     <>
-      <div className={cn('grid gap-3', variant === 'desktop' ? 'grid-cols-3' : 'grid-cols-1')}>
+      <div className={cn('grid gap-2.5', variant === 'desktop' ? 'grid-cols-3' : 'grid-cols-1')}>
         <ToggleRow
           checked={settings.autoMode}
           disabled={isBusy}
@@ -229,7 +229,7 @@ export function BatteryOptimizerControlsCard({
         </label>
       </div>
 
-      <div className={cn(variant === 'desktop' ? 'grid grid-cols-3 gap-3' : 'flex flex-col gap-3')}>
+      <div className={cn(variant === 'desktop' ? 'grid grid-cols-3 gap-3' : 'flex flex-col gap-2.5')}>
         <button type="button" className={secondaryButtonClassName()} disabled={isBusy} onClick={optimizer.refresh}>
           {optimizer.isRefreshing ? 'Refreshing...' : 'Refresh prices / forecast'}
         </button>
@@ -275,7 +275,7 @@ export function BatteryOptimizerPlanTable({
           <div className={planPillClassName()}>{planHours}h horizon</div>
         </div>
 
-        <div className="flex flex-col gap-3" aria-label="Battery optimization plan">
+        <div className="flex flex-col gap-2.5" aria-label="Battery optimization plan">
           {rows.map((row) => (
             <article className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]" key={row.startIso}>
               <div className="mb-3 flex items-center justify-between gap-3">
@@ -412,7 +412,7 @@ export function BatteryOptimizerCharts({
 
   if (variant === 'mobile') {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <OptimizerMobileChartCard color="#3d86ff" labels={charts.priceCurve.labels} points={charts.priceCurve.points} title="DK1 price curve" unit="DKK/kWh" />
         <OptimizerMobileChartCard color="#60ea5d" labels={charts.socForecast.labels} points={charts.socForecast.points} title="Battery SoC forecast" unit="%" />
         <OptimizerMobileChartCard color="#f0b339" labels={charts.plannedBatteryPower.labels} points={charts.plannedBatteryPower.points} title="Planned charge / discharge" unit="kWh" />
@@ -510,12 +510,12 @@ function SummaryBlock({
   value: string
 }) {
   return (
-    <div className={cn('rounded-[18px] border border-white/8 bg-[#0b111d]/88 shadow-[0_12px_28px_rgba(0,0,0,0.18)]', compact ? 'p-2.5' : 'p-4')}>
-      <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
+    <div className={cn('rounded-[18px] border border-white/8 bg-[#0b111d]/88 shadow-[0_12px_28px_rgba(0,0,0,0.18)]', compact ? 'p-2.5' : 'p-3.5')}>
+      <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-dashboard-muted">{label}</span>
       <strong
         className={cn(
           'mt-2 block font-semibold text-dashboard-text',
-          compact ? 'text-[0.84rem] leading-5' : 'text-[1rem] leading-7',
+          compact ? 'text-[0.84rem] leading-5' : 'text-[0.94rem] leading-6',
         )}
         style={
           compact
@@ -536,9 +536,9 @@ function SummaryBlock({
 
 function StatusMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-h-[88px] rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
-      <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
-      <strong className="mt-2 block break-words text-[0.96rem] font-semibold leading-5 text-dashboard-text">{value}</strong>
+    <div className="min-h-[76px] rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+      <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-dashboard-muted">{label}</span>
+      <strong className="mt-1.5 block break-words text-[0.92rem] font-semibold leading-5 text-dashboard-text">{value}</strong>
     </div>
   )
 }
@@ -638,7 +638,7 @@ function OptimizerEmptyCard({ title, variant }: { title: string; variant: Varian
 function wrapVariantCard(variant: Variant, title: string, body: ReactNode) {
   if (variant === 'mobile') {
     return (
-      <GlassCard className="dashboard-glass-card flex flex-col gap-4 rounded-panel p-4">
+      <GlassCard className="dashboard-glass-card flex flex-col gap-3 rounded-panel p-4">
         <SectionHeading title={title} />
         {body}
       </GlassCard>

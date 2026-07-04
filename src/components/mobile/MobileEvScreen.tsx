@@ -34,8 +34,8 @@ export function MobileEvScreen({
   }
 
   return (
-    <div className="flex flex-col gap-4" data-mode={activeMode}>
-      <GlassCard className="grid grid-cols-[128px_1fr] gap-4 rounded-[26px] p-4">
+    <div className="flex flex-col gap-4 pb-4" data-mode={activeMode}>
+      <GlassCard className="grid grid-cols-[108px_1fr] gap-3 rounded-[26px] p-4">
         <div className="rounded-[20px] border border-white/8 bg-[#0b111d]/88 p-2">
           <img src={assetPath('/new-energy-dashboard/car.png')} alt="Tesla Model Y" />
         </div>
@@ -59,17 +59,21 @@ export function MobileEvScreen({
       />
 
       {activeMode === 'status' ? (
-        <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
-          <SectionHeading title="Charger status" />
-          <EvChargerOverviewSection
-            chargeRate={charger.chargeRate}
-            layout="mobile"
-            sessionDuration={charger.sessionDuration}
-            sessionEnergy={charger.sessionEnergy}
-            status={charger.status}
-          />
-          <EvChargerSettingsSection controller={controller} />
-        </GlassCard>
+        <>
+          <GlassCard className="flex flex-col gap-4 rounded-[24px] p-4">
+            <SectionHeading title="Charger status" />
+            <EvChargerOverviewSection
+              chargeRate={charger.chargeRate}
+              layout="mobile"
+              sessionDuration={charger.sessionDuration}
+              sessionEnergy={charger.sessionEnergy}
+              status={charger.status}
+            />
+          </GlassCard>
+          <GlassCard className="rounded-[24px] px-4 pb-4 pt-6">
+            <EvChargerSettingsSection controller={controller} />
+          </GlassCard>
+        </>
       ) : null}
 
       {activeMode === 'plan' ? (

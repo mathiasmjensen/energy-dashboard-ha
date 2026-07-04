@@ -134,7 +134,7 @@ export function AnalyticsCard({
         </div>
       ) : null}
 
-      <div className="min-h-[164px] pt-2">{children}</div>
+      <div className="min-h-[146px] pt-2">{children}</div>
     </GlassCard>
   )
 }

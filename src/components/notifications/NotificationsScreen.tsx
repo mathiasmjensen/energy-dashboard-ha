@@ -162,7 +162,7 @@ export function MobileNotificationsScreen({
   setPreference: (key: keyof NotificationPreferences, value: boolean) => void
 }) {
   return (
-    <div className="flex flex-col gap-4 pb-2">
+    <div className="flex flex-col gap-4 pb-4">
       <GlassCard className="rounded-[26px] p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -174,17 +174,17 @@ export function MobileNotificationsScreen({
           </StatusChip>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-2 gap-2">
           <MobileNotificationStat label="Permission" value={formatPermission(notifications.permission)} />
           <MobileNotificationStat label="Subscription" value={notifications.isSubscribed ? 'Active' : 'Inactive'} />
           <MobileNotificationStat label="Backend" value={notifications.backendAvailable ? 'Connected' : 'Unavailable'} />
           <MobileNotificationStat label="Last sync" value={notifications.lastSyncedAt ? formatTimestamp(notifications.lastSyncedAt) : 'Not yet'} />
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-2 gap-2">
           <ActionButton label={notifications.isSyncing ? 'Refreshing...' : 'Refresh'} variant="secondary" onClick={() => void controller.refresh()} />
           <ActionButton
-            label={notifications.isSubscribed ? (notifications.isSyncing ? 'Turning off...' : 'Turn off') : notifications.isSyncing ? 'Turning on...' : 'Turn on'}
+            label={notifications.isSubscribed ? (notifications.isSyncing ? 'Off...' : 'Turn off') : notifications.isSyncing ? 'On...' : 'Turn on'}
             variant="primary"
             onClick={() => void (notifications.isSubscribed ? controller.disable() : controller.enable())}
           />
@@ -201,7 +201,7 @@ export function MobileNotificationsScreen({
         <div className="flex items-center justify-between gap-2">
           <SectionHeading title="Alert preferences" />
         </div>
-        <div className="mt-4 grid gap-3">
+        <div className="mt-4 grid gap-2.5">
           {PREFERENCE_ITEMS.map((item) => (
             <PreferenceCard
               key={item.key}
@@ -215,7 +215,7 @@ export function MobileNotificationsScreen({
         </div>
       </GlassCard>
 
-      <GlassCard className="rounded-[24px] p-4">
+      <GlassCard className="rounded-[24px] px-4 pb-4 pt-10">
         <div className="flex items-center justify-between gap-3">
           <SectionHeading title="Recent alerts" />
           <div className="inline-flex min-h-7 items-center rounded-full border border-white/10 bg-white/[0.04] px-2.5 text-[11px] text-dashboard-soft">
@@ -287,7 +287,7 @@ function NotificationStat({
 
 function MobileNotificationStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 px-3 py-3 shadow-[0_12px_28px_rgba(0,0,0,0.16)]">
+    <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 px-3 py-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.16)]">
       <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
       <strong className="mt-2 block text-[13px] font-semibold text-dashboard-text">{value}</strong>
     </div>
@@ -311,12 +311,12 @@ function PreferenceCard({
     <div
       className={cn(
         'flex items-start justify-between gap-4 rounded-[18px] border border-white/8 bg-[#0b111d]/88 shadow-[0_12px_28px_rgba(0,0,0,0.16)]',
-        mobile ? 'px-4 py-3' : 'px-4 py-4',
+        mobile ? 'px-4 py-2.5' : 'px-4 py-4',
       )}
     >
       <div className="min-w-0">
         <strong className="block text-[14px] font-semibold text-dashboard-text">{label}</strong>
-        <span className="mt-1 block text-[12px] leading-5 text-dashboard-soft">{description}</span>
+        <span className="mt-1 block text-[12px] leading-[1.35rem] text-dashboard-soft">{description}</span>
       </div>
       <button
         aria-pressed={checked}

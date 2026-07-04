@@ -24,18 +24,18 @@ export function EvChargerOverviewSection({
   const isMobile = layout === 'mobile'
 
   return (
-    <div className={cn('grid gap-4', isMobile ? 'grid-cols-1' : 'grid-cols-[265px_minmax(0,1fr)]')}>
+    <div className={cn('grid gap-4', isMobile ? 'grid-cols-[112px_1fr] items-start' : 'grid-cols-[265px_minmax(0,1fr)]')}>
       <div
         className={cn(
           'grid place-items-center rounded-[22px] border border-white/10 bg-[#0c121d]/88 shadow-[0_24px_70px_rgba(0,0,0,0.24)]',
-          isMobile ? 'min-h-[220px]' : 'h-[245px] w-[265px]',
+          isMobile ? 'min-h-[124px] p-3' : 'h-[245px] w-[265px]',
         )}
       >
         <img src={assetPath('/new-energy-dashboard/charger.png')} alt="Wall mounted EV charger" />
       </div>
 
-      <div className="grid gap-3 rounded-[22px] border border-white/10 bg-[#0c121d]/88 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
-        <div className="flex min-h-[88px] items-center gap-4 rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-4">
+      <div className="grid gap-2.5 rounded-[22px] border border-white/10 bg-[#0c121d]/88 p-3.5 shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
+        <div className={cn('flex items-center gap-4 rounded-[18px] border border-white/8 bg-white/[0.03] px-4', isMobile ? 'min-h-[76px] py-3' : 'min-h-[88px] py-4')}>
           <span className="h-3 w-3 rounded-full bg-dashboard-green shadow-[0_0_16px_rgba(96,234,93,0.56)]" />
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.14em] text-dashboard-muted">Status</p>
@@ -44,10 +44,10 @@ export function EvChargerOverviewSection({
           </div>
         </div>
 
-        <div className="grid gap-1 px-1 pb-1">
-          <EvStat icon="bolt" label="Power" unit="kW" value={chargeRate} />
-          <EvStat icon="history" label="Session energy" unit="kWh" value={sessionEnergy} />
-          <EvStat icon="clock" label="Duration" value={sessionDuration} />
+        <div className={cn(isMobile ? 'grid gap-0.5 px-1 pb-0.5' : 'grid gap-1 px-1 pb-1')}>
+          <EvStat compact={isMobile} icon="bolt" label="Power" unit="kW" value={chargeRate} />
+          <EvStat compact={isMobile} icon="history" label="Session energy" unit="kWh" value={sessionEnergy} />
+          <EvStat compact={isMobile} icon="clock" label="Duration" value={sessionDuration} />
         </div>
       </div>
     </div>
@@ -128,7 +128,7 @@ export function EvChargerActivitySection({
 
           {layout === 'mobile' ? <ActivePlanSummary controller={controller} /> : null}
 
-          <div className={cn('grid gap-3', layout === 'mobile' ? 'grid-cols-1' : 'grid-cols-[1fr_1fr_auto] items-end')}>
+      <div className={cn('grid gap-3', layout === 'mobile' ? 'grid-cols-1' : 'grid-cols-[1fr_1fr_auto] items-end')}>
             <label className="grid gap-2">
               <span className="text-xs font-medium uppercase tracking-[0.14em] text-dashboard-muted">From</span>
               <input
@@ -158,20 +158,39 @@ export function EvChargerActivitySection({
             </button>
           </div>
 
-          <div className={cn('grid gap-3', layout === 'mobile' ? 'grid-cols-1' : 'grid-cols-3')}>
-            <span className={summaryStatClassName()}>
-              <small className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Now</small>
-              <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{controller.priceSummary.current} DKK/kWh</strong>
-            </span>
-            <span className={summaryStatClassName()}>
-              <small className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Average</small>
-              <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{controller.priceSummary.average} DKK/kWh</strong>
-            </span>
-            <span className={summaryStatClassName()}>
-              <small className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Peak</small>
-              <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{controller.priceSummary.peak} DKK/kWh</strong>
-            </span>
-          </div>
+          {layout === 'mobile' ? (
+            <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-3 py-2.5">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <span className="grid gap-1">
+                  <small className="text-[10px] font-medium uppercase tracking-[0.12em] text-dashboard-muted">Now</small>
+                  <strong className="text-[12px] font-semibold text-dashboard-text">{controller.priceSummary.current}</strong>
+                </span>
+                <span className="grid gap-1">
+                  <small className="text-[10px] font-medium uppercase tracking-[0.12em] text-dashboard-muted">Avg</small>
+                  <strong className="text-[12px] font-semibold text-dashboard-text">{controller.priceSummary.average}</strong>
+                </span>
+                <span className="grid gap-1">
+                  <small className="text-[10px] font-medium uppercase tracking-[0.12em] text-dashboard-muted">Peak</small>
+                  <strong className="text-[12px] font-semibold text-dashboard-text">{controller.priceSummary.peak}</strong>
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-3 grid-cols-3">
+              <span className={summaryStatClassName()}>
+                <small className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Now</small>
+                <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{controller.priceSummary.current} DKK/kWh</strong>
+              </span>
+              <span className={summaryStatClassName()}>
+                <small className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Average</small>
+                <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{controller.priceSummary.average} DKK/kWh</strong>
+              </span>
+              <span className={summaryStatClassName()}>
+                <small className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Peak</small>
+                <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{controller.priceSummary.peak} DKK/kWh</strong>
+              </span>
+            </div>
+          )}
 
           <div className="grid grid-cols-[42px_1fr_42px] items-center gap-2">
             <button
@@ -322,9 +341,9 @@ function SegmentedControl({
 function ChargeHistoryList({ sessions }: { sessions: EvChargerController['sessionHistory'] }) {
   if (!sessions.length) {
     return (
-      <div className="grid min-h-[182px] place-content-center gap-2 rounded-[20px] border border-dashed border-white/10 bg-white/[0.02] px-5 py-6 text-center">
+      <div className="grid min-h-[132px] place-content-center gap-1.5 rounded-[20px] border border-dashed border-white/10 bg-white/[0.02] px-4 py-5 text-center">
         <strong className="text-base font-semibold text-dashboard-text">No completed sessions yet</strong>
-        <p className="max-w-[28rem] text-sm leading-5 text-dashboard-soft">Home Assistant needs recorder history for the EVCC charging entities before sessions can appear here.</p>
+        <p className="max-w-[28rem] text-[13px] leading-5 text-dashboard-soft">Recorder history for the EVCC charging entities is needed before sessions appear here.</p>
       </div>
     )
   }
@@ -362,22 +381,24 @@ function ChargeHistoryList({ sessions }: { sessions: EvChargerController['sessio
 }
 
 function EvStat({
+  compact = false,
   icon,
   label,
   unit,
   value,
 }: {
+  compact?: boolean
   icon: 'bolt' | 'clock' | 'history'
   label: string
   unit?: string
   value: string
 }) {
   return (
-    <div className="flex min-h-[56px] items-center gap-4 border-t border-white/8 px-2 py-3 first:border-t-0">
+    <div className={cn('flex items-center gap-4 border-t border-white/8 px-2 first:border-t-0', compact ? 'min-h-[48px] py-2.5' : 'min-h-[56px] py-3')}>
       <EvUiIcon name={icon} />
       <div>
         <p className="text-xs font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</p>
-        <strong className="mt-1 block text-lg font-semibold text-dashboard-text">
+        <strong className={cn('mt-1 block font-semibold text-dashboard-text', compact ? 'text-[1.05rem]' : 'text-lg')}>
           {value}
           {unit ? <small> {unit}</small> : null}
         </strong>

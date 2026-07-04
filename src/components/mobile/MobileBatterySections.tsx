@@ -42,7 +42,7 @@ export function MobileBatteryDetailsSection({
           <MobileDataStateBadge badge={battery.dataState} />
         </div>
 
-        <div className="grid grid-cols-[1fr_124px] gap-4">
+        <div className="grid grid-cols-[1fr_108px] gap-4">
           <div className="grid content-start gap-3">
             <div>
               <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Battery state</span>
@@ -56,12 +56,12 @@ export function MobileBatteryDetailsSection({
             </div>
           </div>
 
-          <div className="flex items-center justify-center rounded-[20px] border border-white/8 bg-[#0b111d]/88 p-3">
+          <div className="flex items-center justify-center rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-2.5">
             <BatteryVisual level={battery.socValue} />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <DetailCard label="Current behavior" tone={battery.status === 'Charging' ? 'green' : battery.status === 'Discharging' ? 'danger' : 'neutral'}>
             <StatusChip tone={battery.status === 'Charging' ? 'green' : battery.status === 'Discharging' ? 'danger' : 'neutral'}>
               {battery.status}
@@ -146,7 +146,7 @@ function DetailCard({
   tone?: 'danger' | 'green' | 'neutral'
 }) {
   return (
-    <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 px-3 py-3 shadow-[0_12px_28px_rgba(0,0,0,0.16)]">
+    <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 px-3 py-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.16)]">
       <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
       <div className="mt-2">
         {tone === 'neutral' ? children : <div className={tone === 'green' ? 'text-emerald-300' : 'text-rose-300'}>{children}</div>}
