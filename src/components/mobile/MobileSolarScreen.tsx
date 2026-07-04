@@ -137,11 +137,12 @@ function SolarFlowDiagram({
   const evDirection = overview.evMeta.toLowerCase().includes('charg') ? 'forward' : 'reverse'
 
   return (
-    <div className="relative min-h-[312px] overflow-hidden rounded-[22px] border border-white/6 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.04),transparent_52%)] px-3 py-4">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(84,114,170,0.06),transparent_42%)]" aria-hidden="true" />
+    <div className="relative min-h-[324px] overflow-hidden rounded-[22px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01)),radial-gradient(circle_at_50%_52%,rgba(86,115,172,0.08),transparent_44%),#111823] px-3 py-4">
+      <div className="absolute inset-[12px] rounded-[18px] border border-white/8 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_58%)]" aria-hidden="true" />
+      <div className="absolute left-1/2 top-1/2 h-[188px] w-[188px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.05] bg-[radial-gradient(circle,rgba(255,255,255,0.02),transparent_70%)]" aria-hidden="true" />
 
       <FlowNode
-        className="left-[8px] top-[16px] w-[132px]"
+        className="left-[20px] top-[28px] w-[122px]"
         label="Solar"
         tone="gold"
         value={`${distribution.solar} kWh`}
@@ -152,8 +153,8 @@ function SolarFlowDiagram({
       </FlowNode>
 
       <FlowNode
-        className="left-[8px] top-[186px] w-[132px]"
-        detail={<FlowDetailPills tone="blue" values={[`In ${distribution.gridImport}`, `Out ${distribution.gridExport}`]} />}
+        className="left-[20px] top-[210px] w-[124px]"
+        detail={<FlowMetaLine values={[`In ${distribution.gridImport}`, `Out ${distribution.gridExport}`]} />}
         label="Grid"
         tone="blue"
         value={`${distribution.gridImport} kWh`}
@@ -165,8 +166,8 @@ function SolarFlowDiagram({
 
       <FlowNode
         align="right"
-        className="right-[8px] top-[16px] w-[136px]"
-        detail={<FlowDetailPills tone="green" values={[`In ${distribution.batteryCharge}`, `Out ${distribution.batteryDischarge}`]} />}
+        className="right-[20px] top-[28px] w-[126px]"
+        detail={<FlowMetaLine values={[`In ${distribution.batteryCharge}`, `Out ${distribution.batteryDischarge}`]} />}
         label="Batt."
         tone="green"
         value={`${distribution.battery} kWh`}
@@ -178,7 +179,7 @@ function SolarFlowDiagram({
 
       <FlowNode
         align="right"
-        className="right-[8px] top-[200px] w-[118px]"
+        className="right-[20px] top-[218px] w-[108px]"
         label="EV"
         tone="neutral"
         value={`${distribution.ev} kWh`}
@@ -188,19 +189,19 @@ function SolarFlowDiagram({
         </NodeIcon>
       </FlowNode>
 
-      <div className="absolute left-1/2 top-1/2 z-[2] grid h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[30px] border border-white/18 bg-[#0b111b]/95 px-4 py-4 text-center shadow-[0_24px_56px_rgba(0,0,0,0.26)]">
+      <div className="absolute left-1/2 top-1/2 z-[2] grid h-[128px] w-[128px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[34px] border border-white/18 bg-[linear-gradient(180deg,rgba(10,17,27,0.96),rgba(8,12,18,0.98))] px-4 py-4 text-center shadow-[0_24px_56px_rgba(0,0,0,0.26)]">
         <NodeIcon tone="white">
           <MobileIcon name="home" />
         </NodeIcon>
         <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-dashboard-muted">Home</span>
-        <strong className="text-[15px] font-semibold text-dashboard-text">{distribution.home} kWh</strong>
+        <strong className="text-[16px] font-semibold text-dashboard-text">{distribution.home} kWh</strong>
       </div>
 
       <svg className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-visible" viewBox="0 0 340 312" aria-hidden="true">
-        <FlowPath color="#f7b62f" dash="8 26" direction="forward" path="M140 70 C156 70 164 84 166 100 C168 112 168 118 168 126" />
-        <FlowPath color="#9a5cff" dash="8 26" direction={gridDirection} path="M140 230 C156 230 164 216 166 202 C168 190 168 186 168 180" />
-        <FlowPath color="#57dd70" dash="8 26" direction={batteryDirection} path="M174 126 C174 112 176 98 186 88 C196 78 210 70 224 70" />
-        <FlowPath color="#8d96a6" dash="8 28" direction={evDirection} path="M174 180 C174 194 176 206 186 216 C196 226 208 230 222 230" />
+        <FlowPath color="#f7b62f" dash="10 30" direction="forward" path="M142 78 C152 78 160 86 164 98 C168 108 168 118 168 126" />
+        <FlowPath color="#9a5cff" dash="10 30" direction={gridDirection} path="M144 230 C154 230 160 222 164 210 C168 200 168 190 168 182" />
+        <FlowPath color="#57dd70" dash="10 30" direction={batteryDirection} path="M172 126 C172 116 176 104 186 94 C196 84 206 78 218 78" />
+        <FlowPath color="#8d96a6" dash="10 32" direction={evDirection} path="M172 182 C172 194 176 204 186 214 C194 222 204 230 216 230" />
       </svg>
     </div>
   )
@@ -237,23 +238,16 @@ function FlowNode({
   )
 }
 
-function FlowDetailPills({
-  tone,
+function FlowMetaLine({
   values,
 }: {
-  tone: 'blue' | 'green'
   values: string[]
 }) {
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-1.5">
       {values.map((value) => (
         <span
-          className={cn(
-            'inline-flex min-h-5 items-center rounded-full border px-2 text-[9px] font-medium leading-none',
-            tone === 'green'
-              ? 'border-emerald-400/14 bg-emerald-400/[0.08] text-emerald-100/82'
-              : 'border-sky-400/14 bg-sky-400/[0.08] text-sky-100/82',
-          )}
+          className="inline-flex min-h-5 items-center rounded-full border border-white/10 bg-white/[0.045] px-2 text-[9px] font-medium leading-none text-dashboard-soft"
           key={value}
         >
           {value}
@@ -265,7 +259,7 @@ function FlowDetailPills({
 
 function flowNodeClassName(tone: 'blue' | 'gold' | 'green' | 'neutral', align: 'left' | 'right', className: string) {
   return cn(
-    'absolute z-[2] rounded-[20px] border bg-[#0a111b]/92 px-3 py-3 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-md [&_.mobile-node-icon]:h-9 [&_.mobile-node-icon]:w-9 [&_.mobile-node-icon_svg]:h-4 [&_.mobile-node-icon_svg]:w-4',
+    'absolute z-[2] rounded-[18px] border bg-[linear-gradient(180deg,rgba(12,18,28,0.94),rgba(10,15,23,0.9))] px-3 py-3 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-md [&_.mobile-node-icon]:h-8 [&_.mobile-node-icon]:w-8 [&_.mobile-node-icon_svg]:h-3.5 [&_.mobile-node-icon_svg]:w-3.5',
     align === 'right' && '[&_.mobile-node-icon]:order-2',
     tone === 'gold' && 'border-dashboard-orange/25',
     tone === 'blue' && 'border-dashboard-purple/25',
