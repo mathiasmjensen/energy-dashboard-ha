@@ -73,15 +73,15 @@
 }
 
 .mobile-flow-path__track {
-  opacity: 0.26;
-  stroke-width: 2.2;
+  opacity: 0.2;
+  stroke-width: 2;
 }
 
 .mobile-flow-path__pulse {
-  stroke-width: 3.1;
-  stroke-dasharray: var(--flow-dash, 6 24);
-  animation: mobile-flow-forward 1.8s linear infinite;
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--flow-color) 76%, white));
+  stroke-width: 2.7;
+  stroke-dasharray: var(--flow-dash, 8 26);
+  animation: mobile-flow-forward 2.2s linear infinite;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--flow-color) 58%, white));
 }
 
 .mobile-flow-path[data-direction='reverse'] .mobile-flow-path__pulse {
