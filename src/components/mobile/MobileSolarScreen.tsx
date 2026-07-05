@@ -139,7 +139,7 @@ function SolarFlowDiagram({
       <div className="absolute inset-[10px] rounded-[18px] border border-white/8" aria-hidden="true" />
 
       <FlowReferenceCard
-        className="left-[16px] top-[18px] h-[102px] w-[114px]"
+        className="left-[18px] top-[22px] h-[84px] w-[104px]"
         icon="solar"
         label="SOLAR"
         primary={`${distribution.solar} kWh`}
@@ -147,7 +147,7 @@ function SolarFlowDiagram({
       />
 
       <FlowReferenceCard
-        className="right-[16px] top-[18px] h-[102px] w-[114px]"
+        className="right-[18px] top-[22px] h-[84px] w-[104px]"
         icon="battery"
         label="BATTERY"
         primary={`${distribution.battery} kWh`}
@@ -155,7 +155,7 @@ function SolarFlowDiagram({
       />
 
       <FlowReferenceCard
-        className="left-[16px] top-[228px] h-[102px] w-[114px]"
+        className="left-[18px] top-[232px] h-[84px] w-[104px]"
         icon="grid"
         label="GRID"
         primary={`${distribution.gridImport} kWh`}
@@ -163,7 +163,7 @@ function SolarFlowDiagram({
       />
 
       <FlowReferenceCard
-        className="right-[16px] top-[228px] h-[102px] w-[114px]"
+        className="right-[18px] top-[232px] h-[84px] w-[104px]"
         icon="car"
         label="EV"
         primary={`${distribution.ev} kWh`}
@@ -178,10 +178,10 @@ function SolarFlowDiagram({
       </div>
 
       <svg className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-visible" viewBox="0 0 340 344" aria-hidden="true">
-        <FlowPath color="#ffd33d" dash="12 24" direction="forward" path="M130 72 C150 72 158 90 158 112 L158 138" />
-        <FlowPath color="#69e760" dash="12 24" direction={batteryDirection} path="M182 138 L182 112 C182 90 192 72 210 72" />
-        <FlowPath color="#9a5cff" dash="12 24" direction={gridDirection} path="M130 274 C150 274 158 256 158 228 L158 206" />
-        <FlowPath color="#4c95ff" dash="12 24" direction={evDirection} path="M182 206 L182 228 C182 256 194 274 210 274" />
+        <FlowPath color="#ffd33d" dash="12 24" direction="forward" path="M122 72 C146 72 158 90 158 112 L158 138" />
+        <FlowPath color="#69e760" dash="12 24" direction={batteryDirection} path="M182 138 L182 112 C182 90 194 72 218 72" />
+        <FlowPath color="#9a5cff" dash="12 24" direction={gridDirection} path="M122 274 C146 274 158 256 158 228 L158 206" />
+        <FlowPath color="#4c95ff" dash="12 24" direction={evDirection} path="M182 206 L182 228 C182 256 194 274 218 274" />
       </svg>
     </div>
   )
@@ -202,12 +202,12 @@ function FlowReferenceCard({
 }) {
   return (
     <div className={referenceCardClassName(tone, className)}>
-      <div className="flex h-full flex-col items-center justify-center px-3 py-4 text-center">
+      <div className="flex h-full flex-col items-center justify-center px-2.5 py-3 text-center">
         <div className={referenceIconClassName(tone)}>
           <MobileIcon className="h-5 w-5" name={icon} />
         </div>
         <span className={referenceLabelClassName(tone)}>{label}</span>
-        <strong className="mt-2 text-[15px] font-semibold leading-tight text-white">{primary}</strong>
+        <strong className="mt-1.5 text-[13px] font-semibold leading-tight text-white">{primary}</strong>
       </div>
     </div>
   )
@@ -215,7 +215,7 @@ function FlowReferenceCard({
 
 function referenceCardClassName(tone: 'blue' | 'gold' | 'green' | 'purple', className: string) {
   return cn(
-    'absolute z-[2] rounded-[22px] border bg-[linear-gradient(180deg,rgba(18,24,34,0.96),rgba(12,18,28,0.92))] shadow-[0_18px_44px_rgba(0,0,0,0.18)] backdrop-blur-md',
+    'absolute z-[2] rounded-[20px] border bg-[linear-gradient(180deg,rgba(18,24,34,0.96),rgba(12,18,28,0.92))] shadow-[0_14px_32px_rgba(0,0,0,0.16)] backdrop-blur-md',
     tone === 'gold' && 'border-dashboard-orange/18 bg-[linear-gradient(180deg,rgba(247,182,47,0.07),rgba(10,15,23,0.88))]',
     tone === 'blue' && 'border-[#4c95ff]/18 bg-[linear-gradient(180deg,rgba(76,149,255,0.07),rgba(10,15,23,0.88))]',
     tone === 'green' && 'border-dashboard-green/18 bg-[linear-gradient(180deg,rgba(87,221,112,0.07),rgba(10,15,23,0.88))]',
@@ -226,7 +226,7 @@ function referenceCardClassName(tone: 'blue' | 'gold' | 'green' | 'purple', clas
 
 function referenceIconClassName(tone: 'blue' | 'gold' | 'green' | 'purple') {
   return cn(
-    'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-[#0b1119]',
+    'inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full border bg-[#0b1119]',
     tone === 'gold' && 'border-dashboard-orange/20 text-dashboard-orange shadow-[0_0_18px_rgba(247,182,47,0.14)]',
     tone === 'blue' && 'border-[#4c95ff]/20 text-[#4c95ff] shadow-[0_0_18px_rgba(76,149,255,0.16)]',
     tone === 'green' && 'border-dashboard-green/20 text-dashboard-green shadow-[0_0_18px_rgba(87,221,112,0.12)]',
@@ -236,7 +236,7 @@ function referenceIconClassName(tone: 'blue' | 'gold' | 'green' | 'purple') {
 
 function referenceLabelClassName(tone: 'blue' | 'gold' | 'green' | 'purple') {
   return cn(
-    'mt-2.5 text-[10px] font-medium tracking-[0.06em]',
+    'mt-2 text-[9px] font-medium tracking-[0.08em]',
     tone === 'gold' && 'text-dashboard-orange',
     tone === 'green' && 'text-dashboard-green',
     tone === 'purple' && 'text-dashboard-purple',
