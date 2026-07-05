@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import type { MobileDashboardProps, SolarPeriod } from './MobileTypes'
 import { cn } from '../../lib/cn'
 import {
@@ -8,7 +7,6 @@ import {
   MobileBarChart,
   MobileDataStateBadge,
   MobileIcon,
-  NodeIcon,
   SegmentedControl,
 } from './MobilePrimitives'
 import { SOLAR_PERIODS } from './MobileConstants'
@@ -137,134 +135,115 @@ function SolarFlowDiagram({
   const evDirection = overview.evMeta.toLowerCase().includes('charg') ? 'forward' : 'reverse'
 
   return (
-    <div className="relative min-h-[324px] overflow-hidden rounded-[22px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01)),radial-gradient(circle_at_50%_52%,rgba(86,115,172,0.08),transparent_44%),#111823] px-3 py-4">
-      <div className="absolute inset-[12px] rounded-[18px] border border-white/8 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_58%)]" aria-hidden="true" />
-      <div className="absolute left-1/2 top-1/2 h-[188px] w-[188px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.05] bg-[radial-gradient(circle,rgba(255,255,255,0.02),transparent_70%)]" aria-hidden="true" />
+    <div className="relative min-h-[332px] overflow-hidden rounded-[22px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0.01)),radial-gradient(circle_at_50%_52%,rgba(82,111,170,0.1),transparent_42%),#101720] px-3 py-4">
+      <div className="absolute inset-[12px] rounded-[18px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_24%)]" aria-hidden="true" />
+      <div className="absolute left-1/2 top-1/2 h-[204px] w-[204px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.04]" aria-hidden="true" />
+      <div className="absolute left-1/2 top-1/2 h-[150px] w-[150px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.04]" aria-hidden="true" />
 
-      <FlowNode
-        className="left-[20px] top-[28px] w-[122px]"
+      <FlowBadge
+        className="left-[18px] top-[26px]"
+        icon="solar"
         label="Solar"
         tone="gold"
         value={`${distribution.solar} kWh`}
-      >
-        <NodeIcon tone="gold">
-          <MobileIcon name="solar" />
-        </NodeIcon>
-      </FlowNode>
+      />
 
-      <FlowNode
-        className="left-[20px] top-[210px] w-[124px]"
-        detail={<FlowMetaLine values={[`In ${distribution.gridImport}`, `Out ${distribution.gridExport}`]} />}
+      <FlowBadge
+        className="left-[18px] top-[218px]"
+        icon="grid"
         label="Grid"
+        meta={`In ${distribution.gridImport} · Out ${distribution.gridExport}`}
         tone="blue"
         value={`${distribution.gridImport} kWh`}
-      >
-        <NodeIcon tone="blue">
-          <MobileIcon name="grid" />
-        </NodeIcon>
-      </FlowNode>
+      />
 
-      <FlowNode
+      <FlowBadge
         align="right"
-        className="right-[20px] top-[28px] w-[126px]"
-        detail={<FlowMetaLine values={[`In ${distribution.batteryCharge}`, `Out ${distribution.batteryDischarge}`]} />}
+        className="right-[18px] top-[26px]"
+        icon="battery"
         label="Batt."
+        meta={`In ${distribution.batteryCharge} · Out ${distribution.batteryDischarge}`}
         tone="green"
         value={`${distribution.battery} kWh`}
-      >
-        <NodeIcon tone="green">
-          <MobileIcon name="battery" />
-        </NodeIcon>
-      </FlowNode>
+      />
 
-      <FlowNode
+      <FlowBadge
         align="right"
-        className="right-[20px] top-[218px] w-[108px]"
+        className="right-[18px] top-[226px]"
+        icon="car"
         label="EV"
         tone="neutral"
         value={`${distribution.ev} kWh`}
-      >
-        <NodeIcon tone="neutral">
-          <MobileIcon name="car" />
-        </NodeIcon>
-      </FlowNode>
+      />
 
-      <div className="absolute left-1/2 top-1/2 z-[2] grid h-[128px] w-[128px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[34px] border border-white/18 bg-[linear-gradient(180deg,rgba(10,17,27,0.96),rgba(8,12,18,0.98))] px-4 py-4 text-center shadow-[0_24px_56px_rgba(0,0,0,0.26)]">
-        <NodeIcon tone="white">
-          <MobileIcon name="home" />
-        </NodeIcon>
-        <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-dashboard-muted">Home</span>
-        <strong className="text-[16px] font-semibold text-dashboard-text">{distribution.home} kWh</strong>
+      <div className="absolute left-1/2 top-1/2 z-[2] flex h-[136px] w-[136px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[38px] border border-white/18 bg-[linear-gradient(180deg,rgba(11,18,28,0.97),rgba(8,12,18,0.98))] text-center shadow-[0_24px_60px_rgba(0,0,0,0.28)]">
+        <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-white/[0.025] text-white/90">
+          <MobileIcon className="h-5 w-5" name="home" />
+        </div>
+        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-dashboard-muted">Home</span>
+        <strong className="mt-2 text-[16px] font-semibold leading-none text-dashboard-text">{distribution.home} kWh</strong>
       </div>
 
-      <svg className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-visible" viewBox="0 0 340 312" aria-hidden="true">
-        <FlowPath color="#f7b62f" dash="10 30" direction="forward" path="M142 78 C152 78 160 86 164 98 C168 108 168 118 168 126" />
-        <FlowPath color="#9a5cff" dash="10 30" direction={gridDirection} path="M144 230 C154 230 160 222 164 210 C168 200 168 190 168 182" />
-        <FlowPath color="#57dd70" dash="10 30" direction={batteryDirection} path="M172 126 C172 116 176 104 186 94 C196 84 206 78 218 78" />
-        <FlowPath color="#8d96a6" dash="10 32" direction={evDirection} path="M172 182 C172 194 176 204 186 214 C194 222 204 230 216 230" />
+      <svg className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-visible" viewBox="0 0 340 332" aria-hidden="true">
+        <FlowPath color="#f7b62f" dash="12 34" direction="forward" path="M124 82 C144 82 152 94 160 112 C164 122 166 132 166 142" />
+        <FlowPath color="#9a5cff" dash="12 34" direction={gridDirection} path="M124 244 C144 244 152 232 160 214 C164 204 166 194 166 184" />
+        <FlowPath color="#57dd70" dash="12 34" direction={batteryDirection} path="M174 142 C174 126 178 114 188 102 C198 90 210 82 228 82" />
+        <FlowPath color="#96a0b0" dash="12 36" direction={evDirection} path="M174 184 C174 200 178 212 188 224 C198 236 210 244 226 244" />
       </svg>
     </div>
   )
 }
 
-function FlowNode({
+function FlowBadge({
   align = 'left',
-  children,
   className,
-  detail,
+  icon,
   label,
+  meta,
   tone,
   value,
 }: {
   align?: 'left' | 'right'
-  children: ReactNode
   className: string
-  detail?: ReactNode
+  icon: 'battery' | 'car' | 'grid' | 'solar'
   label: string
+  meta?: string
   tone: 'blue' | 'gold' | 'green' | 'neutral'
   value: string
 }) {
   return (
     <div className={flowNodeClassName(tone, align, className)}>
-      <div className={cn('flex items-start gap-3', align === 'right' && 'flex-row-reverse text-right')}>
-        {children}
+      <div className={cn('flex items-center gap-3', align === 'right' && 'flex-row-reverse text-right')}>
+        <div className={flowIconClassName(tone)}>
+          <MobileIcon className="h-4 w-4" name={icon} />
+        </div>
         <div className="min-w-0 flex-1">
           <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
           <strong className="mt-1 block text-[14px] font-semibold leading-none text-dashboard-text">{value}</strong>
-          {detail ? <div className="mt-2">{detail}</div> : null}
+          {meta ? <small className="mt-2 block text-[9px] leading-4 text-dashboard-soft">{meta}</small> : null}
         </div>
       </div>
     </div>
   )
 }
 
-function FlowMetaLine({
-  values,
-}: {
-  values: string[]
-}) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {values.map((value) => (
-        <span
-          className="inline-flex min-h-5 items-center rounded-full border border-white/10 bg-white/[0.045] px-2 text-[9px] font-medium leading-none text-dashboard-soft"
-          key={value}
-        >
-          {value}
-        </span>
-      ))}
-    </div>
+function flowNodeClassName(tone: 'blue' | 'gold' | 'green' | 'neutral', _align: 'left' | 'right', className: string) {
+  return cn(
+    'absolute z-[2] w-[126px] rounded-[18px] border px-3 py-2.5 shadow-[0_18px_44px_rgba(0,0,0,0.18)] backdrop-blur-md',
+    tone === 'gold' && 'border-dashboard-orange/18 bg-[linear-gradient(180deg,rgba(247,182,47,0.07),rgba(10,15,23,0.88))]',
+    tone === 'blue' && 'border-dashboard-purple/18 bg-[linear-gradient(180deg,rgba(154,92,255,0.07),rgba(10,15,23,0.88))]',
+    tone === 'green' && 'border-dashboard-green/18 bg-[linear-gradient(180deg,rgba(87,221,112,0.07),rgba(10,15,23,0.88))]',
+    tone === 'neutral' && 'border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(10,15,23,0.88))]',
+    className,
   )
 }
 
-function flowNodeClassName(tone: 'blue' | 'gold' | 'green' | 'neutral', align: 'left' | 'right', className: string) {
+function flowIconClassName(tone: 'blue' | 'gold' | 'green' | 'neutral') {
   return cn(
-    'absolute z-[2] rounded-[18px] border bg-[linear-gradient(180deg,rgba(12,18,28,0.94),rgba(10,15,23,0.9))] px-3 py-3 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-md [&_.mobile-node-icon]:h-8 [&_.mobile-node-icon]:w-8 [&_.mobile-node-icon_svg]:h-3.5 [&_.mobile-node-icon_svg]:w-3.5',
-    align === 'right' && '[&_.mobile-node-icon]:order-2',
-    tone === 'gold' && 'border-dashboard-orange/25',
-    tone === 'blue' && 'border-dashboard-purple/25',
-    tone === 'green' && 'border-dashboard-green/25',
-    tone === 'neutral' && 'border-white/15',
-    className,
+    'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-[#09111a]',
+    tone === 'gold' && 'border-dashboard-orange/20 text-dashboard-orange shadow-[0_0_18px_rgba(247,182,47,0.14)]',
+    tone === 'blue' && 'border-dashboard-purple/18 text-[#68b7ff] shadow-[0_0_18px_rgba(154,92,255,0.12)]',
+    tone === 'green' && 'border-dashboard-green/20 text-dashboard-green shadow-[0_0_18px_rgba(87,221,112,0.12)]',
+    tone === 'neutral' && 'border-white/14 text-white/78',
   )
 }
