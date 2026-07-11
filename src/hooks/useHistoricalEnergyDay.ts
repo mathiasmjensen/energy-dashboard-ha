@@ -4,6 +4,15 @@ import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
 import { resolveHaAccessToken, resolveHaApiBase } from '../services/haApi'
 import { getDashboardMockData } from '../services/dashboardMockData'
 import { getNumericScale } from '../services/energyEntityFormatting'
+import type {
+  HistoricalEnergyDayCacheEntry,
+} from '../models/historicalEnergyDay'
+import {
+  getEmptyHistoricalDistribution,
+  getEmptyHistoricalSolarProduction,
+  readHistoricalEnergyDayCache,
+  writeHistoricalEnergyDayCache,
+} from '../services/historicalEnergyDay'
 
 const MAX_DAY_OFFSET = 30
 const HOUR_MS = 60 * 60 * 1000
@@ -56,30 +65,8 @@ type HistoricalEnergyDayProps = {
   currentSolarProduction: HistoricalEnergyDayResult['solarProduction']
 }
 
-type HistoricalEnergyDayCacheEntry = {
-  available: boolean
-  source: 'live' | 'mock'
-  distribution: HistoricalEnergyDayResult['distribution']
-  solarProduction: HistoricalEnergyDayResult['solarProduction']
-}
-
-const EMPTY_DISTRIBUTION = {
-  battery: '---',
-  batteryCharge: '---',
-  batteryDischarge: '---',
-  ev: '---',
-  gridExport: '---',
-  gridImport: '---',
-  grid: '---',
-  home: '---',
-  solar: '---',
-}
-
-const EMPTY_SOLAR_PRODUCTION = {
-  curve: Array.from({ length: 24 }, () => 0),
-  labels: Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, '0')}:00`),
-  value: '---',
-}
+const EMPTY_DISTRIBUTION = getEmptyHistoricalDistribution()
+const EMPTY_SOLAR_PRODUCTION = getEmptyHistoricalSolarProduction()
 
 export function useHistoricalEnergyDay({
   currentDistribution,
@@ -140,6 +127,42 @@ export function useHistoricalEnergyDay({
   const mockHistoricalDay = useMemo(() => getDashboardMockData().historicalEnergyDay, [])
 
   useEffect(() => {
+    const todayKey = getDayKey(0)
+    const todayCacheKey = getCacheKey(sourceKey, 0)
+    const nextEntry: HistoricalEnergyDayCacheEntry = {
+      available: true,
+      createdAt: Date.now(),
+      source: 'live',
+      distribution: currentDistribution,
+      solarProduction: currentSolarProduction,
+    }
+
+    setCache((current) => {
+      const existing = current[todayCacheKey]
+      if (
+        existing &&
+        existing.source === nextEntry.source &&
+        JSON.stringify(existing.distribution) === JSON.stringify(nextEntry.distribution) &&
+        JSON.stringify(existing.solarProduction) === JSON.stringify(nextEntry.solarProduction)
+      ) {
+        return current
+      }
+
+      return {
+        ...current,
+        [todayCacheKey]: nextEntry,
+      }
+    })
+
+    writeHistoricalEnergyDayCache(sourceKey, todayKey, {
+      available: true,
+      source: 'live',
+      distribution: currentDistribution,
+      solarProduction: currentSolarProduction,
+    })
+  }, [currentDistribution, currentSolarProduction, sourceKey])
+
+  useEffect(() => {
     if (dayOffset === 0) {
       return
     }
@@ -154,6 +177,15 @@ export function useHistoricalEnergyDay({
     }
 
     if (cache[getCacheKey(sourceKey, dayOffset)]) {
+      return
+    }
+
+    const persisted = readHistoricalEnergyDayCache(sourceKey, getDayKey(dayOffset))
+    if (persisted) {
+      setCache((current) => ({
+        ...current,
+        [getCacheKey(sourceKey, dayOffset)]: persisted,
+      }))
       return
     }
 
@@ -177,6 +209,12 @@ export function useHistoricalEnergyDay({
         const nextEntry = buildHistoricalDayEntry(rowsByKey, start, end)
 
         if (!controller.signal.aborted) {
+          writeHistoricalEnergyDayCache(sourceKey, getDayKey(dayOffset), {
+            available: nextEntry.available,
+            source: nextEntry.source,
+            distribution: nextEntry.distribution,
+            solarProduction: nextEntry.solarProduction,
+          })
           setCache((current) => ({
             ...current,
             [cacheKey]: nextEntry,
@@ -184,10 +222,17 @@ export function useHistoricalEnergyDay({
         }
       } catch {
         if (!controller.signal.aborted) {
+          writeHistoricalEnergyDayCache(sourceKey, getDayKey(dayOffset), {
+            available: true,
+            source: 'mock',
+            distribution: mockHistoricalDay.distribution,
+            solarProduction: mockHistoricalDay.solarProduction,
+          })
           setCache((current) => ({
             ...current,
             [cacheKey]: {
               available: true,
+              createdAt: Date.now(),
               source: 'mock',
               distribution: mockHistoricalDay.distribution,
               solarProduction: mockHistoricalDay.solarProduction,
@@ -374,6 +419,7 @@ function buildHistoricalDayEntry(
 
   return {
     available: hasData,
+    createdAt: Date.now(),
     source: hasData ? 'live' : 'mock',
     distribution: {
       battery: formatKwh(Math.max(batteryChargeDistributionTotal, batteryDischargeDistributionTotal)),
