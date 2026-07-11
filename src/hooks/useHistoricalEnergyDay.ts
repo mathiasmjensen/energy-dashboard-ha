@@ -422,7 +422,7 @@ function buildHistoricalDayEntry(
     createdAt: Date.now(),
     source: hasData ? 'live' : 'mock',
     distribution: {
-      battery: formatKwh(Math.max(batteryChargeDistributionTotal, batteryDischargeDistributionTotal)),
+      battery: formatKwh(batteryChargeDistributionTotal + batteryDischargeDistributionTotal),
       batteryCharge: formatKwh(batteryChargeDistributionTotal),
       batteryDischarge: formatKwh(batteryDischargeDistributionTotal),
       ev: formatKwh(evTotal),

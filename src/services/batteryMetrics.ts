@@ -61,6 +61,10 @@ export function getBatteryDailyEnergyTotal({
   dischargeTodayKwh: number | null
   status: string
 }) {
+  if (chargeTodayKwh !== null && dischargeTodayKwh !== null) {
+    return chargeTodayKwh + dischargeTodayKwh
+  }
+
   const normalizedStatus = status.toLowerCase()
 
   if (normalizedStatus === 'charging') {
@@ -75,7 +79,7 @@ export function getBatteryDailyEnergyTotal({
     return null
   }
 
-  return Math.max(chargeTodayKwh ?? 0, dischargeTodayKwh ?? 0)
+  return (chargeTodayKwh ?? 0) + (dischargeTodayKwh ?? 0)
 }
 
 export function getBatteryTimeEstimate({
