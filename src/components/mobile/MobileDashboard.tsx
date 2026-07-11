@@ -87,6 +87,8 @@ export function MobileDashboard({
             <MobileBatteryScreen
               battery={battery}
               history={activeBatteryHistory}
+              historyError={batteryHistory.error}
+              historySource={batteryHistory.source}
               insights={batteryInsights}
               optimizer={batteryOptimizer}
               period={batteryPeriod}

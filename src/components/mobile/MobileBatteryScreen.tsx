@@ -11,6 +11,8 @@ type MobileOptimizerSection = 'status' | 'plan' | 'charts'
 export function MobileBatteryScreen({
   battery,
   history,
+  historyError,
+  historySource,
   insights,
   optimizer,
   period,
@@ -18,6 +20,8 @@ export function MobileBatteryScreen({
 }: {
   battery: MobileDashboardProps['battery']
   history: { labels: string[]; points: number[] }
+  historyError: string | null
+  historySource: 'ha' | 'unavailable'
   insights: {
     chargeRate: string
     dischargeRate: string
@@ -36,7 +40,15 @@ export function MobileBatteryScreen({
       <SegmentedControl active={section} ariaLabel="Battery mobile section" options={MOBILE_BATTERY_SECTIONS} onChange={(value) => setSection(value as MobileBatterySection)} />
 
       {section === 'Details' ? (
-        <MobileBatteryDetailsSection battery={battery} history={history} insights={insights} period={period} onPeriodChange={onPeriodChange} />
+        <MobileBatteryDetailsSection
+          battery={battery}
+          history={history}
+          historyError={historyError}
+          historySource={historySource}
+          insights={insights}
+          period={period}
+          onPeriodChange={onPeriodChange}
+        />
       ) : (
         <MobileBatteryOptimizerSection optimizer={optimizer} optimizerSection={optimizerSection} setOptimizerSection={setOptimizerSection} />
       )}

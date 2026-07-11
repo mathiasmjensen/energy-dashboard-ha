@@ -44,8 +44,10 @@ export type DesktopDashboardProps = {
   }
   batteryHistory: {
     day: { labels: string[]; points: number[] }
+    error: string | null
     month: { labels: string[]; points: number[] }
     quarter: { labels: string[]; points: number[] }
+    source: 'ha' | 'unavailable'
     week: { labels: string[]; points: number[] }
   }
   batteryOptimizer: BatteryOptimizerState

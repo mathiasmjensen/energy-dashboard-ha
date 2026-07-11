@@ -3,33 +3,31 @@ import type { BatteryHistoryPeriod, BatteryHistorySeries, BatteryHistoryState } 
 const HOUR_MS = 60 * 60 * 1000
 const DAY_MS = 24 * HOUR_MS
 
-export function getFallbackBatteryHistorySeries(socValue: number, period: BatteryHistoryPeriod): BatteryHistorySeries {
-  const clampedSoc = clamp(socValue || 0, 0, 100)
-
+export function getEmptyBatteryHistorySeries(period: BatteryHistoryPeriod): BatteryHistorySeries {
   if (period === '24h') {
     return {
-      labels: Array.from({ length: 24 }, (_, index) => `${String(index).padStart(2, '0')}:00`),
-      points: Array.from({ length: 24 }, (_, index) => clamp(clampedSoc - 10 + index * 0.95, 0, 100)),
+      labels: [],
+      points: [],
     }
   }
 
   if (period === '7d') {
     return {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      points: Array.from({ length: 7 }, (_, index) => clamp(clampedSoc - 6 + index * 1.8, 0, 100)),
+      labels: [],
+      points: [],
     }
   }
 
   if (period === '30d') {
     return {
-      labels: ['W1', 'W2', 'W3', 'W4'],
-      points: Array.from({ length: 4 }, (_, index) => clamp(clampedSoc - 5 + index * 2.2, 0, 100)),
+      labels: [],
+      points: [],
     }
   }
 
   return {
-    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-    points: Array.from({ length: 4 }, (_, index) => clamp(clampedSoc - 10 + index * 3.3, 0, 100)),
+    labels: [],
+    points: [],
   }
 }
 
@@ -69,7 +67,7 @@ export function buildBatteryHistorySeriesFromStates(
   fallbackSocValue: number,
 ): BatteryHistorySeries {
   if (!states.length) {
-    return getFallbackBatteryHistorySeries(fallbackSocValue, period)
+    return buildFlatBatteryHistorySeries(fallbackSocValue, period)
   }
 
   if (period === '24h') {
@@ -117,6 +115,36 @@ export function buildBatteryHistorySeriesFromStates(
     startMs,
     states,
   })
+}
+
+function buildFlatBatteryHistorySeries(socValue: number, period: BatteryHistoryPeriod): BatteryHistorySeries {
+  const clampedSoc = clamp(socValue || 0, 0, 100)
+
+  if (period === '24h') {
+    return {
+      labels: Array.from({ length: 24 }, (_, index) => `${String(index).padStart(2, '0')}:00`),
+      points: Array.from({ length: 24 }, () => clampedSoc),
+    }
+  }
+
+  if (period === '7d') {
+    return {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      points: Array.from({ length: 7 }, () => clampedSoc),
+    }
+  }
+
+  if (period === '30d') {
+    return {
+      labels: ['W1', 'W2', 'W3', 'W4'],
+      points: Array.from({ length: 4 }, () => clampedSoc),
+    }
+  }
+
+  return {
+    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+    points: Array.from({ length: 4 }, () => clampedSoc),
+  }
 }
 
 function buildBucketSeries({

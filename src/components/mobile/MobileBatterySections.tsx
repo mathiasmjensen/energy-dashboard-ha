@@ -19,12 +19,16 @@ type MobileOptimizerSection = (typeof MOBILE_OPTIMIZER_SECTIONS)[number]
 export function MobileBatteryDetailsSection({
   battery,
   history,
+  historyError,
+  historySource,
   insights,
   period,
   onPeriodChange,
 }: {
   battery: MobileDashboardProps['battery']
   history: { labels: string[]; points: number[] }
+  historyError: string | null
+  historySource: 'ha' | 'unavailable'
   insights: {
     chargeRate: string
     dischargeRate: string
@@ -34,6 +38,8 @@ export function MobileBatteryDetailsSection({
   period: BatteryPeriod
   onPeriodChange: (period: BatteryPeriod) => void
 }) {
+  const hasHistory = history.points.length > 0
+
   return (
     <>
       <GlassCard className="grid gap-4 rounded-[26px] p-4">
@@ -89,7 +95,19 @@ export function MobileBatteryDetailsSection({
         </div>
 
         <div className="rounded-[20px] border border-white/8 bg-[#09101a]/72 p-2.5">
-          <MobileLineChart color="#60ea5d" labels={history.labels} points={history.points} unit="%" />
+          {hasHistory ? (
+            <MobileLineChart color="#60ea5d" labels={history.labels} points={history.points} unit="%" />
+          ) : (
+            <div className="flex min-h-[156px] flex-col items-center justify-center gap-2 rounded-[16px] border border-dashed border-white/10 bg-white/[0.02] px-5 text-center">
+              <strong className="text-[14px] font-semibold text-dashboard-text">No battery history yet</strong>
+              <p className="text-[12px] leading-5 text-dashboard-soft">
+                {historyError ?? 'Recorder history for the battery state-of-charge sensor is not available yet.'}
+              </p>
+              <span className="inline-flex rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-100">
+                {historySource === 'ha' ? 'Live' : 'History unavailable'}
+              </span>
+            </div>
+          )}
         </div>
       </GlassCard>
     </>

@@ -9,3 +9,14 @@ export type BatteryHistoryState = {
   changedMs: number
   value: number
 }
+
+export type BatteryHistorySource = 'ha' | 'unavailable'
+
+export type BatteryHistoryResult = {
+  day: BatteryHistorySeries
+  error: string | null
+  month: BatteryHistorySeries
+  quarter: BatteryHistorySeries
+  source: BatteryHistorySource
+  week: BatteryHistorySeries
+}

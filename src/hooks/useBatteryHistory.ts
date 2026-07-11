@@ -1,21 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
-import type { BatteryHistoryPeriod, BatteryHistorySeries } from '../models/batteryHistory'
+import type { BatteryHistoryPeriod, BatteryHistoryResult } from '../models/batteryHistory'
 import { resolveHaAccessToken, resolveHaApiBase } from '../services/haApi'
 import {
   buildBatteryHistorySeriesFromStates,
-  getFallbackBatteryHistorySeries,
+  getEmptyBatteryHistorySeries,
   normalizeBatteryHistoryStates,
 } from '../services/batteryHistory'
-
-type BatteryHistoryResult = {
-  month: BatteryHistorySeries
-  quarter: BatteryHistorySeries
-  source: 'fallback' | 'ha'
-  week: BatteryHistorySeries
-  day: BatteryHistorySeries
-}
 
 const HISTORY_LOOKBACK_DAYS = 90
 
@@ -25,9 +17,10 @@ export function useBatteryHistory(fallbackSocValue: number): BatteryHistoryResul
   const resolved = useMemo(() => resolveEnergyEntities(entities), [entities])
   const batterySocEntityId = resolved.batterySoc?.entityId ?? null
   const [historyState, setHistoryState] = useState<{
+    error: string | null
     entityId: string | null
     states: ReturnType<typeof normalizeBatteryHistoryStates>
-  }>({ entityId: null, states: [] })
+  }>({ entityId: null, error: null, states: [] })
   const [nowMs] = useState(() => Date.now())
 
   useEffect(() => {
@@ -64,12 +57,16 @@ export function useBatteryHistory(fallbackSocValue: number): BatteryHistoryResul
 
         setHistoryState({
           entityId: batterySocEntityId,
+          error: null,
           states: nextStates,
         })
-      } catch {
-        if (!controller.signal.aborted && historyState.entityId !== batterySocEntityId) {
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          const message = error instanceof Error ? error.message : 'Battery history could not be loaded'
+          console.warn('[battery-history]', message)
           setHistoryState({
             entityId: batterySocEntityId,
+            error: message,
             states: [],
           })
         }
@@ -86,14 +83,15 @@ export function useBatteryHistory(fallbackSocValue: number): BatteryHistoryResul
     const getSeries = (period: BatteryHistoryPeriod) =>
       activeStates.length
         ? buildBatteryHistorySeriesFromStates(activeStates, period, nowMs, fallbackSocValue)
-        : getFallbackBatteryHistorySeries(fallbackSocValue, period)
+        : getEmptyBatteryHistorySeries(period)
 
     return {
       day: getSeries('24h'),
+      error: activeStates.length ? null : historyState.error,
       month: getSeries('30d'),
       quarter: getSeries('90d'),
-      source: activeStates.length ? 'ha' : 'fallback',
+      source: activeStates.length ? 'ha' : 'unavailable',
       week: getSeries('7d'),
     }
-  }, [batterySocEntityId, fallbackSocValue, historyState.entityId, historyState.states, nowMs])
+  }, [batterySocEntityId, fallbackSocValue, historyState.entityId, historyState.error, historyState.states, nowMs])
 }

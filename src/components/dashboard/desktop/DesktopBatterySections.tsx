@@ -28,8 +28,10 @@ type BatteryModel = {
 
 type BatteryHistoryModel = {
   day: { labels: string[]; points: number[] }
+  error: string | null
   month: { labels: string[]; points: number[] }
   quarter: { labels: string[]; points: number[] }
+  source: 'ha' | 'unavailable'
   week: { labels: string[]; points: number[] }
 }
 
@@ -59,7 +61,13 @@ export function BatteryDetailsSection({
     <div className="grid h-full min-h-0 grid-cols-[minmax(0,0.92fr)_280px] gap-5">
       <section className="flex min-h-0 flex-col gap-5">
         <BatterySummaryCards battery={battery} timeEstimate={timeEstimate} />
-        <BatteryHistoryCard activeHistory={activeHistory} period={period} setPeriod={setPeriod} />
+        <BatteryHistoryCard
+          activeHistory={activeHistory}
+          historyError={batteryHistory.error}
+          historySource={batteryHistory.source}
+          period={period}
+          setPeriod={setPeriod}
+        />
       </section>
 
       <aside className="flex min-h-0 flex-col gap-5">
@@ -164,13 +172,19 @@ function BatterySummaryCards({
 
 function BatteryHistoryCard({
   activeHistory,
+  historyError,
+  historySource,
   period,
   setPeriod,
 }: {
   activeHistory: { labels: string[]; points: number[] }
+  historyError: string | null
+  historySource: 'ha' | 'unavailable'
   period: BatteryHistoryPeriod
   setPeriod: (period: BatteryHistoryPeriod) => void
 }) {
+  const hasHistory = activeHistory.points.length > 0
+
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-[24px] border border-white/10 bg-[#111722]/92 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -199,21 +213,37 @@ function BatteryHistoryCard({
         </div>
       </div>
 
-      <LineChart
-        className="insight-line-chart min-h-[240px] flex-1 rounded-[20px] border border-white/8 bg-[#0b111d]/88 p-4"
-        color="#60ea5d"
-        label="Battery percentage over time"
-        labels={activeHistory.labels}
-        points={activeHistory.points}
-        unit="%"
-      />
+      <div className="relative min-h-[240px] flex-1 rounded-[20px] border border-white/8 bg-[#0b111d]/88 p-4">
+        {hasHistory ? (
+          <LineChart
+            className="insight-line-chart h-full w-full"
+            color="#60ea5d"
+            label="Battery percentage over time"
+            labels={activeHistory.labels}
+            points={activeHistory.points}
+            unit="%"
+          />
+        ) : (
+          <div className="flex h-full min-h-[208px] flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-white/10 bg-white/[0.02] px-6 text-center">
+            <strong className="text-[15px] font-semibold text-dashboard-text">No battery history yet</strong>
+            <p className="max-w-[28rem] text-sm leading-6 text-dashboard-soft">
+              {historyError ?? 'Recorder history for the battery state-of-charge sensor is not available yet.'}
+            </p>
+            <span className="inline-flex rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-100">
+              {historySource === 'ha' ? 'Live' : 'History unavailable'}
+            </span>
+          </div>
+        )}
+      </div>
 
       <div className="mt-3 flex items-start gap-3 rounded-[20px] border border-white/8 bg-[#0b111d]/88 px-4 py-3">
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-semibold text-dashboard-text">
           i
         </span>
         <p className="text-sm leading-5 text-dashboard-soft">
-          The graph shows the battery state of charge over the selected time period.
+          {hasHistory
+            ? 'The graph shows the battery state of charge over the selected time period.'
+            : 'Once Home Assistant recorder has battery SoC history, this chart will switch over automatically.'}
         </p>
       </div>
     </div>

@@ -23,8 +23,10 @@ type BatteryStatusModalProps = {
   energy: string
   history: {
     day: { labels: string[]; points: number[] }
+    error: string | null
     month: { labels: string[]; points: number[] }
     quarter: { labels: string[]; points: number[] }
+    source: 'ha' | 'unavailable'
     week: { labels: string[]; points: number[] }
   }
   onClose: () => void
@@ -76,6 +78,7 @@ export function BatteryStatusModal({
     storedEnergyKwh: parseDisplayNumber(energy),
   })
   const activeHistory = period === '24h' ? history.day : period === '7d' ? history.week : period === '30d' ? history.month : history.quarter
+  const hasHistory = activeHistory.points.length > 0
 
   return (
     <div
@@ -157,14 +160,23 @@ export function BatteryStatusModal({
             </div>
           </div>
 
-          <LineChart
-            className="min-h-[260px] rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3"
-            color="#60ea5d"
-            label="Battery percentage over time"
-            labels={activeHistory.labels}
-            points={activeHistory.points}
-            unit="%"
-          />
+          {hasHistory ? (
+            <LineChart
+              className="min-h-[260px] rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3"
+              color="#60ea5d"
+              label="Battery percentage over time"
+              labels={activeHistory.labels}
+              points={activeHistory.points}
+              unit="%"
+            />
+          ) : (
+            <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-[18px] border border-dashed border-white/10 bg-[#0b111d]/88 px-6 text-center">
+              <strong className="text-[15px] font-semibold text-dashboard-text">No battery history yet</strong>
+              <p className="max-w-[28rem] text-sm leading-6 text-dashboard-soft">
+                {history.error ?? 'Recorder history for the battery state-of-charge sensor is not available yet.'}
+              </p>
+            </div>
+          )}
 
           <div className="mt-4 flex items-start gap-3 rounded-[18px] border border-white/8 bg-[#0b111d]/88 px-4 py-3">
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-semibold text-dashboard-text">

@@ -54,9 +54,10 @@ export type MobileDashboardProps = {
   insightControls: InsightHeaderControls
   batteryHistory: {
     day: { labels: string[]; points: number[] }
+    error: string | null
     month: { labels: string[]; points: number[] }
     quarter: { labels: string[]; points: number[] }
-    source: 'fallback' | 'ha'
+    source: 'ha' | 'unavailable'
     week: { labels: string[]; points: number[] }
   }
   distribution: {
