@@ -110,6 +110,12 @@ export const ENERGY_ENTITY_CANDIDATES: Partial<Record<keyof typeof ENERGY_ENTITI
     'sensor.foxess_loads_power',
     'sensor.foxess_inverter_load_power',
   ],
+  evChargePower: [
+    'sensor.evcc_carport_charge_power',
+    'sensor.evcc_carport_power',
+    'sensor.evcc_loadpoint_charge_power',
+    'sensor.evcc_loadpoint_power',
+  ],
   solarPower: [
     'sensor.foxess_solar_power',
     'sensor.foxess_pv_power',

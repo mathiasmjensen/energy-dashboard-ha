@@ -33,7 +33,27 @@ export function getNumericState(resolved: ResolvedEnergyEntities, key: EnergyEnt
     return null
   }
 
-  return value * (ENERGY_ENTITY_NUMERIC_SCALE[key] ?? 1)
+  return value * getNumericScale(resolved, key)
+}
+
+export function getNumericScale(resolved: ResolvedEnergyEntities, key: EnergyEntityKey) {
+  const entity = getResolvedEntity(resolved, key)
+  const unit = String(entity?.attributes?.unit_of_measurement ?? '').trim().toLowerCase()
+  const fallbackScale = ENERGY_ENTITY_NUMERIC_SCALE[key] ?? 1
+
+  if (!unit) {
+    return fallbackScale
+  }
+
+  if (unit === 'kw' || unit === 'kwh') {
+    return 1
+  }
+
+  if (unit === 'w' || unit === 'wh') {
+    return 0.001
+  }
+
+  return fallbackScale
 }
 
 export function getEntityOptions(resolved: ResolvedEnergyEntities, key: EnergyEntityKey) {

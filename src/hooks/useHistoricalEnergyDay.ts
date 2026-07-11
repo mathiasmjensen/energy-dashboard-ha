@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
 import { resolveHaAccessToken, resolveHaApiBase } from '../services/haApi'
-import { ENERGY_ENTITY_NUMERIC_SCALE } from '../data/energyEntities'
 import { getDashboardMockData } from '../services/dashboardMockData'
+import { getNumericScale } from '../services/energyEntityFormatting'
 
 const MAX_DAY_OFFSET = 30
 const HOUR_MS = 60 * 60 * 1000
@@ -119,6 +119,23 @@ export function useHistoricalEnergyDay({
       resolved.solarPower?.entityId,
     ],
   )
+  const numericScales = useMemo(
+    () =>
+      ({
+        batteryPower: getNumericScale(resolved, 'batteryPower'),
+        batteryChargeToday: getNumericScale(resolved, 'batteryChargeToday'),
+        batteryDischargeToday: getNumericScale(resolved, 'batteryDischargeToday'),
+        evChargePower: getNumericScale(resolved, 'evChargePower'),
+        gridExportedToday: getNumericScale(resolved, 'gridExportedToday'),
+        gridImportToday: getNumericScale(resolved, 'gridImportToday'),
+        gridPower: getNumericScale(resolved, 'gridPower'),
+        homeEnergyToday: getNumericScale(resolved, 'homeEnergyToday'),
+        homePower: getNumericScale(resolved, 'homePower'),
+        solarProductionToday: getNumericScale(resolved, 'solarProductionToday'),
+        solarPower: getNumericScale(resolved, 'solarPower'),
+      }) satisfies Record<HistoryKey, number>,
+    [resolved],
+  )
   const sourceKey = useMemo(() => JSON.stringify(entityIds), [entityIds])
   const mockHistoricalDay = useMemo(() => getDashboardMockData().historicalEnergyDay, [])
 
@@ -154,6 +171,7 @@ export function useHistoricalEnergyDay({
           activeRequestEntries,
           apiBase,
           end,
+          numericScales,
           start,
         })
         const nextEntry = buildHistoricalDayEntry(rowsByKey, start, end)
@@ -181,7 +199,7 @@ export function useHistoricalEnergyDay({
 
     void fetchHistory()
     return () => controller.abort()
-  }, [cache, connection, dayOffset, entityIds, mockHistoricalDay, sourceKey])
+  }, [cache, connection, dayOffset, entityIds, mockHistoricalDay, numericScales, sourceKey])
 
   const activeEntry = dayOffset === 0 ? null : cache[getCacheKey(sourceKey, dayOffset)] ?? null
   const hasActiveHistory = dayOffset > 0 && activeEntry?.available
@@ -218,6 +236,7 @@ async function fetchHistoryRowsByKey({
   activeRequestEntries,
   apiBase,
   end,
+  numericScales,
   start,
 }: {
   abortSignal: AbortSignal
@@ -225,6 +244,7 @@ async function fetchHistoryRowsByKey({
   activeRequestEntries: Array<[HistoryKey, string]>
   apiBase: string
   end: Date
+  numericScales: Record<HistoryKey, number>
   start: Date
 }) {
   const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
@@ -245,7 +265,7 @@ async function fetchHistoryRowsByKey({
       }
 
       const payload: unknown = await response.json()
-      const scale = ENERGY_ENTITY_NUMERIC_SCALE[key] ?? 1
+      const scale = numericScales[key] ?? 1
       rowsByKey[key] = normalizeHistoryRows(extractSingleHistorySeries(payload), scale)
     }),
   )
