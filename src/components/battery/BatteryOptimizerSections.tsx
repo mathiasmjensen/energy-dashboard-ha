@@ -43,7 +43,7 @@ export function OptimizerStateBanner({ optimizer, variant }: { optimizer: Batter
         </strong>
         <span className="text-sm leading-5 text-dashboard-soft">
           {optimizer.hasLiveError && optimizer.snapshot
-            ? `Showing ${getOptimizerSourceLabel(optimizer.snapshot.source).toLowerCase()} while the backend reconnects.`
+            ? `Showing ${getOptimizerSourceLabel(optimizer.snapshot.source).toLowerCase()} while the live optimizer source reconnects.`
             : optimizer.errorMessage ?? 'No optimizer data yet.'}
         </span>
       </div>

@@ -207,6 +207,17 @@ Predbat is now the recommended planning engine:
 - optimizer planning, recommendation, and controls come from Predbat entities
 - the legacy `/api/battery/*` backend path remains available only as an optional fallback using `VITE_BATTERY_OPTIMIZER_MODE=legacy-api`
 
+Predbat migration checklist:
+- install and configure Predbat in Home Assistant / AppDaemon
+- confirm these core entities exist:
+  - `select.predbat_mode`
+  - `switch.predbat_active`
+  - `switch.predbat_set_read_only`
+  - `sensor.predbat_plan_html`
+- copy `home-assistant/energy_dashboard_battery_optimizer.yaml` into `/config/packages/`
+- if your Predbat entity ids differ, override them with the `VITE_PREDBAT_*` variables from `.env.example`
+- keep the old backend only if you want a rollback path, and switch it on with `VITE_BATTERY_OPTIMIZER_MODE=legacy-api`
+
 ### Notifications
 
 Notifications use:
