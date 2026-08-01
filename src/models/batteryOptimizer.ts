@@ -156,7 +156,7 @@ export interface BatteryOptimizerState {
   isRefreshing: boolean
   isSavingSettings: boolean
   isStale: boolean
-  mode: 'direct-api' | 'ha-proxy' | 'mock'
+  mode: 'legacy-api' | 'mock' | 'predbat'
   retry: () => void
   snapshot: BatteryOptimizerSnapshot | null
   updateSetting: <TKey extends keyof BatteryOptimizerSettings>(key: TKey, value: BatteryOptimizerSettings[TKey]) => void

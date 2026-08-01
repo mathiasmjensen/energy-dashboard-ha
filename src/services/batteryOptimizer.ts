@@ -14,22 +14,9 @@ import type {
 } from '../models/batteryOptimizer'
 import type { PeakRateDay, PeakRateHour } from '../models/peakRates'
 import type { SolarForecastWindow } from '../models/solarForecast'
-import { isProductionBuild, resolveBrowserVisibleUrl } from './runtimeSecurity'
+import { resolveBrowserVisibleUrl } from './runtimeSecurity'
 
 const STALE_MS = 30 * 60 * 1000
-
-export function getBatteryOptimizerMode() {
-  const configured = getEnvValue('VITE_BATTERY_OPTIMIZER_MODE')?.trim().toLowerCase()
-
-  if (configured === 'mock' || configured === 'direct-api' || configured === 'ha-proxy') {
-    if (configured === 'direct-api' && isProductionBuild() && !getBatteryOptimizerBaseUrl()) {
-      return 'ha-proxy' as const
-    }
-    return configured
-  }
-
-  return 'mock' as const
-}
 
 export function getBatteryOptimizerBaseUrl() {
   const configured = getEnvValue('VITE_BATTERY_OPTIMIZER_BASE_URL')?.trim()

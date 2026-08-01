@@ -1,7 +1,7 @@
 import {
   getBatteryOptimizerBaseUrl,
-  getBatteryOptimizerMode,
 } from './batteryOptimizer'
+import { getBatteryOptimizerMode } from './predbat'
 import type {
   BatteryOptimizerApiPlanPayload,
   BatteryOptimizerApiSettingsPayload,
@@ -23,11 +23,11 @@ export class BatteryOptimizerRequestError extends Error {
 export function createBatteryOptimizerClient(): BatteryOptimizerClient | null {
   const mode = getBatteryOptimizerMode()
 
-  if (mode === 'mock') {
+  if (mode !== 'legacy-api') {
     return null
   }
 
-  const baseUrl = mode === 'direct-api' ? getBatteryOptimizerBaseUrl() : ''
+  const baseUrl = getBatteryOptimizerBaseUrl()
 
   return {
     applyPlan: (payload) => requestJson<void>(baseUrl, '/api/battery/apply-plan', { body: payload, method: 'POST' }).then(() => undefined),

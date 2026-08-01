@@ -16,7 +16,7 @@ The project provides:
 - a desktop dashboard with energy flow, battery, solar, EV, pricing, and notifications
 - a mobile dashboard with dedicated Home, Solar, Battery, EV, and Notifications screens
 - Home Assistant package files for EVCC, FoxESS, pricing, battery optimizer, helpers, and notifications
-- optional standalone backend services for notifications and battery optimization
+- an optional standalone notifications backend
 
 ## Requirements
 
@@ -51,7 +51,7 @@ The default production-safe environment is in `.env.example`.
 VITE_HA_URL=
 VITE_HA_TOKEN=
 VITE_ENABLE_DIRECT_BROWSER_APIS=false
-VITE_BATTERY_OPTIMIZER_MODE=ha-proxy
+VITE_BATTERY_OPTIMIZER_MODE=predbat
 VITE_BATTERY_OPTIMIZER_BASE_URL=
 VITE_NOTIFICATIONS_BASE_URL=
 VITE_PEAK_RATE_URL=disabled
@@ -95,7 +95,7 @@ The repo is configured for a Home-Assistant-first deployment model.
 
 Recommended production setup:
 - let Home Assistant provide auth/session access
-- keep FoxESS keys, optimizer tokens, and notification secrets server-side only
+- keep FoxESS keys and notification secrets server-side only
 - use Home Assistant REST sensors, scripts, and package files for backend integrations
 - do not commit real `.env` files or `/config/secrets.yaml`
 
@@ -193,13 +193,19 @@ The UI supports:
 - charts
 
 Recommended production mode:
-- `VITE_BATTERY_OPTIMIZER_MODE=ha-proxy`
+- `VITE_BATTERY_OPTIMIZER_MODE=predbat`
 
 Primary files:
 - `src/hooks/useBatteryOptimizer.ts`
 - `src/services/batteryOptimizer.ts`
-- `src/services/batteryOptimizerClient.ts`
+- `src/services/predbat.ts`
+- `src/data/predbatEntities.ts`
 - `home-assistant/energy_dashboard_battery_optimizer.yaml`
+
+Predbat is now the recommended planning engine:
+- live battery/grid values still come from your existing HA/FoxESS entities
+- optimizer planning, recommendation, and controls come from Predbat entities
+- the legacy `/api/battery/*` backend path remains available only as an optional fallback using `VITE_BATTERY_OPTIMIZER_MODE=legacy-api`
 
 ### Notifications
 
