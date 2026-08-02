@@ -63,7 +63,9 @@ export const PREDBAT_ENTITY_CANDIDATES: Record<keyof typeof PREDBAT_ENTITY_DEFAU
     'input_datetime.energy_dashboard_predbat_paused_until',
   ],
   planSensor: [
+    'predbat.plan_html',
     'sensor.predbat_plan_html',
+    'predbat.plan',
     'sensor.predbat_plan',
     'sensor.energy_dashboard_predbat_plan',
     'sensor.energy_dashboard_predbat_plan_raw',
@@ -105,6 +107,7 @@ export const PREDBAT_ENTITY_CANDIDATES: Record<keyof typeof PREDBAT_ENTITY_DEFAU
     'sensor.energy_dashboard_predbat_spot_price',
   ],
   statusSensor: [
+    'predbat.status',
     'sensor.predbat_status',
     'sensor.energy_dashboard_predbat_status',
   ],
@@ -148,4 +151,3 @@ export function getConfiguredPredbatEntityIds(key: PredbatEntityKey) {
 
   return [...new Set(ids.filter(Boolean))]
 }
-
