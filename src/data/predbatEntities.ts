@@ -3,7 +3,12 @@ export const PREDBAT_ENTITY_DEFAULTS = {
   allowBatteryExportSwitch: 'switch.predbat_allow_battery_export',
   allowGridChargingSwitch: 'switch.predbat_allow_grid_charging',
   applyPlanScript: 'script.energy_dashboard_predbat_apply_plan',
+  batteryCapacitySensor: 'sensor.predbat_battery_capacity',
+  batteryHoursLeftSensor: 'predbat.battery_hours_left',
+  batteryPowerSensor: 'predbat.battery_power',
+  batterySocSensor: 'sensor.predbat_battery_soc',
   fullBuyPriceSensor: 'sensor.predbat_full_buy_price',
+  gridPowerSensor: 'predbat.grid_power',
   maxGridChargeInput: 'input_number.predbat_max_grid_charge_kwh',
   modeSelect: 'select.predbat_mode',
   pauseScript: 'script.energy_dashboard_predbat_pause_until_tomorrow',
@@ -25,6 +30,20 @@ export const PREDBAT_ENTITY_CANDIDATES: Record<keyof typeof PREDBAT_ENTITY_DEFAU
     'switch.predbat_active',
     'input_boolean.predbat_active',
   ],
+  batteryCapacitySensor: [
+    'sensor.predbat_battery_capacity',
+  ],
+  batteryHoursLeftSensor: [
+    'predbat.battery_hours_left',
+    'sensor.predbat_battery_hours_left',
+  ],
+  batteryPowerSensor: [
+    'predbat.battery_power',
+    'sensor.predbat_battery_power',
+  ],
+  batterySocSensor: [
+    'sensor.predbat_battery_soc',
+  ],
   allowBatteryExportSwitch: [
     'switch.predbat_allow_battery_export',
     'switch.predbat_export_enable',
@@ -45,6 +64,10 @@ export const PREDBAT_ENTITY_CANDIDATES: Record<keyof typeof PREDBAT_ENTITY_DEFAU
     'sensor.predbat_import_rate',
     'sensor.predbat_buy_price',
     'sensor.energy_dashboard_predbat_full_buy_price',
+  ],
+  gridPowerSensor: [
+    'predbat.grid_power',
+    'sensor.predbat_grid_power',
   ],
   maxGridChargeInput: [
     'input_number.predbat_max_grid_charge_kwh',
@@ -124,7 +147,12 @@ const ENV_KEYS: Record<PredbatEntityKey, string> = {
   allowBatteryExportSwitch: 'VITE_PREDBAT_ALLOW_BATTERY_EXPORT_SWITCH',
   allowGridChargingSwitch: 'VITE_PREDBAT_ALLOW_GRID_CHARGING_SWITCH',
   applyPlanScript: 'VITE_PREDBAT_APPLY_PLAN_SCRIPT',
+  batteryCapacitySensor: 'VITE_PREDBAT_BATTERY_CAPACITY_SENSOR',
+  batteryHoursLeftSensor: 'VITE_PREDBAT_BATTERY_HOURS_LEFT_SENSOR',
+  batteryPowerSensor: 'VITE_PREDBAT_BATTERY_POWER_SENSOR',
+  batterySocSensor: 'VITE_PREDBAT_BATTERY_SOC_SENSOR',
   fullBuyPriceSensor: 'VITE_PREDBAT_FULL_BUY_PRICE_SENSOR',
+  gridPowerSensor: 'VITE_PREDBAT_GRID_POWER_SENSOR',
   maxGridChargeInput: 'VITE_PREDBAT_MAX_GRID_CHARGE_INPUT',
   modeSelect: 'VITE_PREDBAT_MODE_SELECT',
   pauseScript: 'VITE_PREDBAT_PAUSE_SCRIPT',
@@ -142,7 +170,8 @@ const ENV_KEYS: Record<PredbatEntityKey, string> = {
 }
 
 export function getConfiguredPredbatEntityIds(key: PredbatEntityKey) {
-  const explicit = String(import.meta.env[ENV_KEYS[key]] ?? '').trim()
+  const env = import.meta.env ?? {}
+  const explicit = String(env[ENV_KEYS[key]] ?? '').trim()
   const ids = [
     ...(explicit ? [explicit] : []),
     ...PREDBAT_ENTITY_CANDIDATES[key],

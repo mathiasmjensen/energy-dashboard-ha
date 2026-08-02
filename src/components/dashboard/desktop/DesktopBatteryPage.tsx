@@ -55,7 +55,7 @@ export function DesktopBatteryPage({
   })
   return (
     <section
-      className="absolute left-[236px] right-0 top-0 h-[941px] overflow-hidden px-8 pb-6 pr-7 pt-6"
+      className="absolute bottom-0 left-[236px] right-0 top-0 overflow-y-auto overscroll-contain px-8 pb-12 pr-7 pt-6 [scrollbar-gutter:stable]"
       aria-label="Battery details"
     >
       <header className="flex h-[70px] items-start justify-between">
@@ -74,7 +74,7 @@ export function DesktopBatteryPage({
         </div>
       </header>
 
-      <div className="flex h-[calc(100%-82px)] min-h-0 flex-col gap-4">
+      <div className="flex min-h-[calc(100%-82px)] flex-col gap-4">
         <div className="flex flex-wrap gap-2" role="tablist" aria-label="Battery sections">
           {BATTERY_SECTIONS.map((item) => (
             <button

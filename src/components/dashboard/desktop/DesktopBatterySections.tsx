@@ -88,7 +88,7 @@ export function BatteryOptimizerSection({
   setOptimizerSection: (section: OptimizerSection) => void
 }) {
   return (
-    <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+    <section className="flex min-h-0 flex-1 flex-col gap-4">
       <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Battery optimizer sections">
         {OPTIMIZER_SECTIONS.map((item) => (
@@ -110,9 +110,9 @@ export function BatteryOptimizerSection({
         ))}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <div className="min-h-0 flex-1 pb-2">
         {optimizerSection === 'Status' ? (
-          <div className="grid h-full gap-4">
+          <div className="grid gap-4">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
               <BatteryOptimizerStatusCard optimizer={optimizer} variant="desktop" />
               <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="desktop" />

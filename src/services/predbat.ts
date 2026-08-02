@@ -28,9 +28,10 @@ export function getBatteryOptimizerMode(): BatteryOptimizerRuntimeMode {
 
 export function resolvePredbatEntities(entities: HassEntityMap): PredbatResolvedEntities {
   const resolved: PredbatResolvedEntities = {}
+  const entries = Object.entries(entities)
 
   for (const key of Object.keys(PREDBAT_ENTITY_DEFAULTS) as PredbatEntityKey[]) {
-    const entityId = getConfiguredPredbatEntityIds(key).find((candidate) => Boolean(entities[candidate]))
+    const entityId = getConfiguredPredbatEntityIds(key).find((candidate) => Boolean(entities[candidate])) ?? findPredbatEntityId(entries, key)
     if (!entityId) {
       continue
     }
@@ -42,6 +43,40 @@ export function resolvePredbatEntities(entities: HassEntityMap): PredbatResolved
   }
 
   return resolved
+}
+
+function findPredbatEntityId(entries: Array<[string, HassEntityMap[string]]>, key: PredbatEntityKey) {
+  const matchingIds = entries
+    .map(([entityId]) => entityId)
+    .filter((entityId) => isPredbatEntityMatch(entityId, key))
+    .sort()
+
+  return matchingIds[0]
+}
+
+function isPredbatEntityMatch(entityId: string, key: PredbatEntityKey) {
+  switch (key) {
+    case 'batteryCapacitySensor':
+      return /^sensor\.predbat_fox_.+_battery_capacity$/.test(entityId)
+    case 'batteryHoursLeftSensor':
+      return entityId === 'predbat.battery_hours_left' || entityId === 'sensor.predbat_battery_hours_left'
+    case 'batteryPowerSensor':
+      return (
+        entityId === 'predbat.battery_power' ||
+        entityId === 'sensor.predbat_battery_power' ||
+        /^sensor\.predbat_fox_.+_battery_flow$/.test(entityId)
+      )
+    case 'batterySocSensor':
+      return /^sensor\.predbat_fox_.+_soc$/.test(entityId)
+    case 'gridPowerSensor':
+      return entityId === 'predbat.grid_power' || entityId === 'sensor.predbat_grid_power'
+    case 'reserveInput':
+      return entityId === 'input_number.predbat_set_reserve_min' || /^number\.predbat_fox_.+_battery_schedule_reserve$/.test(entityId)
+    case 'allowBatteryExportSwitch':
+      return entityId === 'switch.predbat_export_more_solar'
+    default:
+      return false
+  }
 }
 
 export function hasPredbatData(resolved: PredbatResolvedEntities) {
@@ -71,7 +106,7 @@ export function buildPredbatSnapshotPayloads(
   )
   const decisionSummary = deriveDecisionSummaryFromRows(rows, recommendation)
   const statusPayload: BatteryOptimizerApiStatusPayload = {
-    batteryPowerKw: inputs.batteryPowerKw ?? undefined,
+    batteryPowerKw: getEntityNumber(resolved.batteryPowerSensor?.entity) ?? inputs.batteryPowerKw ?? undefined,
     estimatedProfitTodayDkk:
       getEntityNumber(resolved.profitTodaySensor?.entity) ??
       getEntityAttributeNumber(resolved.statusSensor?.entity, 'estimatedProfitTodayDkk') ??
@@ -80,7 +115,7 @@ export function buildPredbatSnapshotPayloads(
       getEntityNumber(resolved.fullBuyPriceSensor?.entity) ??
       getEntityAttributeNumber(resolved.statusSensor?.entity, 'fullBuyPriceDkkPerKwh') ??
       rows[0]?.fullBuyPriceDkkPerKwh,
-    gridPowerKw: inputs.gridPowerKw ?? undefined,
+    gridPowerKw: getEntityNumber(resolved.gridPowerSensor?.entity) ?? inputs.gridPowerKw ?? undefined,
     mode: normalizePredbatMode(
       getEntityState(resolved.modeSelect?.entity) ?? getEntityAttributeString(resolved.statusSensor?.entity, 'mode'),
       isEntityOn(resolved.readOnlySwitch?.entity),
@@ -90,7 +125,7 @@ export function buildPredbatSnapshotPayloads(
       getEntityNumber(resolved.sellPriceSensor?.entity) ??
       getEntityAttributeNumber(resolved.statusSensor?.entity, 'sellPriceDkkPerKwh') ??
       rows[0]?.sellPriceDkkPerKwh,
-    socPercent: inputs.batterySocPercent ?? undefined,
+    socPercent: getEntityNumber(resolved.batterySocSensor?.entity) ?? inputs.batterySocPercent ?? undefined,
     spotPriceDkkPerKwh:
       getEntityNumber(resolved.spotPriceSensor?.entity) ??
       getEntityAttributeNumber(resolved.statusSensor?.entity, 'spotPriceDkkPerKwh') ??

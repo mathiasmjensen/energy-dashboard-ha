@@ -36,7 +36,7 @@ export function MobileBatteryScreen({
   const [optimizerSection, setOptimizerSection] = useState<MobileOptimizerSection>('status')
 
   return (
-    <div className="flex flex-col gap-4 pb-2">
+    <div className="flex flex-col gap-4 pb-[calc(var(--mobile-bottom-space)+8px)]">
       <SegmentedControl active={section} ariaLabel="Battery mobile section" options={MOBILE_BATTERY_SECTIONS} onChange={(value) => setSection(value as MobileBatterySection)} />
 
       {section === 'Details' ? (
