@@ -16,3 +16,79 @@ command_line:
       json_attributes:
         - prices
       scan_interval: 900
+
+# Predbat consumes detailed rate intervals from separate entities for the
+# current and next calendar day. These template sensors reuse the dashboard's
+# cached `prices` attribute, so Home Assistant does not make extra proxy calls.
+template:
+  - sensor:
+      - name: Stromligning Import Today
+        unique_id: stromligning_import_today
+        unit_of_measurement: "DKK/kWh"
+        state_class: measurement
+        icon: mdi:currency-dkk
+        availability: >-
+          {{ state_attr('sensor.energy_dashboard_peak_rates', 'prices') is not none }}
+        state: >-
+          {% set prices = state_attr('sensor.energy_dashboard_peak_rates', 'prices') or [] %}
+          {% set now_ts = now().timestamp() %}
+          {% set ns = namespace(current=none) %}
+          {% for item in prices %}
+            {% set start = as_datetime(item.get('start')) %}
+            {% set end = as_datetime(item.get('end')) %}
+            {% if start and end and start.timestamp() <= now_ts < end.timestamp() %}
+              {% set ns.current = item.get('price', item.get('value', 0)) | float(0) %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.current if ns.current is not none else 0 }}
+        attributes:
+          prices_today: >-
+            {% set prices = state_attr('sensor.energy_dashboard_peak_rates', 'prices') or [] %}
+            {% set target_date = now().date().isoformat() %}
+            {% set ns = namespace(intervals=[]) %}
+            {% for item in prices %}
+              {% set start = as_local(as_datetime(item.get('start'))) %}
+              {% if start and start.date().isoformat() == target_date %}
+                {% set ns.intervals = ns.intervals + [{
+                  'start': item.get('start'),
+                  'end': item.get('end'),
+                  'price': item.get('price', item.get('value', 0)) | float(0)
+                }] %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.intervals }}
+
+      - name: Stromligning Import Tomorrow
+        unique_id: stromligning_import_tomorrow
+        unit_of_measurement: "DKK/kWh"
+        state_class: measurement
+        icon: mdi:currency-dkk
+        availability: >-
+          {{ state_attr('sensor.energy_dashboard_peak_rates', 'prices') is not none }}
+        state: >-
+          {% set prices = state_attr('sensor.energy_dashboard_peak_rates', 'prices') or [] %}
+          {% set target_date = (now() + timedelta(days=1)).date().isoformat() %}
+          {% set ns = namespace(count=0) %}
+          {% for item in prices %}
+            {% set start = as_local(as_datetime(item.get('start'))) %}
+            {% if start and start.date().isoformat() == target_date %}
+              {% set ns.count = ns.count + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.count }}
+        attributes:
+          prices_tomorrow: >-
+            {% set prices = state_attr('sensor.energy_dashboard_peak_rates', 'prices') or [] %}
+            {% set target_date = (now() + timedelta(days=1)).date().isoformat() %}
+            {% set ns = namespace(intervals=[]) %}
+            {% for item in prices %}
+              {% set start = as_local(as_datetime(item.get('start'))) %}
+              {% if start and start.date().isoformat() == target_date %}
+                {% set ns.intervals = ns.intervals + [{
+                  'start': item.get('start'),
+                  'end': item.get('end'),
+                  'price': item.get('price', item.get('value', 0)) | float(0)
+                }] %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.intervals }}

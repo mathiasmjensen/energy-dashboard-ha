@@ -179,7 +179,20 @@ Primary package file:
 
 Handled through the Home Assistant pricing package:
 - hourly electricity prices
-- dashboard price attributes
+- dashboard price attributes (`sensor.energy_dashboard_peak_rates`)
+- Predbat-compatible price intervals:
+  - `sensor.stromligning_import_today` with a `prices_today` attribute
+  - `sensor.stromligning_import_tomorrow` with a `prices_tomorrow` attribute
+
+Both Predbat sensors are derived from the dashboard price cache, so the price
+proxy is still polled only once every 15 minutes. Add the following to Predbat
+`apps.yaml` after installing the package:
+
+```yaml
+metric_stromligning_import_today: sensor.stromligning_import_today
+metric_stromligning_import_tomorrow: sensor.stromligning_import_tomorrow
+plan_interval_minutes: 15
+```
 
 Primary package file:
 - `home-assistant/energy_dashboard_prices.yaml`
