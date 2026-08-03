@@ -7,12 +7,30 @@
 # - switch.predbat_active
 # - switch.predbat_set_read_only
 # - sensor.predbat_plan_html
+# - Predbat's local plan endpoint at /api/plan_data
 #
 # If your Predbat entity ids differ, adjust the script targets below or
 # override the matching ids in the dashboard `.env`.
 #
 # Do not load this together with the legacy combined
 # `energy-dashboard-hakit.yaml` package.
+
+# Exposes Predbat's structured plan to the dashboard through Home Assistant.
+# Replace PREDBAT_HOST with the hostname or LAN address of the Predbat service.
+rest:
+  - resource: "http://PREDBAT_HOST:5052/api/plan_data"
+    scan_interval: 300
+    sensor:
+      - name: Energy Dashboard Predbat Plan
+        unique_id: energy_dashboard_predbat_plan
+        icon: mdi:battery-clock-outline
+        value_template: "{{ value_json.plan.rows | count }}"
+        json_attributes_path: "$.plan"
+        json_attributes:
+          - rows
+          - time
+          - currency_symbols
+          - reason_templates
 
 input_datetime:
   energy_dashboard_predbat_paused_until:
@@ -28,6 +46,7 @@ script:
         target:
           entity_id:
             - sensor.predbat_plan_html
+            - sensor.energy_dashboard_predbat_plan
             - sensor.predbat_status
             - sensor.predbat_recommendation
             - sensor.predbat_spot_price
@@ -48,6 +67,7 @@ script:
         target:
           entity_id:
             - sensor.predbat_plan_html
+            - sensor.energy_dashboard_predbat_plan
             - sensor.predbat_status
 
   energy_dashboard_predbat_pause_until_tomorrow:
@@ -68,6 +88,7 @@ script:
         target:
           entity_id:
             - sensor.predbat_plan_html
+            - sensor.energy_dashboard_predbat_plan
             - sensor.predbat_status
 
 automation:
@@ -95,5 +116,6 @@ automation:
         target:
           entity_id:
             - sensor.predbat_plan_html
+            - sensor.energy_dashboard_predbat_plan
             - sensor.predbat_status
     mode: single

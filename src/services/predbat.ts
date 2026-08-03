@@ -234,11 +234,15 @@ function normalizePredbatPlanRow(payload: unknown, index: number) {
   const expectedHouseUsage =
     parseNumber(row.expectedHouseUsageKwh ?? row.expected_house_usage_kwh ?? row.house_usage ?? row.load ?? row.usage) ?? 0
   const expectedProfit =
-    parseNumber(row.expectedProfitDkk ?? row.expected_profit_dkk ?? row.profit ?? row.delta_profit) ?? 0
+    parseNumber(row.expectedProfitDkk ?? row.expected_profit_dkk ?? row.profit ?? row.delta_profit) ??
+    -(parseNumber(row.cost_change) ?? 0)
+  const plannedBatteryPowerKw = parseNumber(row.plannedBatteryPowerKw ?? row.planned_battery_power_kw ?? row.soc_change)
+  const actionFromState = normalizePredbatPlanAction(row.state, plannedBatteryPowerKw)
 
   return {
     action: normalizeRecommendation(
       row.action ??
+        actionFromState ??
         deriveActionFromPredbatRow(row, {
           expectedSolarSurplusKwh: expectedSolarSurplus,
           sellPriceDkkPerKwh: sellPrice,
@@ -256,7 +260,28 @@ function normalizePredbatPlanRow(payload: unknown, index: number) {
     spotPriceDkkPerKwh: roundNumber(spotPrice),
     startIso,
     targetSocPercent: clamp(roundNumber(targetSoc, 0), 0, 100),
+    ...(plannedBatteryPowerKw === null ? {} : { plannedBatteryPowerKw: roundNumber(plannedBatteryPowerKw) }),
   }
+}
+
+function normalizePredbatPlanAction(state: unknown, plannedBatteryPowerKw: number | null): BatteryOptimizerRecommendation | null {
+  const normalized = String(state ?? '').trim().toLowerCase()
+  if (normalized.includes('exp') || normalized.includes('export')) {
+    return 'SELL'
+  }
+  if (normalized.includes('charge')) {
+    return 'CHARGE'
+  }
+  if (plannedBatteryPowerKw !== null && plannedBatteryPowerKw > 0.05) {
+    return 'CHARGE'
+  }
+  if (plannedBatteryPowerKw !== null && plannedBatteryPowerKw < -0.05) {
+    return 'DISCHARGE'
+  }
+  if (normalized.includes('demand') || normalized.includes('eco') || normalized.includes('hold')) {
+    return 'HOLD'
+  }
+  return null
 }
 
 function deriveActionFromPredbatRow(
@@ -315,6 +340,9 @@ function buildPredbatChartPayload(rows: ReturnType<typeof normalizePredbatPlanRo
     plannedBatteryPower: {
       labels,
       points: rows.map((row) => {
+        if (row.plannedBatteryPowerKw !== undefined) {
+          return row.plannedBatteryPowerKw
+        }
         if (row.action === 'BUY' || row.action === 'CHARGE') {
           return 2.4
         }

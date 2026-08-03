@@ -13,7 +13,7 @@ export const PREDBAT_ENTITY_DEFAULTS = {
   modeSelect: 'select.predbat_mode',
   pauseScript: 'script.energy_dashboard_predbat_pause_until_tomorrow',
   pausedUntilHelper: 'input_datetime.energy_dashboard_predbat_paused_until',
-  planSensor: 'sensor.predbat_plan_html',
+  planSensor: 'sensor.energy_dashboard_predbat_plan',
   profitTodaySensor: 'sensor.predbat_profit_today',
   readOnlySwitch: 'switch.predbat_set_read_only',
   recommendationSensor: 'sensor.predbat_recommendation',
@@ -86,11 +86,11 @@ export const PREDBAT_ENTITY_CANDIDATES: Record<keyof typeof PREDBAT_ENTITY_DEFAU
     'input_datetime.energy_dashboard_predbat_paused_until',
   ],
   planSensor: [
+    'sensor.energy_dashboard_predbat_plan',
     'predbat.plan_html',
     'sensor.predbat_plan_html',
     'predbat.plan',
     'sensor.predbat_plan',
-    'sensor.energy_dashboard_predbat_plan',
     'sensor.energy_dashboard_predbat_plan_raw',
   ],
   profitTodaySensor: [

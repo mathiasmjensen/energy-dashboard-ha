@@ -29,6 +29,7 @@ export interface BatteryOptimizerPlanRow {
   spotPriceDkkPerKwh: number
   startIso: string
   targetSocPercent: number
+  plannedBatteryPowerKw?: number
 }
 
 export interface BatteryOptimizerDecisionSummary {

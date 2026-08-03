@@ -50,4 +50,36 @@ test.describe('Predbat entity resolution', () => {
     expect(payloads.statusPayload.gridPowerKw).toBe(0.01)
     expect(payloads.statusPayload.socPercent).toBe(53)
   })
+
+  test('prefers the structured Predbat plan over the rendered HTML summary', () => {
+    const structuredPlan = entity('4')
+    structuredPlan.attributes = {
+      rows: [
+        {
+          cost_change: -0.23,
+          export_rate: 1.43,
+          import_rate: 2.41,
+          load_forecast: 0.71,
+          pv_forecast: 2.19,
+          soc_change: -3.4,
+          soc_percent: 53,
+          state: 'Exp',
+          time: '2026-08-03T23:00:00+0200',
+        },
+      ],
+    }
+    const entities = {
+      'predbat.plan_html': entity('<table></table>'),
+      'sensor.energy_dashboard_predbat_plan': structuredPlan,
+    } as never
+
+    const payloads = buildPredbatSnapshotPayloads(resolvePredbatEntities(entities), inputs)
+    const [row] = payloads.planPayload.rows as Array<Record<string, unknown>>
+
+    expect(row.action).toBe('SELL')
+    expect(row.spotPriceDkkPerKwh).toBe(2.41)
+    expect(row.sellPriceDkkPerKwh).toBe(1.43)
+    expect(row.plannedBatteryPowerKw).toBe(-3.4)
+    expect(row.expectedProfitDkk).toBe(0.23)
+  })
 })

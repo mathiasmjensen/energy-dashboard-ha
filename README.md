@@ -226,11 +226,14 @@ Predbat is now the recommended planning engine:
 
 Predbat migration checklist:
 - install and configure Predbat in Home Assistant / AppDaemon
+- set the `resource` in `home-assistant/energy_dashboard_battery_optimizer.yaml`
+  to your Predbat endpoint, for example `http://192.168.1.156:5052/api/plan_data`
 - confirm these core entities exist:
   - `select.predbat_mode`
   - `switch.predbat_active`
   - `switch.predbat_set_read_only`
   - `sensor.predbat_plan_html`
+  - `sensor.energy_dashboard_predbat_plan`
 - copy `home-assistant/energy_dashboard_battery_optimizer.yaml` into `/config/packages/`
 - if your Predbat entity ids differ, override them with the `VITE_PREDBAT_*` variables from `.env.example`
 - keep the old backend only if you want a rollback path, and switch it on with `VITE_BATTERY_OPTIMIZER_MODE=legacy-api`
