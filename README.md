@@ -183,6 +183,8 @@ Handled through the Home Assistant pricing package:
 - Predbat-compatible price intervals:
   - `sensor.stromligning_import_today` with a `prices_today` attribute
   - `sensor.stromligning_import_tomorrow` with a `prices_tomorrow` attribute
+  - `sensor.stromligning_export_today` with a `prices_today` attribute
+  - `sensor.stromligning_export_tomorrow` with a `prices_tomorrow` attribute
 
 Both Predbat sensors are derived from the dashboard price cache, so the price
 proxy is still polled only once every 15 minutes. Add the following to Predbat
@@ -191,6 +193,8 @@ proxy is still polled only once every 15 minutes. Add the following to Predbat
 ```yaml
 metric_stromligning_import_today: sensor.stromligning_import_today
 metric_stromligning_import_tomorrow: sensor.stromligning_import_tomorrow
+metric_stromligning_export_today: sensor.stromligning_export_today
+metric_stromligning_export_tomorrow: sensor.stromligning_export_tomorrow
 plan_interval_minutes: 15
 ```
 
