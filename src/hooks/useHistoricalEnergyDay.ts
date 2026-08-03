@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
 import { resolveHaAccessToken, resolveHaApiBase } from '../services/haApi'
+import { extractHaHistorySeries, requestHaHistory } from '../services/haHistory'
 import { getDashboardMockData } from '../services/dashboardMockData'
 import { getNumericScale } from '../services/energyEntityFormatting'
 import type {
@@ -128,32 +129,6 @@ export function useHistoricalEnergyDay({
 
   useEffect(() => {
     const todayKey = getDayKey(0)
-    const todayCacheKey = getCacheKey(sourceKey, 0)
-    const nextEntry: HistoricalEnergyDayCacheEntry = {
-      available: true,
-      createdAt: Date.now(),
-      source: 'live',
-      distribution: currentDistribution,
-      solarProduction: currentSolarProduction,
-    }
-
-    setCache((current) => {
-      const existing = current[todayCacheKey]
-      if (
-        existing &&
-        existing.source === nextEntry.source &&
-        JSON.stringify(existing.distribution) === JSON.stringify(nextEntry.distribution) &&
-        JSON.stringify(existing.solarProduction) === JSON.stringify(nextEntry.solarProduction)
-      ) {
-        return current
-      }
-
-      return {
-        ...current,
-        [todayCacheKey]: nextEntry,
-      }
-    })
-
     writeHistoricalEnergyDayCache(sourceKey, todayKey, {
       available: true,
       source: 'live',
@@ -182,11 +157,13 @@ export function useHistoricalEnergyDay({
 
     const persisted = readHistoricalEnergyDayCache(sourceKey, getDayKey(dayOffset))
     if (persisted) {
-      setCache((current) => ({
-        ...current,
-        [getCacheKey(sourceKey, dayOffset)]: persisted,
-      }))
-      return
+      queueMicrotask(() => {
+        setCache((current) => ({
+          ...current,
+          [getCacheKey(sourceKey, dayOffset)]: persisted,
+        }))
+      })
+      return undefined
     }
 
     const controller = new AbortController()
@@ -202,6 +179,7 @@ export function useHistoricalEnergyDay({
           accessToken,
           activeRequestEntries,
           apiBase,
+          connection,
           end,
           numericScales,
           start,
@@ -280,6 +258,7 @@ async function fetchHistoryRowsByKey({
   accessToken,
   activeRequestEntries,
   apiBase,
+  connection,
   end,
   numericScales,
   start,
@@ -288,32 +267,29 @@ async function fetchHistoryRowsByKey({
   accessToken?: string
   activeRequestEntries: Array<[HistoryKey, string]>
   apiBase: string
+  connection: unknown
   end: Date
   numericScales: Record<HistoryKey, number>
   start: Date
 }) {
-  const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
   const rowsByKey = createEmptyHistoryRowsByKey()
+  const payload = await requestHaHistory({
+    accessToken,
+    apiBase,
+    connection,
+    end,
+    entityIds: activeRequestEntries.map(([, entityId]) => entityId),
+    signal: abortSignal,
+    start,
+  })
 
-  await Promise.all(
-    activeRequestEntries.map(async ([key, entityId]) => {
-      const url = `${apiBase}/api/history/period/${encodeURIComponent(start.toISOString())}?filter_entity_id=${encodeURIComponent(entityId)}&end_time=${encodeURIComponent(end.toISOString())}&no_attributes`
-      const response = await fetch(url, {
-        cache: 'no-store',
-        credentials: 'include',
-        headers,
-        signal: abortSignal,
-      })
-
-      if (!response.ok) {
-        throw new Error(`Historical energy day request failed for ${entityId} with ${response.status}`)
-      }
-
-      const payload: unknown = await response.json()
-      const scale = numericScales[key] ?? 1
-      rowsByKey[key] = normalizeHistoryRows(extractSingleHistorySeries(payload), scale)
-    }),
-  )
+  for (const [key, entityId] of activeRequestEntries) {
+    const scale = numericScales[key] ?? 1
+    rowsByKey[key] = normalizeHistoryRows(
+      extractHaHistorySeries(payload, entityId, activeRequestEntries.map(([, activeEntityId]) => activeEntityId)),
+      scale,
+    )
+  }
 
   return rowsByKey
 }
@@ -332,14 +308,6 @@ function createEmptyHistoryRowsByKey(): Record<HistoryKey, NormalizedHistoryRow[
     solarProductionToday: [],
     solarPower: [],
   } satisfies Record<HistoryKey, NormalizedHistoryRow[]>
-}
-
-function extractSingleHistorySeries(payload: unknown) {
-  if (!Array.isArray(payload) || !Array.isArray(payload[0])) {
-    return []
-  }
-
-  return payload[0]
 }
 
 function normalizeHistoryRows(payload: unknown, scale: number) {

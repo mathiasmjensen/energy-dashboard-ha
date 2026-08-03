@@ -3,6 +3,7 @@ import { useHass } from '@hakit/core'
 import { resolveEnergyEntities } from '../data/resolveEnergyEntities'
 import type { BatteryHistoryPeriod, BatteryHistoryResult } from '../models/batteryHistory'
 import { resolveHaAccessToken, resolveHaApiBase } from '../services/haApi'
+import { extractHaHistorySeries, requestHaHistory } from '../services/haHistory'
 import {
   buildBatteryHistorySeriesFromStates,
   getEmptyBatteryHistorySeries,
@@ -52,24 +53,19 @@ export function useBatteryHistory(fallbackSocValue: number): BatteryHistoryResul
 
       try {
         for (const entityId of batterySocEntityIds) {
-          const url = `${apiBase}/api/history/period/${encodeURIComponent(startDate)}?filter_entity_id=${encodeURIComponent(entityId)}&end_time=${encodeURIComponent(endDate)}&no_attributes`
-          const response = await fetch(url, {
-            cache: 'no-store',
-            credentials: 'include',
-            headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          const payload = await requestHaHistory({
+            accessToken,
+            apiBase,
+            connection,
+            end: new Date(endDate),
+            entityIds: [entityId],
             signal: controller.signal,
+            start: new Date(startDate),
           })
-
-          if (!response.ok) {
-            failures.push(`${entityId}: ${response.status}`)
-            continue
-          }
-
-          const payload: unknown = await response.json()
-          const nextStates = normalizeBatteryHistoryStates(payload)
+          const nextStates = normalizeBatteryHistoryStates(extractHaHistorySeries(payload, entityId))
 
           if (!nextStates.length) {
-            failures.push(`${entityId}: no usable states`)
+            failures.push(`${entityId}: no recorded states`)
             continue
           }
 
@@ -102,7 +98,7 @@ export function useBatteryHistory(fallbackSocValue: number): BatteryHistoryResul
     void fetchHistory()
 
     return () => controller.abort()
-  }, [accessToken, apiBase, batterySocEntityIds, batterySocEntitySignature])
+  }, [accessToken, apiBase, batterySocEntityIds, batterySocEntitySignature, connection])
 
   return useMemo(() => {
     const activeStates = historyState.entityId && batterySocEntityIds.includes(historyState.entityId) ? historyState.states : []
