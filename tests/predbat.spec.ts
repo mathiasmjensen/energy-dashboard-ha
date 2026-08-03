@@ -81,5 +81,7 @@ test.describe('Predbat entity resolution', () => {
     expect(row.sellPriceDkkPerKwh).toBe(1.43)
     expect(row.plannedBatteryPowerKw).toBe(-3.4)
     expect(row.expectedProfitDkk).toBe(0.23)
+    expect(payloads.statusPayload.fullBuyPriceDkkPerKwh).toBe(2.41)
+    expect(payloads.statusPayload.sellPriceDkkPerKwh).toBe(1.43)
   })
 })

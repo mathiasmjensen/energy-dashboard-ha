@@ -118,12 +118,15 @@ export const PREDBAT_ENTITY_CANDIDATES: Record<keyof typeof PREDBAT_ENTITY_DEFAU
     'number.predbat_min_reserve_percent',
   ],
   sellPriceSensor: [
+    'sensor.stromligning_export_today',
+    'sensor.energy_dashboard_export_price',
     'sensor.predbat_sell_price',
     'sensor.predbat_export_rate',
     'sensor.predbat_feed_in_price',
     'sensor.energy_dashboard_predbat_sell_price',
   ],
   spotPriceSensor: [
+    'sensor.energy_dashboard_spot_price',
     'sensor.predbat_spot_price',
     'sensor.predbat_import_rate',
     'sensor.predbat_current_rate',

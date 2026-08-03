@@ -5,7 +5,7 @@ import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/ba
 import { BatteryDetailsSection, BatteryOptimizerSection } from './DesktopBatterySections'
 import { StatusPill } from './DesktopShared'
 
-const BATTERY_SECTIONS = ['Battery details', 'Battery optimizer'] as const
+const BATTERY_SECTIONS = ['Battery planner', 'Battery details'] as const
 type BatterySection = (typeof BATTERY_SECTIONS)[number]
 type BatteryHistoryPeriod = '24h' | '7d' | '30d' | '90d'
 type OptimizerSection = 'Status' | 'Plan' | 'Charts'
@@ -43,8 +43,8 @@ export function DesktopBatteryPage({
   }
 }) {
   const [period, setPeriod] = useState<BatteryHistoryPeriod>('24h')
-  const [batterySection, setBatterySection] = useState<BatterySection>('Battery details')
-  const [optimizerSection, setOptimizerSection] = useState<OptimizerSection>('Status')
+  const [batterySection, setBatterySection] = useState<BatterySection>('Battery planner')
+  const [optimizerSection, setOptimizerSection] = useState<OptimizerSection>('Plan')
 
   const timeEstimate = getBatteryTimeEstimate({
     capacityKwh: parseDisplayNumber(battery.capacity),
@@ -64,7 +64,7 @@ export function DesktopBatteryPage({
           <p className="mt-[7px] text-[15px] text-[#d7dbe1]">
             {batterySection === 'Battery details'
               ? 'Battery status, charge level, and history in one place'
-              : 'Battery optimizer workspace for status, planning, and charts'}
+              : 'Predbat plan, price decisions, and controls'}
           </p>
         </div>
         <div className="fixed left-[1196px] top-[31px] z-[3] grid grid-cols-[126px_146px_142px] gap-6">

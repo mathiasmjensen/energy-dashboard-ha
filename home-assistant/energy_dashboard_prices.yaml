@@ -93,6 +93,26 @@ template:
             {% endfor %}
             {{ ns.intervals }}
 
+      - name: Energy Dashboard Spot Price
+        unique_id: energy_dashboard_spot_price
+        unit_of_measurement: "DKK/kWh"
+        state_class: measurement
+        icon: mdi:chart-line
+        availability: >-
+          {{ state_attr('sensor.energy_dashboard_peak_rates', 'prices') is not none }}
+        state: >-
+          {% set prices = state_attr('sensor.energy_dashboard_peak_rates', 'prices') or [] %}
+          {% set now_ts = now().timestamp() %}
+          {% set ns = namespace(current=none) %}
+          {% for item in prices %}
+            {% set start = as_datetime(item.get('start')) %}
+            {% set end = as_datetime(item.get('end')) %}
+            {% if start and end and start.timestamp() <= now_ts < end.timestamp() %}
+              {% set ns.current = item.get('spot_price', 0) | float(0) %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.current if ns.current is not none else 0 }}
+
       # Export payout derived by the price proxy. Each interval is the hourly
       # spot component less 3.75 ore supplier administration, 1.19 ore Vores
       # Elnet feed-in, and 0.53 ore Energinet balancing (all per kWh).

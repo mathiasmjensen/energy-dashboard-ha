@@ -105,6 +105,7 @@ export function buildPredbatSnapshotPayloads(
     rows[0]?.action ?? 'HOLD',
   )
   const decisionSummary = deriveDecisionSummaryFromRows(rows, recommendation)
+  const currentPlanRow = rows[0]
   const statusPayload: BatteryOptimizerApiStatusPayload = {
     batteryPowerKw: getEntityNumber(resolved.batteryPowerSensor?.entity) ?? inputs.batteryPowerKw ?? undefined,
     estimatedProfitTodayDkk:
@@ -112,9 +113,10 @@ export function buildPredbatSnapshotPayloads(
       getEntityAttributeNumber(resolved.statusSensor?.entity, 'estimatedProfitTodayDkk') ??
       decisionSummary.expectedDailyArbitrageProfitDkk,
     fullBuyPriceDkkPerKwh:
+      currentPlanRow?.fullBuyPriceDkkPerKwh ??
       getEntityNumber(resolved.fullBuyPriceSensor?.entity) ??
       getEntityAttributeNumber(resolved.statusSensor?.entity, 'fullBuyPriceDkkPerKwh') ??
-      rows[0]?.fullBuyPriceDkkPerKwh,
+      undefined,
     gridPowerKw: getEntityNumber(resolved.gridPowerSensor?.entity) ?? inputs.gridPowerKw ?? undefined,
     mode: normalizePredbatMode(
       getEntityState(resolved.modeSelect?.entity) ?? getEntityAttributeString(resolved.statusSensor?.entity, 'mode'),
@@ -122,14 +124,15 @@ export function buildPredbatSnapshotPayloads(
     ),
     recommendation,
     sellPriceDkkPerKwh:
+      currentPlanRow?.sellPriceDkkPerKwh ??
       getEntityNumber(resolved.sellPriceSensor?.entity) ??
       getEntityAttributeNumber(resolved.statusSensor?.entity, 'sellPriceDkkPerKwh') ??
-      rows[0]?.sellPriceDkkPerKwh,
+      undefined,
     socPercent: getEntityNumber(resolved.batterySocSensor?.entity) ?? inputs.batterySocPercent ?? undefined,
     spotPriceDkkPerKwh:
       getEntityNumber(resolved.spotPriceSensor?.entity) ??
       getEntityAttributeNumber(resolved.statusSensor?.entity, 'spotPriceDkkPerKwh') ??
-      rows[0]?.spotPriceDkkPerKwh,
+      currentPlanRow?.spotPriceDkkPerKwh,
     updatedAt:
       getEntityState(resolved.updatedAtSensor?.entity) ??
       getEntityAttributeString(resolved.planSensor?.entity, 'updatedAt') ??

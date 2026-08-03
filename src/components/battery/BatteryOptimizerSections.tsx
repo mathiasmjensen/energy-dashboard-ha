@@ -87,8 +87,8 @@ export function BatteryOptimizerStatusCard({
         <StatusMetric label="Battery power" value={formatOptimizerPower(status.batteryPowerKw)} />
         <StatusMetric label="Grid now" value={formatOptimizerPower(status.gridPowerKw)} />
         <StatusMetric label="Spot price" value={formatOptimizerPrice(status.spotPriceDkkPerKwh)} />
-        <StatusMetric label="Full buy price" value={formatOptimizerPrice(status.fullBuyPriceDkkPerKwh)} />
-        <StatusMetric label="Sell price" value={formatOptimizerPrice(status.sellPriceDkkPerKwh)} />
+        <StatusMetric label="Buy price" value={formatOptimizerPrice(status.fullBuyPriceDkkPerKwh)} />
+        <StatusMetric label="Export payout" value={formatOptimizerPrice(status.sellPriceDkkPerKwh)} />
         <StatusMetric label="Profit today" value={formatOptimizerCurrency(status.estimatedProfitTodayDkk)} />
       </div>
 
@@ -588,6 +588,10 @@ function RecommendationBadge({
   tone: 'blue' | 'gold' | 'green' | 'neutral' | 'purple'
   variant: Variant
 }) {
+  if (recommendation === 'DISCHARGE') {
+    return null
+  }
+
   if (variant === 'mobile') {
     return <StatusChip tone={mapToneToMobile(tone)}>{recommendation}</StatusChip>
   }

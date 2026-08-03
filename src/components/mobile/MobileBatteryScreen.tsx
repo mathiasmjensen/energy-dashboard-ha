@@ -4,7 +4,7 @@ import type { BatteryPeriod, MobileDashboardProps } from './MobileTypes'
 import { MobileBatteryDetailsSection, MobileBatteryOptimizerSection } from './MobileBatterySections'
 import { SegmentedControl } from './MobilePrimitives'
 
-const MOBILE_BATTERY_SECTIONS = ['Details', 'Optimizer'] as const
+const MOBILE_BATTERY_SECTIONS = ['Planner', 'Details'] as const
 type MobileBatterySection = (typeof MOBILE_BATTERY_SECTIONS)[number]
 type MobileOptimizerSection = 'status' | 'plan' | 'charts'
 
@@ -32,8 +32,8 @@ export function MobileBatteryScreen({
   period: BatteryPeriod
   onPeriodChange: (period: BatteryPeriod) => void
 }) {
-  const [section, setSection] = useState<MobileBatterySection>('Details')
-  const [optimizerSection, setOptimizerSection] = useState<MobileOptimizerSection>('status')
+  const [section, setSection] = useState<MobileBatterySection>('Planner')
+  const [optimizerSection, setOptimizerSection] = useState<MobileOptimizerSection>('plan')
 
   return (
     <div className="flex flex-col gap-4 pb-[calc(var(--mobile-bottom-space)+8px)]">
