@@ -125,7 +125,6 @@ test.describe('energy dashboard', () => {
     await expect(workspace.getByRole('heading', { name: 'Optimizer actions' })).toBeVisible()
     await expect(workspace.getByRole('heading', { name: 'Price optimization' })).toBeVisible()
     await workspace.getByRole('button', { name: 'View full plan' }).click()
-    await workspace.getByRole('tab', { name: 'Details' }).click()
     await workspace.getByRole('tab', { name: 'Full plan' }).click()
     await expect(workspace.getByRole('heading', { name: 'Optimization plan' })).toBeVisible()
     await page.getByRole('button', { name: 'Settings', exact: true }).click()

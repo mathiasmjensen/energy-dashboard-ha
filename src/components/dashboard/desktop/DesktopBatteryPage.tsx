@@ -5,8 +5,7 @@ import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/ba
 import { BatteryDetailsWorkspace, BatteryPlannerDashboard } from './DesktopBatterySections'
 import { StatusPill } from './DesktopShared'
 
-const BATTERY_SECTIONS = ['Dashboard', 'Details'] as const
-type BatterySection = (typeof BATTERY_SECTIONS)[number]
+type BatterySection = 'Dashboard' | 'Details'
 type BatteryHistoryPeriod = '24h' | '7d' | '30d' | '90d'
 
 export function DesktopBatteryPage({
@@ -102,35 +101,20 @@ export function DesktopBatteryPage({
       </header>
 
       <div className="flex min-h-[calc(100%-82px)] flex-col gap-4">
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Battery sections">
-          {BATTERY_SECTIONS.map((item) => (
-            <button
-              key={item}
-              aria-selected={batterySection === item}
-              className={cn(
-                'inline-flex min-h-10 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition',
-                batterySection === item
-                  ? 'border-dashboard-blue/45 bg-dashboard-blue/16 text-dashboard-text shadow-[0_10px_24px_rgba(77,122,255,0.18)]'
-                  : 'border-white/10 bg-white/5 text-dashboard-soft hover:border-white/20 hover:bg-white/8 hover:text-dashboard-text',
-              )}
-              role="tab"
-              type="button"
-              onClick={() => setBatterySection(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-
         {batterySection === 'Details' ? (
-          <BatteryDetailsWorkspace
-            battery={battery}
-            batteryHistory={batteryHistory}
-            period={period}
-            setPeriod={setPeriod}
-            timeEstimate={timeEstimate}
-            optimizer={batteryOptimizer}
-          />
+          <>
+            <button className="w-fit rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-dashboard-soft transition hover:border-white/20 hover:text-white" type="button" onClick={() => setBatterySection('Dashboard')}>
+              Back to battery dashboard
+            </button>
+            <BatteryDetailsWorkspace
+              battery={battery}
+              batteryHistory={batteryHistory}
+              period={period}
+              setPeriod={setPeriod}
+              timeEstimate={timeEstimate}
+              optimizer={batteryOptimizer}
+            />
+          </>
         ) : (
           <BatteryPlannerDashboard
             battery={battery}
