@@ -149,7 +149,7 @@ export function DesktopDashboard({
           style={sceneStyle}
         >
         <aside
-          className="absolute inset-y-0 left-0 w-[236px] border-r border-white/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_34%),rgba(12,17,23,0.86)] px-3 pb-[30px] pt-[34px]"
+          className="overview-sidebar absolute inset-y-0 left-0 w-[236px] border-r border-white/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_34%),rgba(12,17,23,0.86)] px-3 pb-[30px] pt-[34px]"
           aria-label="Dashboard navigation"
         >
           <div className="flex items-center gap-[13px] px-3 pb-[30px] pt-0.5">
@@ -164,7 +164,7 @@ export function DesktopDashboard({
                 <button
                   key={label}
                   aria-current={active ? 'page' : undefined}
-                  className={`grid min-h-[46px] cursor-pointer grid-cols-[32px_1fr] items-center rounded-lg px-[14px] text-left transition ${
+                  className={`nav-item grid min-h-[46px] cursor-pointer grid-cols-[32px_1fr] items-center rounded-lg px-[14px] text-left transition ${
                     active
                       ? 'bg-[linear-gradient(90deg,rgba(47,134,255,0.3),rgba(47,134,255,0.14))] text-dashboard-blue shadow-[0_12px_30px_rgba(47,134,255,0.15)]'
                       : 'bg-transparent text-[#eef3f8] hover:bg-white/[0.05] hover:text-white'
@@ -248,7 +248,7 @@ export function DesktopDashboard({
               </section>
             </section>
 
-            <aside className="absolute right-4 top-[108px] grid w-[484px] gap-[14px]" aria-label="Energy details">
+            <aside className="absolute right-4 top-[96px] grid w-[484px] gap-[10px]" aria-label="Energy details">
               <EnergyDistributionPanel
                 battery={distribution.battery}
                 batteryCharge={distribution.batteryCharge}

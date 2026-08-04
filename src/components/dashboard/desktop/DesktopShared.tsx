@@ -32,7 +32,7 @@ export type DayHeaderControls = {
 }
 
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={cn('dashboard-glass-panel relative overflow-hidden', className)}>{children}</section>
+  return <section className={cn('overview-panel dashboard-glass-panel relative overflow-hidden', className)}>{children}</section>
 }
 
 export function StatusPill({

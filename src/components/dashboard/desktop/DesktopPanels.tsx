@@ -32,9 +32,9 @@ export function EnergyDistributionPanel({
   solar: string
 }) {
   return (
-    <Panel className="h-[232px] px-4 pb-[14px] pt-6">
+    <Panel className="distribution-panel h-[214px] px-4 pb-[12px] pt-5">
       <PanelHeader badge={badge} controls={<DayWindowControls {...controls} />} showPeriod={false} title="Energy distribution" />
-      <div className="relative mt-[17px] h-[152px]">
+      <div className="relative mt-[12px] h-[144px]">
         <div className={desktopDistNodeClassName('solar')}>
           <span className={desktopDistDotClassName('solar')} aria-hidden="true" />
           <div>
@@ -115,7 +115,7 @@ export function SolarProductionPanel({
   value: string
 }) {
   return (
-    <Panel className="h-[228px] px-4 py-4">
+    <Panel className="solar-production-panel h-[210px] px-4 py-4">
       <PanelHeader badge={badge} controls={<DayWindowControls {...controls} />} showPeriod={false} title="Solar production" />
       <div className="mt-[18px] flex items-baseline gap-1.5">
         <strong className="text-[27px] leading-none text-white">{value}</strong>
@@ -157,7 +157,7 @@ export function BatteryStatusPanel({
   })
 
   return (
-    <Panel className="h-[188px] px-[18px] pb-[14px] pt-[17px]">
+    <Panel className="h-[174px] px-[18px] pb-[12px] pt-[15px]">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Battery status</h2>
@@ -211,22 +211,22 @@ export function MarketRatesPanel({ optimizer }: { optimizer: BatteryOptimizerSta
   const maxRate = Math.max(0.1, ...rows.flatMap((row) => [row.fullBuyPriceDkkPerKwh, row.sellPriceDkkPerKwh]))
 
   return (
-    <Panel className="h-[162px] px-4 py-[15px]" aria-label="Buy and export energy prices">
+    <Panel className="market-rates-panel h-[144px] px-4 py-[13px]">
       <div className="flex items-center justify-between gap-3">
         <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Energy market</h2>
         <span className="rounded-full border border-white/10 bg-white/[0.035] px-2.5 py-1 text-[10px] font-semibold text-dashboard-soft">Next 24h</span>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
+      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
         <MarketRate label="Buy now" tone="buy" value={formatOptimizerPrice(buyNow)} />
         <MarketRate label="Export now" tone="export" value={formatOptimizerPrice(exportNow)} />
       </div>
 
-      <div className="mt-3 flex h-[50px] items-end gap-[3px] rounded-[12px] border border-white/[0.06] bg-[#09101a]/72 px-2 pb-2 pt-1.5">
+      <div className="mt-2.5 flex h-[42px] items-end gap-[3px] rounded-[12px] border border-white/[0.06] bg-[#09101a]/72 px-2 pb-1.5 pt-1">
         {rows.length ? (
           rows.map((row, index) => {
-            const buyHeight = Math.max(3, Math.round((row.fullBuyPriceDkkPerKwh / maxRate) * 38))
-            const exportHeight = Math.max(2, Math.round((row.sellPriceDkkPerKwh / maxRate) * 38))
+            const buyHeight = Math.max(3, Math.round((row.fullBuyPriceDkkPerKwh / maxRate) * 30))
+            const exportHeight = Math.max(2, Math.round((row.sellPriceDkkPerKwh / maxRate) * 30))
             return (
               <div className="group relative flex h-full min-w-0 flex-1 items-end justify-center gap-px" key={row.startIso}>
                 <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-blue/80 transition group-hover:bg-dashboard-blue" style={{ height: `${buyHeight}px` }} />
