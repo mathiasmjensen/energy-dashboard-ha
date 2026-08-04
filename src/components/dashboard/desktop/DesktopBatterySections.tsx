@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
 import { cn } from '../../../lib/cn'
 import {
@@ -13,8 +14,8 @@ import { LineChart } from './DesktopShared'
 
 const PERIODS = ['24h', '7d', '30d', '90d'] as const
 type BatteryHistoryPeriod = (typeof PERIODS)[number]
-const OPTIMIZER_SECTIONS = ['Status', 'Plan', 'Charts'] as const
-type OptimizerSection = (typeof OPTIMIZER_SECTIONS)[number]
+const DETAILS_SECTIONS = ['Battery', 'Full plan', 'Controls'] as const
+type DetailsSection = (typeof DETAILS_SECTIONS)[number]
 
 type BatteryModel = {
   capacity: string
@@ -78,53 +79,96 @@ export function BatteryDetailsSection({
   )
 }
 
-export function BatteryOptimizerSection({
+export function BatteryPlannerDashboard({
   optimizer,
-  optimizerSection,
-  setOptimizerSection,
+  onOpenDetails,
 }: {
   optimizer: BatteryOptimizerState
-  optimizerSection: OptimizerSection
-  setOptimizerSection: (section: OptimizerSection) => void
+  onOpenDetails: () => void
 }) {
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-4">
       <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Battery optimizer sections">
-        {OPTIMIZER_SECTIONS.map((item) => (
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <BatteryOptimizerStatusCard optimizer={optimizer} variant="desktop" />
+        <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="desktop" />
+      </div>
+      <BatteryOptimizerCharts optimizer={optimizer} variant="desktop" />
+      <div className="flex items-center justify-between gap-4 rounded-[22px] border border-dashboard-blue/20 bg-dashboard-blue/[0.07] px-5 py-4 shadow-[0_20px_50px_rgba(33,81,210,0.12)]">
+        <div>
+          <strong className="block text-base font-semibold text-dashboard-text">Need the full plan?</strong>
+          <span className="mt-1 block text-sm text-dashboard-soft">Review every scheduled hour, change optimizer settings, or apply the plan.</span>
+        </div>
+        <button className="shrink-0 rounded-xl bg-dashboard-blue px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(61,134,255,0.28)] transition hover:bg-[#4d8fff]" type="button" onClick={onOpenDetails}>
+          Open details
+        </button>
+      </div>
+    </section>
+  )
+}
+
+export function BatteryDetailsWorkspace({
+  battery,
+  batteryHistory,
+  optimizer,
+  period,
+  setPeriod,
+  timeEstimate,
+}: {
+  battery: BatteryModel
+  batteryHistory: BatteryHistoryModel
+  optimizer: BatteryOptimizerState
+  period: BatteryHistoryPeriod
+  setPeriod: (period: BatteryHistoryPeriod) => void
+  timeEstimate: { label: string; value: string }
+}) {
+  const [section, setSection] = useState<DetailsSection>('Battery')
+
+  return (
+    <section className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Battery detail sections">
+        {DETAILS_SECTIONS.map((item) => (
           <button
             key={item}
-            aria-selected={optimizerSection === item}
+            aria-selected={section === item}
             className={cn(
               'inline-flex min-h-10 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition',
-              optimizerSection === item
+              section === item
                 ? 'border-dashboard-blue/45 bg-dashboard-blue/16 text-dashboard-text shadow-[0_10px_24px_rgba(77,122,255,0.18)]'
                 : 'border-white/10 bg-white/5 text-dashboard-soft hover:border-white/20 hover:bg-white/8 hover:text-dashboard-text',
             )}
             role="tab"
             type="button"
-            onClick={() => setOptimizerSection(item)}
+            onClick={() => setSection(item)}
           >
             {item}
           </button>
         ))}
       </div>
 
-      <div className="min-h-0 flex-1 pb-2">
-        {optimizerSection === 'Status' ? (
-          <div className="grid gap-4">
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-              <BatteryOptimizerStatusCard optimizer={optimizer} variant="desktop" />
-              <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="desktop" />
-            </div>
-            <BatteryOptimizerControlsCard optimizer={optimizer} variant="desktop" />
-          </div>
-        ) : optimizerSection === 'Plan' ? (
+      {section === 'Battery' ? (
+        <BatteryDetailsSection
+          battery={battery}
+          batteryHistory={batteryHistory}
+          period={period}
+          setPeriod={setPeriod}
+          timeEstimate={timeEstimate}
+        />
+      ) : section === 'Full plan' ? (
+        <>
+          <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
           <BatteryOptimizerPlanTable optimizer={optimizer} planHours={48} variant="desktop" />
-        ) : (
-          <BatteryOptimizerCharts optimizer={optimizer} variant="desktop" />
-        )}
-      </div>
+        </>
+      ) : (
+        <>
+          <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <BatteryOptimizerStatusCard optimizer={optimizer} variant="desktop" />
+            <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="desktop" />
+          </div>
+          <BatteryOptimizerControlsCard optimizer={optimizer} variant="desktop" />
+        </>
+      )}
     </section>
   )
 }

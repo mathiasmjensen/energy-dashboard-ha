@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import type { BatteryOptimizerState } from '../../models/batteryOptimizer'
 import type { BatteryPeriod, MobileDashboardProps } from './MobileTypes'
-import { MobileBatteryDetailsSection, MobileBatteryOptimizerSection } from './MobileBatterySections'
+import { MobileBatteryDetailsWorkspace, MobileBatteryPlannerDashboard } from './MobileBatterySections'
 import { SegmentedControl } from './MobilePrimitives'
 
 const MOBILE_BATTERY_SECTIONS = ['Planner', 'Details'] as const
 type MobileBatterySection = (typeof MOBILE_BATTERY_SECTIONS)[number]
-type MobileOptimizerSection = 'status' | 'plan' | 'charts'
 
 export function MobileBatteryScreen({
   battery,
@@ -33,14 +32,13 @@ export function MobileBatteryScreen({
   onPeriodChange: (period: BatteryPeriod) => void
 }) {
   const [section, setSection] = useState<MobileBatterySection>('Planner')
-  const [optimizerSection, setOptimizerSection] = useState<MobileOptimizerSection>('plan')
 
   return (
     <div className="flex flex-col gap-4 pb-[calc(var(--mobile-bottom-space)+8px)]">
       <SegmentedControl active={section} ariaLabel="Battery mobile section" options={MOBILE_BATTERY_SECTIONS} onChange={(value) => setSection(value as MobileBatterySection)} />
 
       {section === 'Details' ? (
-        <MobileBatteryDetailsSection
+        <MobileBatteryDetailsWorkspace
           battery={battery}
           history={history}
           historyError={historyError}
@@ -48,9 +46,10 @@ export function MobileBatteryScreen({
           insights={insights}
           period={period}
           onPeriodChange={onPeriodChange}
+          optimizer={optimizer}
         />
       ) : (
-        <MobileBatteryOptimizerSection optimizer={optimizer} optimizerSection={optimizerSection} setOptimizerSection={setOptimizerSection} />
+        <MobileBatteryPlannerDashboard optimizer={optimizer} onOpenDetails={() => setSection('Details')} />
       )}
     </div>
   )

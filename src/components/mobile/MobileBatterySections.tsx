@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import type { BatteryOptimizerState } from '../../models/batteryOptimizer'
 import {
@@ -13,8 +14,8 @@ import type { BatteryPeriod, MobileDashboardProps } from './MobileTypes'
 import { BATTERY_PERIODS } from './MobileConstants'
 import { GlassCard, MobileDataStateBadge, MobileLineChart, SectionHeading, SegmentedControl, StatusChip } from './MobilePrimitives'
 
-const MOBILE_OPTIMIZER_SECTIONS = ['status', 'plan', 'charts'] as const
-type MobileOptimizerSection = (typeof MOBILE_OPTIMIZER_SECTIONS)[number]
+const MOBILE_DETAILS_SECTIONS = ['Battery', 'Full plan', 'Controls'] as const
+type MobileDetailsSection = (typeof MOBILE_DETAILS_SECTIONS)[number]
 
 export function MobileBatteryDetailsSection({
   battery,
@@ -114,42 +115,86 @@ export function MobileBatteryDetailsSection({
   )
 }
 
-export function MobileBatteryOptimizerSection({
+export function MobileBatteryPlannerDashboard({
   optimizer,
-  optimizerSection,
-  setOptimizerSection,
+  onOpenDetails,
 }: {
   optimizer: BatteryOptimizerState
-  optimizerSection: MobileOptimizerSection
-  setOptimizerSection: (section: MobileOptimizerSection) => void
+  onOpenDetails: () => void
 }) {
-  const optionLabels: Record<MobileOptimizerSection, string> = {
-    charts: 'Charts',
-    plan: 'Plan',
-    status: 'Status',
-  }
-
   return (
     <>
       <OptimizerStateBanner optimizer={optimizer} variant="mobile" />
-      <SegmentedControl
-        active={optimizerSection}
-        ariaLabel="Battery optimizer section"
-        optionLabels={optionLabels}
-        options={MOBILE_OPTIMIZER_SECTIONS}
-        onChange={(value) => setOptimizerSection(value as MobileOptimizerSection)}
-      />
+      <BatteryOptimizerStatusCard optimizer={optimizer} variant="mobile" />
+      <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="mobile" />
+      <BatteryOptimizerCharts optimizer={optimizer} variant="mobile" />
+      <GlassCard className="dashboard-glass-card flex items-center justify-between gap-4 rounded-panel p-4">
+        <div>
+          <strong className="block text-[15px] font-semibold text-dashboard-text">Open the full plan</strong>
+          <span className="mt-1 block text-[12px] leading-5 text-dashboard-soft">See every hour, adjust controls, and apply the optimizer.</span>
+        </div>
+        <button className="shrink-0 rounded-xl bg-dashboard-blue px-3 py-2 text-sm font-semibold text-white" type="button" onClick={onOpenDetails}>
+          Details
+        </button>
+      </GlassCard>
+    </>
+  )
+}
 
-      {optimizerSection === 'status' ? (
+export function MobileBatteryDetailsWorkspace({
+  battery,
+  history,
+  historyError,
+  historySource,
+  insights,
+  optimizer,
+  period,
+  onPeriodChange,
+}: {
+  battery: MobileDashboardProps['battery']
+  history: { labels: string[]; points: number[] }
+  historyError: string | null
+  historySource: 'ha' | 'unavailable'
+  insights: { chargeRate: string; dischargeRate: string; runtimeLabel: string; runtimeValue: string }
+  optimizer: BatteryOptimizerState
+  period: BatteryPeriod
+  onPeriodChange: (period: BatteryPeriod) => void
+}) {
+  const [section, setSection] = useState<MobileDetailsSection>('Battery')
+  const labels: Record<MobileDetailsSection, string> = { Battery: 'Battery', 'Full plan': 'Plan', Controls: 'Controls' }
+
+  return (
+    <>
+      <SegmentedControl
+        active={section}
+        ariaLabel="Battery detail sections"
+        optionLabels={labels}
+        options={MOBILE_DETAILS_SECTIONS}
+        onChange={(value) => setSection(value as MobileDetailsSection)}
+      />
+      {section === 'Battery' ? (
+        <MobileBatteryDetailsSection
+          battery={battery}
+          history={history}
+          historyError={historyError}
+          historySource={historySource}
+          insights={insights}
+          period={period}
+          onPeriodChange={onPeriodChange}
+        />
+      ) : section === 'Full plan' ? (
         <>
+          <OptimizerStateBanner optimizer={optimizer} variant="mobile" />
+          <BatteryOptimizerPlanTable optimizer={optimizer} planHours={24} variant="mobile" />
+        </>
+      ) : (
+        <>
+          <OptimizerStateBanner optimizer={optimizer} variant="mobile" />
           <BatteryOptimizerStatusCard optimizer={optimizer} variant="mobile" />
           <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="mobile" />
           <BatteryOptimizerControlsCard optimizer={optimizer} variant="mobile" />
         </>
-      ) : null}
-
-      {optimizerSection === 'plan' ? <BatteryOptimizerPlanTable optimizer={optimizer} planHours={24} variant="mobile" /> : null}
-      {optimizerSection === 'charts' ? <BatteryOptimizerCharts optimizer={optimizer} variant="mobile" /> : null}
+      )}
     </>
   )
 }

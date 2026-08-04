@@ -2,13 +2,12 @@ import { useState } from 'react'
 import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
 import { cn } from '../../../lib/cn'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/batteryMetrics'
-import { BatteryDetailsSection, BatteryOptimizerSection } from './DesktopBatterySections'
+import { BatteryDetailsWorkspace, BatteryPlannerDashboard } from './DesktopBatterySections'
 import { StatusPill } from './DesktopShared'
 
-const BATTERY_SECTIONS = ['Battery planner', 'Battery details'] as const
+const BATTERY_SECTIONS = ['Planner', 'Details'] as const
 type BatterySection = (typeof BATTERY_SECTIONS)[number]
 type BatteryHistoryPeriod = '24h' | '7d' | '30d' | '90d'
-type OptimizerSection = 'Status' | 'Plan' | 'Charts'
 
 export function DesktopBatteryPage({
   battery,
@@ -43,8 +42,7 @@ export function DesktopBatteryPage({
   }
 }) {
   const [period, setPeriod] = useState<BatteryHistoryPeriod>('24h')
-  const [batterySection, setBatterySection] = useState<BatterySection>('Battery planner')
-  const [optimizerSection, setOptimizerSection] = useState<OptimizerSection>('Plan')
+  const [batterySection, setBatterySection] = useState<BatterySection>('Planner')
 
   const timeEstimate = getBatteryTimeEstimate({
     capacityKwh: parseDisplayNumber(battery.capacity),
@@ -62,9 +60,9 @@ export function DesktopBatteryPage({
         <div>
           <h1 className="m-0 text-[24px] leading-[1.1] text-white">Battery</h1>
           <p className="mt-[7px] text-[15px] text-[#d7dbe1]">
-            {batterySection === 'Battery details'
-              ? 'Battery status, charge level, and history in one place'
-              : 'Predbat plan, price decisions, and controls'}
+            {batterySection === 'Details'
+              ? 'Battery history, the full Predbat plan, and optimizer controls'
+              : 'Your next battery decision, prices, and forecast at a glance'}
           </p>
         </div>
         <div className="fixed left-[1196px] top-[31px] z-[3] grid grid-cols-[126px_146px_142px] gap-6">
@@ -95,16 +93,17 @@ export function DesktopBatteryPage({
           ))}
         </div>
 
-        {batterySection === 'Battery details' ? (
-          <BatteryDetailsSection
+        {batterySection === 'Details' ? (
+          <BatteryDetailsWorkspace
             battery={battery}
             batteryHistory={batteryHistory}
             period={period}
             setPeriod={setPeriod}
             timeEstimate={timeEstimate}
+            optimizer={batteryOptimizer}
           />
         ) : (
-          <BatteryOptimizerSection optimizer={batteryOptimizer} optimizerSection={optimizerSection} setOptimizerSection={setOptimizerSection} />
+          <BatteryPlannerDashboard optimizer={batteryOptimizer} onOpenDetails={() => setBatterySection('Details')} />
         )}
       </div>
     </section>
