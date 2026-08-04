@@ -330,6 +330,6 @@ Primary dashboard assets live in:
 The active desktop scene uses:
 - `public/new-energy-dashboard/background.png`
 
-## License / Usage
+## License
 
-Review and add your preferred project license before public distribution if one is not already in place.
+This project is licensed under the [MIT License](LICENSE).
