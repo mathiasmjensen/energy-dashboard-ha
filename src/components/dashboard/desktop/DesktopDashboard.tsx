@@ -9,6 +9,7 @@ import { assetPath } from '../../../utils/assetPath'
 import { EvChargerModal } from '../../EvChargerModal'
 import { DesktopNotificationsPage } from '../../notifications/NotificationsScreen'
 import { DesktopBatteryPage } from './DesktopBatteryPage'
+import { DesktopSettingsPage } from './DesktopSettingsPage'
 import { EnergyFlowMap, FlowNode } from './DesktopFlow'
 import type { DayHeaderControls } from './DesktopShared'
 import {
@@ -25,6 +26,7 @@ import { OverviewIcon, StatusPill } from './DesktopShared'
 const NAV_ITEMS = [
   { icon: 'home' as const, key: 'overview' as const, label: 'Overview' },
   { icon: 'battery' as const, key: 'battery' as const, label: 'Battery' },
+  { icon: 'settings' as const, key: 'settings' as const, label: 'Settings' },
   { icon: 'bell' as const, key: 'notifications' as const, label: 'Notifications' },
 ] as const
 
@@ -149,7 +151,7 @@ export function DesktopDashboard({
           style={sceneStyle}
         >
         <aside
-          className="overview-sidebar absolute inset-y-0 left-0 w-[236px] border-r border-white/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_34%),rgba(12,17,23,0.86)] px-3 pb-[30px] pt-[34px]"
+          className={`overview-sidebar absolute inset-y-0 left-0 w-[236px] border-r border-white/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_34%),rgba(12,17,23,0.86)] px-3 pb-[30px] pt-[34px] ${activeTab === 'overview' || activeTab === 'notifications' ? '' : 'hidden'}`}
           aria-label="Dashboard navigation"
         >
           <div className="flex items-center gap-[13px] px-3 pb-[30px] pt-0.5">
@@ -288,7 +290,34 @@ export function DesktopDashboard({
             batteryOptimizer={batteryOptimizer}
             displayDate={displayDate}
             displayTime={displayTime}
+            distribution={{
+              batteryCharge: distribution.batteryCharge,
+              batteryDischarge: distribution.batteryDischarge,
+              gridExport: distribution.gridExport,
+              gridImport: distribution.gridImport,
+            }}
+            flow={{
+              evPower: charger.chargeRate,
+              evStatus: charger.status,
+              gridPower: grid.power,
+              gridStatus: grid.status,
+              homePower,
+              solarPower: solar.power,
+            }}
+            onGoOverview={() => setActiveTab('overview')}
+            onOpenEvCharger={onOpenEvCharger}
+            onOpenSettings={() => setActiveTab('settings')}
             weather={weather}
+          />
+        ) : activeTab === 'settings' ? (
+          <DesktopSettingsPage
+            displayDate={displayDate}
+            displayTime={displayTime}
+            optimizer={batteryOptimizer}
+            weather={weather}
+            onGoBattery={() => setActiveTab('battery')}
+            onGoOverview={() => setActiveTab('overview')}
+            onOpenEvCharger={onOpenEvCharger}
           />
         ) : (
           <DesktopNotificationsPage

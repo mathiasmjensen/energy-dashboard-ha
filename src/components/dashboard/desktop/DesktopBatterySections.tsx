@@ -1,20 +1,23 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
 import { cn } from '../../../lib/cn'
 import {
-  BatteryOptimizerCharts,
-  BatteryOptimizerControlsCard,
-  BatteryOptimizerDecisionSummary,
   BatteryOptimizerPlanTable,
-  BatteryOptimizerStatusCard,
   OptimizerStateBanner,
 } from '../../battery/BatteryOptimizerSections'
 import { BatteryVisual } from '../../shared/BatteryVisual'
-import { LineChart } from './DesktopShared'
+import { BarChart, LineChart } from './DesktopShared'
+import {
+  formatOptimizerHourRange,
+  formatOptimizerPrice,
+  formatOptimizerUpdatedAt,
+  getOptimizerModeLabel,
+} from '../../../services/batteryOptimizerFormatting'
 
 const PERIODS = ['24h', '7d', '30d', '90d'] as const
 type BatteryHistoryPeriod = (typeof PERIODS)[number]
-const DETAILS_SECTIONS = ['Battery', 'Full plan', 'Controls'] as const
+const DETAILS_SECTIONS = ['Battery', 'Full plan'] as const
 type DetailsSection = (typeof DETAILS_SECTIONS)[number]
 
 type BatteryModel = {
@@ -80,28 +83,45 @@ export function BatteryDetailsSection({
 }
 
 export function BatteryPlannerDashboard({
+  battery,
+  batteryHistory,
+  distribution,
+  flow,
   optimizer,
   onOpenDetails,
 }: {
+  battery: BatteryModel
+  batteryHistory: BatteryHistoryModel
+  distribution: { batteryCharge: string; batteryDischarge: string; gridExport: string; gridImport: string }
+  flow: { evPower: string; evStatus: string; gridPower: string; gridStatus: string; homePower: string; solarPower: string }
   optimizer: BatteryOptimizerState
   onOpenDetails: () => void
 }) {
+  const snapshot = optimizer.snapshot
+  const status = snapshot?.status
+  const nextAction = snapshot?.planRows[0]
+  const history = batteryHistory.day
+
   return (
-    <section className="flex min-h-0 flex-1 flex-col gap-4">
-      <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <BatteryOptimizerStatusCard optimizer={optimizer} variant="desktop" />
-        <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="desktop" />
+    <section className="grid gap-4 pb-2">
+      <div className="grid gap-3 xl:grid-cols-3">
+        <BatteryHeroMetric label="State of charge" meta={battery.energy ? `${battery.energy} kWh stored` : undefined} tone="green" value={battery.soc}>
+          <BatteryVisual level={battery.socValue} />
+        </BatteryHeroMetric>
+        <BatteryHeroMetric label="Battery power" meta={battery.status} tone={battery.status === 'Discharging' ? 'violet' : 'green'} value={`${battery.power} kW`} />
+        <BatteryHeroMetric label="Stored energy" meta={battery.capacity ? `Usable capacity ${battery.capacity} kWh` : undefined} tone="blue" value={`${battery.energy} kWh`} />
       </div>
-      <BatteryOptimizerCharts optimizer={optimizer} variant="desktop" />
-      <div className="flex items-center justify-between gap-4 rounded-[22px] border border-dashboard-blue/20 bg-dashboard-blue/[0.07] px-5 py-4 shadow-[0_20px_50px_rgba(33,81,210,0.12)]">
-        <div>
-          <strong className="block text-base font-semibold text-dashboard-text">Need the full plan?</strong>
-          <span className="mt-1 block text-sm text-dashboard-soft">Review every scheduled hour, change optimizer settings, or apply the plan.</span>
-        </div>
-        <button className="shrink-0 rounded-xl bg-dashboard-blue px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(61,134,255,0.28)] transition hover:bg-[#4d8fff]" type="button" onClick={onOpenDetails}>
-          Open details
-        </button>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(250px,0.8fr)_minmax(460px,1.5fr)_minmax(250px,0.8fr)]">
+        <BatteryFlowCard battery={battery} flow={flow} />
+        <BatteryOutlookCard optimizer={optimizer} />
+        <BatteryActionsCard nextAction={nextAction} optimizer={optimizer} onOpenDetails={onOpenDetails} />
+      </div>
+
+      <div className={cn('grid gap-4', history.points.length ? 'xl:grid-cols-[minmax(260px,0.8fr)_minmax(320px,1fr)_minmax(0,1.45fr)]' : 'xl:grid-cols-[minmax(260px,0.8fr)_minmax(0,2.45fr)]')}>
+        <EnergySummaryCard distribution={distribution} />
+        <PriceDecisionCard optimizer={optimizer} />
+        {history.points.length ? <BatteryHistoryMiniCard history={history} status={status?.recommendation} /> : null}
       </div>
     </section>
   )
@@ -159,19 +179,94 @@ export function BatteryDetailsWorkspace({
           <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
           <BatteryOptimizerPlanTable optimizer={optimizer} planHours={48} variant="desktop" />
         </>
-      ) : (
-        <>
-          <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-            <BatteryOptimizerStatusCard optimizer={optimizer} variant="desktop" />
-            <BatteryOptimizerDecisionSummary optimizer={optimizer} variant="desktop" />
-          </div>
-          <BatteryOptimizerControlsCard optimizer={optimizer} variant="desktop" />
-        </>
-      )}
+      ) : null}
     </section>
   )
 }
+
+function BatteryHeroMetric({ children, label, meta, tone, value }: { children?: ReactNode; label: string; meta?: string; tone: 'blue' | 'green' | 'violet'; value: string }) {
+  return (
+    <section className={cn('min-h-[126px] rounded-[18px] border bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]', tone === 'green' ? 'border-dashboard-green/35' : tone === 'violet' ? 'border-dashboard-purple/30' : 'border-dashboard-blue/30')}>
+      <div className="flex h-full items-center justify-between gap-3">
+        <div>
+          <span className="text-sm text-dashboard-soft">{label}</span>
+          <strong className="mt-2 block text-[1.65rem] font-semibold leading-none text-white">{value}</strong>
+          {meta ? <span className="mt-2 block text-sm text-dashboard-soft">{meta}</span> : null}
+        </div>
+        {children ?? <span className={cn('h-11 w-11 rounded-full border', tone === 'green' ? 'border-dashboard-green/40 bg-dashboard-green/10' : tone === 'violet' ? 'border-dashboard-purple/40 bg-dashboard-purple/10' : 'border-dashboard-blue/40 bg-dashboard-blue/10')} />}
+      </div>
+    </section>
+  )
+}
+
+function BatteryFlowCard({ battery, flow }: { battery: BatteryModel; flow: { evPower: string; evStatus: string; gridPower: string; gridStatus: string; homePower: string; solarPower: string } }) {
+  return (
+    <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
+      <div className="mb-4 flex items-center gap-2"><h2 className="text-base font-semibold text-white">Battery flow</h2><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
+      <div className="grid grid-cols-2 gap-2.5">
+        <FlowRead label="Solar" tone="sun" value={`${flow.solarPower} kW`} />
+        <FlowRead label="Home" tone="blue" value={`${flow.homePower} kW`} />
+        <FlowRead label="Grid" meta={flow.gridStatus} tone="purple" value={`${flow.gridPower} kW`} />
+        <FlowRead label="EV charger" meta={flow.evStatus} tone="muted" value={`${flow.evPower} kW`} />
+      </div>
+      <div className="mt-3 flex items-center justify-between rounded-[14px] border border-dashboard-green/25 bg-dashboard-green/[0.06] px-3 py-2.5">
+        <span className="text-sm text-dashboard-soft">Battery</span>
+        <div className="text-right"><strong className="block text-[1.1rem] text-dashboard-text">{battery.soc}</strong><span className="text-xs text-dashboard-green">{battery.status} · {battery.power} kW</span></div>
+      </div>
+    </section>
+  )
+}
+
+function BatteryOutlookCard({ optimizer }: { optimizer: BatteryOptimizerState }) {
+  const snapshot = optimizer.snapshot
+  if (!snapshot) return <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
+  const { charts, status } = snapshot
+  return (
+    <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
+      <div className="flex items-center justify-between gap-3"><div><h2 className="text-base font-semibold text-white">Optimization outlook</h2><p className="mt-1 text-sm text-dashboard-soft">Battery target and predicted state of charge</p></div><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
+      <div className="mt-3 grid grid-cols-3 gap-2 border-b border-white/10 pb-3">
+        <MiniRead label="Strategy" value={getOptimizerModeLabel(status.mode)} />
+        <MiniRead label="Target SoC" value={`${Math.round(snapshot.planRows[0]?.targetSocPercent ?? status.socPercent)}%`} />
+        <MiniRead label="Recommendation" value={status.recommendation} />
+      </div>
+      <LineChart className="insight-line-chart mt-3 h-[178px]" color="#60ea5d" label="Battery state of charge forecast" labels={charts.socForecast.labels} points={charts.socForecast.points} unit="%" />
+    </section>
+  )
+}
+
+function BatteryActionsCard({ nextAction, optimizer, onOpenDetails }: { nextAction: import('../../../models/batteryOptimizer').BatteryOptimizerPlanRow | undefined; optimizer: BatteryOptimizerState; onOpenDetails: () => void }) {
+  const status = optimizer.snapshot?.status
+  return (
+    <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
+      <h2 className="text-base font-semibold text-white">Optimizer actions</h2>
+      <div className="mt-3 grid divide-y divide-white/10 rounded-[14px] border border-white/8 bg-[#0a111b]/70 px-3">
+        <ActionRead label="Current action" value={status?.recommendation ?? 'Waiting'} />
+        <ActionRead label="Next action" value={nextAction ? `${nextAction.action} · ${formatOptimizerHourRange(nextAction)}` : 'No plan yet'} />
+        <ActionRead label="Buy price" value={formatOptimizerPrice(status?.fullBuyPriceDkkPerKwh)} />
+        <ActionRead label="Export payout" value={formatOptimizerPrice(status?.sellPriceDkkPerKwh)} />
+        <ActionRead label="Updated" value={formatOptimizerUpdatedAt(status?.updatedAt)} />
+      </div>
+      <button className="mt-3 w-full rounded-xl border border-dashboard-blue/35 bg-dashboard-blue/10 px-3 py-2.5 text-sm font-semibold text-dashboard-text transition hover:bg-dashboard-blue/20" type="button" onClick={onOpenDetails}>View full plan</button>
+    </section>
+  )
+}
+
+function EnergySummaryCard({ distribution }: { distribution: { batteryCharge: string; batteryDischarge: string; gridExport: string; gridImport: string } }) {
+  return <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]"><h2 className="text-base font-semibold text-white">Energy summary <span className="ml-1 text-xs font-medium text-dashboard-soft">Today</span></h2><div className="mt-3 grid gap-2"><ActionRead label="Charged" value={`${distribution.batteryCharge} kWh`} /><ActionRead label="Discharged" value={`${distribution.batteryDischarge} kWh`} /><ActionRead label="Import from grid" value={`${distribution.gridImport} kWh`} /><ActionRead label="Export to grid" value={`${distribution.gridExport} kWh`} /></div></section>
+}
+
+function PriceDecisionCard({ optimizer }: { optimizer: BatteryOptimizerState }) {
+  const charts = optimizer.snapshot?.charts
+  return <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]"><div className="flex items-center justify-between"><h2 className="text-base font-semibold text-white">Price optimization</h2><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>{charts ? <BarChart className="insight-bar-chart insight-bar-chart--prices mt-4 h-[135px]" label="Buy price forecast" labels={charts.priceCurve.labels} unit="DKK/kWh" values={charts.priceCurve.points} /> : <p className="mt-8 text-sm text-dashboard-soft">Waiting for price data.</p>}</section>
+}
+
+function BatteryHistoryMiniCard({ history, status }: { history: { labels: string[]; points: number[] }; status: string | undefined }) {
+  return <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]"><div className="flex items-center justify-between"><h2 className="text-base font-semibold text-white">Battery history</h2><span className="text-xs text-dashboard-soft">24 hours</span></div><LineChart className="insight-line-chart mt-3 h-[135px]" color="#60ea5d" label="Battery state of charge history" labels={history.labels} points={history.points} unit="%" />{status ? <span className="mt-2 block text-xs text-dashboard-soft">Current optimizer recommendation: <strong className="text-dashboard-text">{status}</strong></span> : null}</section>
+}
+
+function FlowRead({ label, meta, tone, value }: { label: string; meta?: string; tone: 'blue' | 'muted' | 'purple' | 'sun'; value: string }) { return <div className="rounded-[13px] border border-white/8 bg-white/[0.025] px-2.5 py-2"><span className={cn('text-xs', tone === 'sun' ? 'text-dashboard-orange' : tone === 'purple' ? 'text-dashboard-purple' : tone === 'blue' ? 'text-dashboard-blue' : 'text-dashboard-soft')}>{label}</span><strong className="mt-1 block text-sm text-white">{value}</strong>{meta ? <span className="mt-1 block truncate text-[10px] text-dashboard-soft">{meta}</span> : null}</div> }
+function MiniRead({ label, value }: { label: string; value: string }) { return <div><span className="block text-[10px] uppercase tracking-[0.1em] text-dashboard-muted">{label}</span><strong className="mt-1 block truncate text-sm text-dashboard-text">{value}</strong></div> }
+function ActionRead({ label, value }: { label: string; value: string }) { return <div className="flex items-center justify-between gap-3 py-2"><span className="text-xs text-dashboard-soft">{label}</span><strong className="max-w-[62%] text-right text-sm font-semibold text-dashboard-text">{value}</strong></div> }
 
 function BatterySummaryCards({
   battery,
