@@ -18,7 +18,7 @@ import {
   EvChargerOverviewCard,
   SolarForecastCard,
   SolarProductionPanel,
-  VehiclePanel,
+  MarketRatesPanel,
 } from './DesktopPanels'
 import { OverviewIcon, StatusPill } from './DesktopShared'
 
@@ -278,7 +278,7 @@ export function DesktopDashboard({
                 socValue={battery.socValue}
                 status={battery.status}
               />
-              <VehiclePanel battery={charger.battery} range={charger.range} />
+              <MarketRatesPanel optimizer={batteryOptimizer} />
             </aside>
           </>
         ) : activeTab === 'battery' ? (

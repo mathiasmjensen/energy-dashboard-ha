@@ -1,10 +1,12 @@
 import { assetPath } from '../../../utils/assetPath'
+import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
 import type { DataStateBadgeModel } from '../../../models/dataState'
 import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../models/dashboardInsights'
 import { cn } from '../../../lib/cn'
 import { BarChart, DataStateBadge, DayWindowControls, type DayHeaderControls, InsightToolbar, Panel, PanelHeader } from './DesktopShared'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/batteryMetrics'
 import { BatteryVisual } from '../../shared/BatteryVisual'
+import { formatOptimizerPrice } from '../../../services/batteryOptimizerFormatting'
 
 export function EnergyDistributionPanel({
   battery,
@@ -201,24 +203,58 @@ export function BatteryStatusPanel({
   )
 }
 
-export function VehiclePanel({ battery, range }: { battery: string; range: string }) {
+export function MarketRatesPanel({ optimizer }: { optimizer: BatteryOptimizerState }) {
+  const rows = optimizer.snapshot?.planRows.slice(0, 24) ?? []
+  const status = optimizer.snapshot?.status
+  const buyNow = status?.fullBuyPriceDkkPerKwh ?? rows[0]?.fullBuyPriceDkkPerKwh
+  const exportNow = status?.sellPriceDkkPerKwh ?? rows[0]?.sellPriceDkkPerKwh
+  const maxRate = Math.max(0.1, ...rows.flatMap((row) => [row.fullBuyPriceDkkPerKwh, row.sellPriceDkkPerKwh]))
+
   return (
-    <Panel className="h-[162px] px-4 py-[17px]">
-      <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Vehicle</h2>
-      <img
-        className="absolute left-[130px] top-[22px] h-[112px] w-[238px] object-contain"
-        src={assetPath('/new-energy-dashboard/car.png')}
-        alt="Electric vehicle"
-      />
-      <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-[5px]">
-        <span className="text-[11px] text-dashboard-soft">Status</span>
-        <span className="text-[11px] text-dashboard-soft">Battery</span>
-        <span className="text-[11px] text-dashboard-soft">Range</span>
-        <strong className="text-[12px] text-white">Parked</strong>
-        <strong className="text-[12px] text-white">{battery}</strong>
-        <strong className="text-[12px] text-white">{range}</strong>
+    <Panel className="h-[162px] px-4 py-[15px]" aria-label="Buy and export energy prices">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Energy market</h2>
+        <span className="rounded-full border border-white/10 bg-white/[0.035] px-2.5 py-1 text-[10px] font-semibold text-dashboard-soft">Next 24h</span>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
+        <MarketRate label="Buy now" tone="buy" value={formatOptimizerPrice(buyNow)} />
+        <MarketRate label="Export now" tone="export" value={formatOptimizerPrice(exportNow)} />
+      </div>
+
+      <div className="mt-3 flex h-[50px] items-end gap-[3px] rounded-[12px] border border-white/[0.06] bg-[#09101a]/72 px-2 pb-2 pt-1.5">
+        {rows.length ? (
+          rows.map((row, index) => {
+            const buyHeight = Math.max(3, Math.round((row.fullBuyPriceDkkPerKwh / maxRate) * 38))
+            const exportHeight = Math.max(2, Math.round((row.sellPriceDkkPerKwh / maxRate) * 38))
+            return (
+              <div className="group relative flex h-full min-w-0 flex-1 items-end justify-center gap-px" key={row.startIso}>
+                <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-blue/80 transition group-hover:bg-dashboard-blue" style={{ height: `${buyHeight}px` }} />
+                <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-green/80 transition group-hover:bg-dashboard-green" style={{ height: `${exportHeight}px` }} />
+                <span className="pointer-events-none absolute -top-8 z-10 hidden whitespace-nowrap rounded-md border border-white/10 bg-[#0b111d] px-2 py-1 text-[10px] text-white shadow-xl group-hover:block">
+                  {new Date(row.startIso).toLocaleTimeString([], { hour: '2-digit', hour12: false })}: buy {formatOptimizerPrice(row.fullBuyPriceDkkPerKwh).replace(' DKK/kWh', '')}, export {formatOptimizerPrice(row.sellPriceDkkPerKwh).replace(' DKK/kWh', '')}
+                </span>
+                {index === 0 ? <span className="sr-only">Current price hour</span> : null}
+              </div>
+            )
+          })
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[11px] text-dashboard-soft">Waiting for Predbat price data</div>
+        )}
       </div>
     </Panel>
+  )
+}
+
+function MarketRate({ label, tone, value }: { label: string; tone: 'buy' | 'export'; value: string }) {
+  return (
+    <div className="min-w-0 rounded-[12px] border border-white/[0.07] bg-white/[0.025] px-2.5 py-2">
+      <span className="flex items-center gap-1.5 text-[10px] text-dashboard-soft">
+        <span className={cn('h-1.5 w-1.5 rounded-full', tone === 'buy' ? 'bg-dashboard-blue' : 'bg-dashboard-green')} />
+        {label}
+      </span>
+      <strong className="mt-1 block truncate text-[12px] font-semibold text-white">{value}</strong>
+    </div>
   )
 }
 
