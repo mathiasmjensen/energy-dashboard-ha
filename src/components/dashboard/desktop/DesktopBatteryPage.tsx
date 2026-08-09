@@ -78,7 +78,7 @@ export function DesktopBatteryPage({
       className="absolute inset-0 overflow-y-auto overscroll-contain bg-[radial-gradient(circle_at_50%_0%,rgba(27,47,68,0.22),transparent_35%),#080d14] px-5 pb-8 pt-5 [scrollbar-gutter:stable]"
       aria-label="Battery details"
     >
-      <header className="relative flex h-[82px] w-full items-start justify-between">
+      <header className="relative flex h-[89px] w-full items-start justify-between">
         <div>
           <h1 className="m-0 text-[24px] leading-[1.1] text-white">Battery</h1>
           <p className="mt-[7px] text-[15px] text-[#d7dbe1]">
