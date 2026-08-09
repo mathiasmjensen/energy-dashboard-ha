@@ -104,7 +104,7 @@ export function BatteryPlannerDashboard({
   const targetSoc = snapshot?.planRows[0]?.targetSocPercent ?? status?.socPercent
 
   return (
-    <section className="mx-auto grid w-full max-w-[1530px] gap-4 pb-5">
+    <section className="grid w-full gap-4 pb-5">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
         <BatteryHeroMetric compact label="State of charge" meta={battery.energy ? `${battery.energy} kWh stored` : undefined} tone="green" value={battery.soc}>
           <BatteryVisual level={battery.socValue} />
@@ -117,15 +117,16 @@ export function BatteryPlannerDashboard({
         <BatteryHeroMetric compact label="Export payout" meta="After export costs" tone="green" value={shortPrice(status?.sellPriceDkkPerKwh)} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(300px,0.9fr)_minmax(440px,1.25fr)_minmax(300px,0.9fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(340px,0.9fr)_minmax(500px,1.45fr)_minmax(300px,0.72fr)]">
         <BatteryFlowCard battery={battery} flow={flow} />
         <BatteryOutlookCard optimizer={optimizer} />
         <BatteryActionsCard nextAction={nextAction} optimizer={optimizer} onOpenDetails={onOpenDetails} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(250px,0.85fr)_minmax(340px,1.15fr)_minmax(340px,1.15fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(240px,0.76fr)_minmax(310px,1fr)_minmax(280px,0.92fr)_minmax(390px,1.32fr)]">
         <EnergySummaryCard distribution={distribution} />
         <PriceDecisionCard optimizer={optimizer} />
+        <BatteryUsageCard distribution={distribution} />
         {history.points.length ? <BatteryHistoryMiniCard history={history} status={status?.recommendation} /> : <BatteryEconomicsCard optimizer={optimizer} />}
       </div>
       {status?.updatedAt ? <p className="px-1 text-[11px] text-dashboard-muted">Last optimized {formatOptimizerUpdatedAt(status.updatedAt)}. Decisions use the current price feed, solar forecast, and battery target.</p> : null}
@@ -260,7 +261,7 @@ function BatteryOutlookCard({ optimizer }: { optimizer: BatteryOptimizerState })
       </div>
       <div className="relative mt-3 border-b border-white/10 pb-2">
         {schedulePoints.length > 1 ? (
-          <><LineChart className="insight-line-chart h-[163px]" color="#60ea5d" label="Battery state of charge forecast" labels={scheduleLabels} points={schedulePoints} unit="%" /><span className="absolute left-0 right-0 top-[36%] border-t border-dashed border-dashboard-green/45" /><span className="absolute right-1 top-[27%] rounded bg-[#102420] px-1.5 py-0.5 text-[9px] font-semibold text-dashboard-green">TARGET</span></>
+          <><div className="h-[163px]"><LineChart className="insight-line-chart" color="#60ea5d" label="Battery state of charge forecast" labels={scheduleLabels} points={schedulePoints} unit="%" /></div><span className="absolute left-0 right-0 top-[36%] border-t border-dashed border-dashboard-green/45" /><span className="absolute right-1 top-[27%] rounded bg-[#102420] px-1.5 py-0.5 text-[9px] font-semibold text-dashboard-green">TARGET</span></>
         ) : (
           <div className="flex h-[163px] items-center justify-center rounded-xl border border-dashed border-white/10 bg-black/10 px-6 text-center text-xs leading-5 text-dashboard-soft">No battery target series has been supplied yet. The next optimization refresh will populate this schedule.</div>
         )}
@@ -296,6 +297,34 @@ function PriceDecisionCard({ optimizer }: { optimizer: BatteryOptimizerState }) 
   return <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]"><div className="flex items-center justify-between"><h2 className="text-base font-semibold text-white">Price optimization</h2><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>{charts ? <BarChart className="insight-bar-chart insight-bar-chart--prices mt-4 h-[135px]" label="Buy price forecast" labels={charts.priceCurve.labels} unit="DKK/kWh" values={charts.priceCurve.points} /> : <p className="mt-8 text-sm text-dashboard-soft">Waiting for price data.</p>}</section>
 }
 
+function BatteryUsageCard({ distribution }: { distribution: { batteryCharge: string; batteryDischarge: string; gridExport: string; gridImport: string } }) {
+  const charged = Math.max(0, Number.parseFloat(distribution.batteryCharge) || 0)
+  const discharged = Math.max(0, Number.parseFloat(distribution.batteryDischarge) || 0)
+  const imported = Math.max(0, Number.parseFloat(distribution.gridImport) || 0)
+  const exported = Math.max(0, Number.parseFloat(distribution.gridExport) || 0)
+  const total = charged + discharged + imported + exported
+  const chargeShare = total ? Math.round((charged / total) * 100) : 0
+  const dischargeShare = total ? Math.round((discharged / total) * 100) : 0
+  const importShare = total ? Math.round((imported / total) * 100) : 0
+
+  return (
+    <section className="rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#132334,#0c141f)] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
+      <div className="flex items-center justify-between"><h2 className="text-base font-semibold text-white">Battery usage</h2><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
+      <div className="mt-4 flex items-center gap-4">
+        <div className="grid h-[118px] w-[118px] shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(#5ddc78 0 ${chargeShare}%, #ffc229 ${chargeShare}% ${chargeShare + dischargeShare}%, #9a62ef ${chargeShare + dischargeShare}% ${chargeShare + dischargeShare + importShare}%, #aeb7c6 ${chargeShare + dischargeShare + importShare}% 100%)` }}>
+          <div className="grid h-[82px] w-[82px] place-items-center rounded-full bg-[#101a27] text-center"><strong className="text-lg text-white">{(charged + discharged).toFixed(1)}</strong><span className="-mt-3 text-[10px] text-dashboard-soft">kWh cycled</span></div>
+        </div>
+        <div className="grid min-w-0 gap-2 text-[11px]">
+          <UsageRead color="bg-dashboard-green" label="Charged" value={`${charged.toFixed(1)} kWh`} />
+          <UsageRead color="bg-dashboard-orange" label="Discharged" value={`${discharged.toFixed(1)} kWh`} />
+          <UsageRead color="bg-dashboard-purple" label="From grid" value={`${imported.toFixed(1)} kWh`} />
+          <UsageRead color="bg-slate-300" label="Exported" value={`${exported.toFixed(1)} kWh`} />
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function BatteryHistoryMiniCard({ history, status }: { history: { labels: string[]; points: number[] }; status: string | undefined }) {
   return <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]"><div className="flex items-center justify-between"><h2 className="text-base font-semibold text-white">Battery history</h2><span className="text-xs text-dashboard-soft">24 hours</span></div><LineChart className="insight-line-chart mt-3 h-[135px]" color="#60ea5d" label="Battery state of charge history" labels={history.labels} points={history.points} unit="%" />{status ? <span className="mt-2 block text-xs text-dashboard-soft">Current optimizer recommendation: <strong className="text-dashboard-text">{status}</strong></span> : null}</section>
 }
@@ -307,6 +336,7 @@ function BatteryEconomicsCard({ optimizer }: { optimizer: BatteryOptimizerState 
 
 function MetricPulseGlyph({ tone }: { tone: 'blue' | 'green' | 'violet' }) { return <svg className={cn('h-12 w-16', tone === 'green' ? 'text-dashboard-green' : tone === 'violet' ? 'text-dashboard-purple' : 'text-dashboard-blue')} fill="none" viewBox="0 0 64 44"><path d="M2 27h10l5-15 7 25 8-31 7 21h7l4-10 5 10h7" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" /></svg> }
 function EconomicRead({ label, value }: { label: string; value: string }) { return <div className="rounded-[13px] border border-white/8 bg-[#09111b]/72 px-3 py-2.5"><span className="block text-[10px] uppercase tracking-[0.1em] text-dashboard-muted">{label}</span><strong className="mt-1 block text-sm text-white">{value}</strong></div> }
+function UsageRead({ color, label, value }: { color: string; label: string; value: string }) { return <div className="flex min-w-0 items-center gap-2"><i className={cn('h-2 w-2 shrink-0 rounded-full', color)} /><span className="min-w-0 flex-1 truncate text-dashboard-soft">{label}</span><strong className="shrink-0 text-dashboard-text">{value}</strong></div> }
 function FlowRead({ icon, label, meta, tone, value }: { icon: 'car' | 'grid' | 'home' | 'solar'; label: string; meta?: string; tone: 'blue' | 'muted' | 'purple' | 'sun'; value: string }) { return <div className="rounded-[13px] border border-white/10 bg-[#0b121c]/95 px-2.5 py-2.5 shadow-[0_10px_22px_rgba(0,0,0,0.22)]"><span className={cn('flex items-center gap-1.5 text-xs', tone === 'sun' ? 'text-dashboard-orange' : tone === 'purple' ? 'text-dashboard-purple' : tone === 'blue' ? 'text-dashboard-blue' : 'text-dashboard-soft')}><OverviewIcon name={icon} />{label}</span><strong className="mt-1.5 block text-sm text-white">{value}</strong>{meta ? <span className="mt-1 block truncate text-[10px] text-dashboard-soft">{meta}</span> : null}</div> }
 function MiniRead({ label, value }: { label: string; value: string }) { return <div><span className="block text-[10px] uppercase tracking-[0.1em] text-dashboard-muted">{label}</span><strong className="mt-1 block truncate text-sm text-dashboard-text">{value}</strong></div> }
 function ActionRead({ label, value }: { label: string; value: string }) { return <div className="flex items-center justify-between gap-3 py-2"><span className="text-xs text-dashboard-soft">{label}</span><strong className="max-w-[62%] text-right text-sm font-semibold text-dashboard-text">{value}</strong></div> }
