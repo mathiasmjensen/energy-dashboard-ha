@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
 import { cn } from '../../../lib/cn'
 import {
@@ -7,7 +7,7 @@ import {
   OptimizerStateBanner,
 } from '../../battery/BatteryOptimizerSections'
 import { BatteryVisual } from '../../shared/BatteryVisual'
-import { BarChart, LineChart, OverviewIcon } from './DesktopShared'
+import { LineChart, OverviewIcon } from './DesktopShared'
 import {
   formatOptimizerHourRange,
   formatOptimizerPrice,
@@ -261,7 +261,7 @@ function BatteryOutlookCard({ optimizer }: { optimizer: BatteryOptimizerState })
       </div>
       <div className="relative mt-3 border-b border-white/10 pb-2">
         {schedulePoints.length > 1 ? (
-          <><div className="h-[163px]"><LineChart className="insight-line-chart" color="#60ea5d" label="Battery state of charge forecast" labels={scheduleLabels} points={schedulePoints} unit="%" /></div><span className="absolute left-0 right-0 top-[36%] border-t border-dashed border-dashboard-green/45" /><span className="absolute right-1 top-[27%] rounded bg-[#102420] px-1.5 py-0.5 text-[9px] font-semibold text-dashboard-green">TARGET</span></>
+          <BatteryScheduleChart labels={scheduleLabels} points={schedulePoints} target={Math.round(snapshot.planRows[0]?.targetSocPercent ?? status.socPercent)} />
         ) : (
           <div className="flex h-[163px] items-center justify-center rounded-xl border border-dashed border-white/10 bg-black/10 px-6 text-center text-xs leading-5 text-dashboard-soft">No battery target series has been supplied yet. The next optimization refresh will populate this schedule.</div>
         )}
@@ -293,9 +293,51 @@ function EnergySummaryCard({ distribution }: { distribution: { batteryCharge: st
 }
 
 function PriceDecisionCard({ optimizer }: { optimizer: BatteryOptimizerState }) {
-  const charts = optimizer.snapshot?.charts
-  return <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]"><div className="flex items-center justify-between"><h2 className="text-base font-semibold text-white">Price optimization</h2><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>{charts ? <BarChart className="insight-bar-chart insight-bar-chart--prices mt-4 h-[135px]" label="Buy price forecast" labels={charts.priceCurve.labels} unit="DKK/kWh" values={charts.priceCurve.points} /> : <p className="mt-8 text-sm text-dashboard-soft">Waiting for price data.</p>}</section>
+  const snapshot = optimizer.snapshot
+  const status = snapshot?.status
+  const summary = snapshot?.decisionSummary
+  const bestBuy = describeWindow(summary?.bestBuyHours)
+  const bestSell = describeWindow(summary?.bestSellHours)
+
+  return (
+    <section className="rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#132334,#0b141e)] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
+      <div className="flex items-center justify-between"><h2 className="text-base font-semibold text-white">Price optimization</h2><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <PriceWindow accent="purple" icon="zap" label="Best charge window" price={formatOptimizerPrice(status?.fullBuyPriceDkkPerKwh)} time={bestBuy} />
+        <PriceWindow accent="sun" icon="sun" label="Best discharge window" price={formatOptimizerPrice(status?.sellPriceDkkPerKwh)} time={bestSell} />
+      </div>
+      <div className="mt-3 flex items-center justify-between rounded-[12px] border border-white/8 bg-[#0a121c]/82 px-3 py-2.5">
+        <div><span className="block text-[10px] text-dashboard-soft">Today&apos;s potential</span><strong className="mt-1 block text-sm text-dashboard-green">{status ? `+${status.estimatedProfitTodayDkk.toFixed(2)} DKK` : '---'}</strong></div>
+        <MiniTrend />
+      </div>
+    </section>
+  )
 }
+
+function BatteryScheduleChart({ labels, points, target }: { labels: string[]; points: number[]; target: number }) {
+  const ticks = labels.length > 1
+    ? [0, Math.round((labels.length - 1) * 0.2), Math.round((labels.length - 1) * 0.4), Math.round((labels.length - 1) * 0.6), Math.round((labels.length - 1) * 0.8), labels.length - 1]
+    : []
+
+  return (
+    <div className="relative h-[170px] pb-5 pl-9 pt-1">
+      <div className="absolute bottom-5 left-0 top-1 flex flex-col justify-between text-[10px] text-dashboard-soft"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div>
+      <div className="absolute bottom-5 left-9 right-0 top-1 border-y border-white/[0.06] bg-[repeating-linear-gradient(0deg,transparent_0,transparent_25%,rgba(255,255,255,0.045)_25%,rgba(255,255,255,0.045)_25.8%)]">
+        <LineChart className="insight-line-chart" color="#60ea5d" label="Battery state of charge forecast" labels={labels} points={points} unit="%" />
+        <span className="absolute left-0 right-0 top-[calc(100%-var(--target))] border-t border-dashed border-dashboard-green/55" style={{ '--target': `${Math.max(8, Math.min(92, target))}%` } as CSSProperties} />
+        <span className="absolute bottom-0 top-0 left-1/2 border-l border-white/75"><i className="absolute -top-4 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold not-italic text-white">Now</i></span>
+      </div>
+      <div className="absolute bottom-0 left-9 right-0 flex justify-between text-[10px] text-dashboard-soft">{ticks.map((index) => <span key={`${labels[index]}-${index}`}>{labels[index]}</span>)}</div>
+    </div>
+  )
+}
+
+function PriceWindow({ accent, icon, label, price, time }: { accent: 'purple' | 'sun'; icon: 'sun' | 'zap'; label: string; price: string; time: string }) {
+  return <div className="rounded-[12px] border border-white/8 bg-[#0a121c]/82 px-2.5 py-2.5"><div className={cn('flex items-center gap-1.5 text-[9px] leading-none', accent === 'purple' ? 'text-dashboard-purple' : 'text-dashboard-orange')}><OverviewIcon name={icon} />{label}</div><strong className="mt-2 block text-[13px] text-white">{time}</strong><span className="mt-1 block text-[10px] text-dashboard-soft">Avg. price</span><span className="mt-0.5 block text-[10px] font-semibold text-dashboard-text">{price}</span></div>
+}
+
+function MiniTrend() { return <svg className="h-8 w-24 text-dashboard-green" fill="none" viewBox="0 0 96 32" aria-hidden="true"><path d="M1 24h10l5-7 6 4 8-13 7 8 6-3 7 8 7-12 7 5 7-7 8 9 7-3 8 8" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg> }
+function describeWindow(hours: string[] | undefined) { if (!hours?.length) return 'No window'; return hours.length === 1 ? hours[0] : `${hours[0]} - ${hours[hours.length - 1]}` }
 
 function BatteryUsageCard({ distribution }: { distribution: { batteryCharge: string; batteryDischarge: string; gridExport: string; gridImport: string } }) {
   const charged = Math.max(0, Number.parseFloat(distribution.batteryCharge) || 0)
