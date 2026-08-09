@@ -52,6 +52,15 @@ test.describe('energy dashboard', () => {
     await expect(page.locator('body')).not.toContainText('unavailable')
   })
 
+  test('keeps the full dashboard workspace on iPad-sized screens', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 768 })
+    await page.goto('/')
+
+    await expect(page.locator('[aria-label="Home energy overview"]')).toBeVisible()
+    await expect(page.getByRole('navigation', { name: 'Dashboard sections' })).toBeVisible()
+    await expect(page.locator('.mobile-dashboard')).toHaveCount(0)
+  })
+
   test('lets desktop energy distribution and solar production step back to previous days together', async ({ page }) => {
     await page.setViewportSize({ width: 1672, height: 941 })
     await page.goto('/')
@@ -156,18 +165,20 @@ test.describe('energy dashboard', () => {
     await expect(page.locator('.ev-price-bar').first()).toHaveAttribute('title', desktopFirstPriceTitle ?? '')
   })
 
-  test('renders the mobile home tab with four-tab navigation', async ({ page }) => {
+  test('renders the mobile home tab with dashboard navigation', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/')
 
-    await expect(page.locator('.mobile-dashboard')).toBeVisible()
+    await expect(page.getByTestId('mobile-dashboard')).toBeVisible()
     await expect(page.locator('.mobile-status-bar')).toHaveCount(0)
     await expect(page.locator('.mobile-top-bar')).toHaveCount(0)
-    await expect(page.locator('.mobile-home-hero-card img')).toBeVisible()
-    await expect(page.locator('.mobile-bottom-nav__item')).toHaveCount(4)
+    await expect(page.getByAltText('Luxury home with solar roof, battery, EV charger, and Tesla')).toBeVisible()
+    await expect(page.locator('.mobile-bottom-nav__item')).toHaveCount(5)
     await expect(page.locator('.mobile-bottom-nav')).not.toContainText('More')
+    await expect(page.getByRole('button', { name: 'Alerts' })).toBeVisible()
     await expectFixedMobileNav(page)
-    await expect(page.locator('.mobile-home-metric')).toHaveCount(5)
+    await expect(page.getByText('Solar output')).toBeVisible()
+    await expect(page.getByText('Grid flow')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Solar forecast' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Energy prices' })).toBeVisible()
   })

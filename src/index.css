@@ -65,7 +65,7 @@
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 767px) {
   html,
   body,
   #root {
