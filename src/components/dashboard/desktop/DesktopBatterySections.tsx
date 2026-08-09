@@ -106,10 +106,10 @@ export function BatteryPlannerDashboard({
   return (
     <section className="grid w-full gap-4 pb-5">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
-        <BatteryHeroMetric compact label="State of charge" meta={battery.energy ? `${battery.energy} kWh stored` : undefined} tone="green" value={battery.soc}>
+        <BatteryHeroMetric compact label="State of charge" meta={battery.energy ? `${battery.energy} kWh stored` : undefined} progress={battery.socValue} tone="green" value={battery.soc}>
           <BatteryVisual className="!h-[78px] !w-[46px]" level={battery.socValue} />
         </BatteryHeroMetric>
-        <BatteryHeroMetric compact label="Battery power" meta={battery.status} tone={battery.status === 'Discharging' ? 'violet' : 'green'} value={`${battery.power} kW`} />
+        <BatteryHeroMetric compact label="Battery power" meta={battery.status} tone="green" value={`${battery.power} kW`} />
         <BatteryHeroMetric compact label="Stored energy" meta={battery.capacity ? `Usable ${battery.capacity} kWh` : undefined} tone="blue" value={`${battery.energy} kWh`} />
         <BatteryHeroMetric compact label="Next action" meta={nextAction ? formatOptimizerHourRange(nextAction) : 'No plan window'} tone="violet" value={nextAction?.action ?? 'HOLD'} />
         <BatteryHeroMetric compact label="Battery target" meta="Next planned target" tone="green" value={targetSoc === undefined ? '---' : `${Math.round(targetSoc)}%`} />
@@ -191,7 +191,7 @@ export function BatteryDetailsWorkspace({
   )
 }
 
-function BatteryHeroMetric({ children, compact = false, label, meta, tone, value }: { children?: ReactNode; compact?: boolean; label: string; meta?: string; tone: 'blue' | 'green' | 'violet'; value: string }) {
+function BatteryHeroMetric({ children, compact = false, label, meta, progress, tone, value }: { children?: ReactNode; compact?: boolean; label: string; meta?: string; progress?: number; tone: 'blue' | 'green' | 'violet'; value: string }) {
   return (
     <section className={cn('relative h-[128px] min-h-0 overflow-hidden rounded-[16px] border bg-[linear-gradient(145deg,rgba(24,35,49,0.96),rgba(11,17,27,0.98))] p-4 shadow-[0_16px_38px_rgba(0,0,0,0.28)]', tone === 'green' ? 'border-dashboard-green/30' : tone === 'violet' ? 'border-dashboard-purple/30' : 'border-dashboard-blue/30')}>
       <span className={cn('absolute left-0 top-0 h-[2px] w-2/3', tone === 'green' ? 'bg-dashboard-green/70' : tone === 'violet' ? 'bg-dashboard-purple/70' : 'bg-dashboard-blue/70')} />
@@ -203,6 +203,7 @@ function BatteryHeroMetric({ children, compact = false, label, meta, tone, value
         </div>
         <div className="shrink-0 opacity-90">{children ?? <MetricPulseGlyph tone={tone} />}</div>
       </div>
+      {progress !== undefined ? <span className="absolute bottom-3 left-4 right-4 h-2 overflow-hidden rounded-full bg-white/10"><i className="block h-full rounded-full bg-[linear-gradient(90deg,#54e778,#26bd62)]" style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} /></span> : null}
     </section>
   )
 }
@@ -273,15 +274,19 @@ function BatteryOutlookCard({ optimizer }: { optimizer: BatteryOptimizerState })
 
 function BatteryActionsCard({ nextAction, optimizer, onOpenDetails }: { nextAction: import('../../../models/batteryOptimizer').BatteryOptimizerPlanRow | undefined; optimizer: BatteryOptimizerState; onOpenDetails: () => void }) {
   const status = optimizer.snapshot?.status
+  const summary = optimizer.snapshot?.decisionSummary
+  const target = optimizer.snapshot?.planRows[0]?.targetSocPercent ?? status?.socPercent
+  const reason = summary?.reserveForHouseUsage?.toLowerCase().includes('reserv') ? 'Reserve house energy' : 'Current price and forecast'
   return (
     <section className="min-h-[379px] rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#152131,#0c141f)] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
       <div className="flex items-center justify-between gap-2"><h2 className="text-base font-semibold text-white">Optimization actions</h2><span className="rounded-full border border-dashboard-blue/25 bg-dashboard-blue/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-blue">AUTO</span></div>
       <div className="mt-3 grid divide-y divide-white/10 rounded-[14px] border border-white/8 bg-[#0a111b]/70 px-3">
         <ActionRead label="Current action" value={status?.recommendation ?? 'Waiting'} />
         <ActionRead label="Next action" value={nextAction ? `${nextAction.action} · ${formatOptimizerHourRange(nextAction)}` : 'No plan yet'} />
-        <ActionRead label="Buy price" value={formatOptimizerPrice(status?.fullBuyPriceDkkPerKwh)} />
-        <ActionRead label="Export payout" value={formatOptimizerPrice(status?.sellPriceDkkPerKwh)} />
-        <ActionRead label="Updated" value={formatOptimizerUpdatedAt(status?.updatedAt)} />
+        <ActionRead label="Reason" value={reason} />
+        <ActionRead label="Battery target" value={target === undefined ? '---' : `${Math.round(target)}%`} />
+        <ActionRead label="Best charge window" value={describeWindow(summary?.bestBuyHours)} />
+        <ActionRead label="Best export window" value={describeWindow(summary?.bestSellHours)} />
       </div>
       <button className="mt-4 w-full rounded-xl border border-dashboard-green/35 bg-dashboard-green/15 px-3 py-3 text-sm font-semibold text-dashboard-green transition hover:bg-dashboard-green/25" type="button" onClick={onOpenDetails}>View full optimization</button>
     </section>
