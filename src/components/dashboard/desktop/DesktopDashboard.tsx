@@ -143,12 +143,14 @@ export function DesktopDashboard({
   const [activeTab, setActiveTab] = useState<DesktopTab>('overview')
   const openBatteryPage = () => setActiveTab('battery')
 
+  const usesFixedOverviewCanvas = activeTab === 'overview'
+
   return (
-    <main className="relative grid place-items-center overflow-hidden" style={shellStyle}>
-      <div className="absolute left-1/2 top-1/2 h-[941px] w-[1672px] -translate-x-1/2 -translate-y-1/2 overflow-hidden">
+    <main className={usesFixedOverviewCanvas ? 'relative grid place-items-center overflow-hidden' : 'relative h-screen w-screen overflow-hidden'} style={usesFixedOverviewCanvas ? shellStyle : undefined}>
+      <div className={usesFixedOverviewCanvas ? 'absolute left-1/2 top-1/2 h-[941px] w-[1672px] -translate-x-1/2 -translate-y-1/2 overflow-hidden' : 'absolute inset-0 overflow-hidden'}>
         <div
-          className="relative h-[941px] w-[1672px] overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)] font-sans tracking-[0] text-dashboard-text"
-          style={sceneStyle}
+          className={usesFixedOverviewCanvas ? 'relative h-[941px] w-[1672px] overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)] font-sans tracking-[0] text-dashboard-text' : 'relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)] font-sans tracking-[0] text-dashboard-text'}
+          style={usesFixedOverviewCanvas ? sceneStyle : undefined}
         >
         <aside
           className={`overview-sidebar absolute inset-y-0 left-0 w-[236px] border-r border-white/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_34%),rgba(12,17,23,0.86)] px-3 pb-[30px] pt-[34px] ${activeTab === 'overview' || activeTab === 'notifications' ? '' : 'hidden'}`}
