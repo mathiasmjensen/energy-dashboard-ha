@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
-import { cn } from '../../../lib/cn'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/batteryMetrics'
 import { BatteryDetailsWorkspace, BatteryPlannerDashboard } from './DesktopBatterySections'
-import { OverviewIcon, StatusPill } from './DesktopShared'
-import type { IconName } from './DesktopShared'
+import { StatusPill } from './DesktopShared'
+import { DesktopTopNavigation } from './DesktopTopNavigation'
 
 type BatterySection = 'Dashboard' | 'Details'
 type BatteryHistoryPeriod = '24h' | '7d' | '30d' | '90d'
@@ -20,6 +19,7 @@ export function DesktopBatteryPage({
   distribution,
   onGoOverview,
   onOpenEvCharger,
+  onOpenNotifications,
   onOpenSettings,
 }: {
   battery: {
@@ -61,6 +61,7 @@ export function DesktopBatteryPage({
   }
   onGoOverview: () => void
   onOpenEvCharger: () => void
+  onOpenNotifications: () => void
   onOpenSettings: () => void
 }) {
   const [period, setPeriod] = useState<BatteryHistoryPeriod>('24h')
@@ -87,13 +88,7 @@ export function DesktopBatteryPage({
               : 'Detailed overview of your battery system and optimization'}
           </p>
         </div>
-        <nav className="absolute left-1/2 top-0 flex h-[58px] -translate-x-1/2 items-center rounded-[18px] border border-white/10 bg-[#090e16]/88 p-1 shadow-[0_16px_42px_rgba(0,0,0,0.28)] backdrop-blur-xl" aria-label="Dashboard sections">
-          <BatteryPageMenuItem icon="home" label="Overview" onClick={onGoOverview} />
-          <BatteryPageMenuItem icon="solar" label="Solar" onClick={onGoOverview} />
-          <BatteryPageMenuItem active icon="battery" label="Battery" onClick={() => setBatterySection('Dashboard')} />
-          <BatteryPageMenuItem icon="car" label="EV Charger" onClick={onOpenEvCharger} />
-          <BatteryPageMenuItem icon="settings" label="Settings" onClick={onOpenSettings} />
-        </nav>
+        <DesktopTopNavigation active="battery" onOpenEvCharger={onOpenEvCharger} onSelect={(page) => page === 'settings' ? onOpenSettings() : page === 'notifications' ? onOpenNotifications() : page === 'overview' ? onGoOverview() : setBatterySection('Dashboard')} />
         <div className="absolute right-0 top-[7px] z-[3] grid grid-cols-[104px_126px_126px] gap-4">
           <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
           <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />
@@ -128,21 +123,5 @@ export function DesktopBatteryPage({
         )}
       </div>
     </section>
-  )
-}
-
-function BatteryPageMenuItem({ active = false, icon, label, onClick }: { active?: boolean; icon: IconName; label: string; onClick: () => void }) {
-  return (
-    <button
-      className={cn(
-        'flex h-full min-w-[92px] flex-col items-center justify-center gap-0.5 rounded-[13px] px-3 text-[11px] font-semibold transition',
-        active ? 'bg-dashboard-green/15 text-dashboard-green shadow-[inset_0_0_0_1px_rgba(96,234,93,0.35)]' : 'text-dashboard-soft hover:bg-white/[0.06] hover:text-white',
-      )}
-      type="button"
-      onClick={onClick}
-    >
-      <OverviewIcon name={icon} />
-      {label}
-    </button>
   )
 }

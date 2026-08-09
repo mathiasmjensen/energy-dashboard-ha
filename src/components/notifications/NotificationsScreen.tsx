@@ -1,6 +1,7 @@
 import { cn } from '../../lib/cn'
 import type { NotificationPreferences, NotificationsState } from '../../models/notifications'
 import { DataStateBadge, OverviewIcon, Panel, StatusPill } from '../dashboard/desktop/DesktopShared'
+import { DesktopTopNavigation } from '../dashboard/desktop/DesktopTopNavigation'
 import { GlassCard, MobileDataStateBadge, MobileIcon, SectionHeading, StatusChip } from '../mobile/MobilePrimitives'
 
 type NotificationController = Pick<ReturnType<typeof import('../../hooks/useNotifications').useNotifications>, 'disable' | 'enable' | 'refresh'>
@@ -20,6 +21,10 @@ export function DesktopNotificationsPage({
   preferences,
   setPreference,
   weather,
+  onGoBattery,
+  onGoOverview,
+  onOpenEvCharger,
+  onOpenSettings,
 }: {
   controller: NotificationController
   displayDate: string
@@ -31,25 +36,30 @@ export function DesktopNotificationsPage({
     condition: string
     temperature: string
   }
+  onGoBattery: () => void
+  onGoOverview: () => void
+  onOpenEvCharger: () => void
+  onOpenSettings: () => void
 }) {
   return (
     <section
-      className="absolute left-[236px] right-0 top-0 h-[941px] overflow-hidden px-8 pb-6 pr-7 pt-6"
+      className="absolute inset-0 overflow-y-auto overscroll-contain px-6 pb-8 pt-5 [scrollbar-gutter:stable]"
       aria-label="Notifications"
     >
-      <header className="flex h-[70px] items-start justify-between">
+      <header className="relative flex h-[89px] items-start justify-between">
         <div>
           <h1 className="m-0 text-[24px] leading-[1.1] text-white">Notifications</h1>
           <p className="mt-[7px] text-[15px] text-[#d7dbe1]">Push alerts, delivery status, and recent dashboard activity.</p>
         </div>
-        <div className="fixed left-[1196px] top-[31px] z-[3] grid grid-cols-[126px_146px_142px] gap-6">
+        <DesktopTopNavigation active="notifications" onOpenEvCharger={onOpenEvCharger} onSelect={(page) => page === 'battery' ? onGoBattery() : page === 'settings' ? onOpenSettings() : page === 'overview' ? onGoOverview() : undefined} />
+        <div className="absolute right-0 top-[7px] z-[3] grid grid-cols-[104px_126px_126px] gap-4">
           <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
           <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />
           <StatusPill primary="All systems" secondary="Normal" tone="ok" />
         </div>
       </header>
 
-      <div className="grid h-[calc(100%-82px)] min-h-0 grid-cols-[minmax(0,0.9fr)_minmax(320px,0.72fr)] gap-5">
+      <div className="grid min-h-[calc(100%-89px)] grid-cols-[minmax(0,0.9fr)_minmax(320px,0.72fr)] gap-5">
         <section className="grid min-h-0 gap-5">
           <Panel className="p-5">
             <div className="flex items-center justify-between gap-3">

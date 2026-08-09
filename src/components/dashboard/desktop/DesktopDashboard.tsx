@@ -10,6 +10,7 @@ import { EvChargerModal } from '../../EvChargerModal'
 import { DesktopNotificationsPage } from '../../notifications/NotificationsScreen'
 import { DesktopBatteryPage } from './DesktopBatteryPage'
 import { DesktopSettingsPage } from './DesktopSettingsPage'
+import { DesktopTopNavigation } from './DesktopTopNavigation'
 import { EnergyFlowMap, FlowNode } from './DesktopFlow'
 import type { DayHeaderControls } from './DesktopShared'
 import {
@@ -21,16 +22,9 @@ import {
   SolarProductionPanel,
   MarketRatesPanel,
 } from './DesktopPanels'
-import { OverviewIcon, StatusPill } from './DesktopShared'
+import { StatusPill } from './DesktopShared'
 
-const NAV_ITEMS = [
-  { icon: 'home' as const, key: 'overview' as const, label: 'Overview' },
-  { icon: 'battery' as const, key: 'battery' as const, label: 'Battery' },
-  { icon: 'settings' as const, key: 'settings' as const, label: 'Settings' },
-  { icon: 'bell' as const, key: 'notifications' as const, label: 'Notifications' },
-] as const
-
-type DesktopTab = (typeof NAV_ITEMS)[number]['key']
+type DesktopTab = 'battery' | 'notifications' | 'overview' | 'settings'
 
 export type DesktopDashboardProps = {
   battery: {
@@ -152,43 +146,10 @@ export function DesktopDashboard({
           className={usesFixedOverviewCanvas ? 'relative h-[941px] w-[1672px] overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)] font-sans tracking-[0] text-dashboard-text' : 'relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)] font-sans tracking-[0] text-dashboard-text'}
           style={usesFixedOverviewCanvas ? sceneStyle : undefined}
         >
-        <aside
-          className={`overview-sidebar absolute inset-y-0 left-0 w-[236px] border-r border-white/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_34%),rgba(12,17,23,0.86)] px-3 pb-[30px] pt-[34px] ${activeTab === 'overview' || activeTab === 'notifications' ? '' : 'hidden'}`}
-          aria-label="Dashboard navigation"
-        >
-          <div className="flex items-center gap-[13px] px-3 pb-[30px] pt-0.5">
-            <OverviewIcon name="home" />
-            <strong className="text-[24px] font-[780] text-white">Home</strong>
-          </div>
-          <nav className="mt-2.5 grid gap-3">
-            {NAV_ITEMS.map(({ icon, key, label }) => {
-              const active = activeTab === key
-
-              return (
-                <button
-                  key={label}
-                  aria-current={active ? 'page' : undefined}
-                  className={`nav-item grid min-h-[46px] cursor-pointer grid-cols-[32px_1fr] items-center rounded-lg px-[14px] text-left transition ${
-                    active
-                      ? 'bg-[linear-gradient(90deg,rgba(47,134,255,0.3),rgba(47,134,255,0.14))] text-dashboard-blue shadow-[0_12px_30px_rgba(47,134,255,0.15)]'
-                      : 'bg-transparent text-[#eef3f8] hover:bg-white/[0.05] hover:text-white'
-                  }`}
-                  data-active={Boolean(active)}
-                  type="button"
-                  onClick={() => setActiveTab(key)}
-                >
-                  <OverviewIcon name={icon} />
-                  <span className="text-[16px] font-[620]">{label}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </aside>
-
         {activeTab === 'overview' ? (
           <>
             <section
-              className="absolute left-[236px] top-0 h-[941px] w-[936px] px-[28px] pb-3 pr-3 pt-6"
+              className="absolute left-0 top-0 h-[941px] w-[1172px] px-[28px] pb-3 pr-3 pt-6"
               aria-label="Home energy overview"
             >
               <header className="flex h-[70px] items-start justify-between">
@@ -196,6 +157,7 @@ export function DesktopDashboard({
                   <h1 className="m-0 text-[24px] leading-[1.1] text-white">Overview</h1>
                   <p className="mt-[7px] text-[15px] text-[#d7dbe1]">Live overview of your home energy system</p>
                 </div>
+                <DesktopTopNavigation active="overview" onOpenEvCharger={onOpenEvCharger} onSelect={setActiveTab} />
                 <div className="fixed left-[1196px] top-[24px] z-[3] grid grid-cols-[120px_138px_138px] gap-5">
                   <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
                   <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />
@@ -282,7 +244,7 @@ export function DesktopDashboard({
                 socValue={battery.socValue}
                 status={battery.status}
               />
-              <MarketRatesPanel optimizer={batteryOptimizer} />
+              <MarketRatesPanel optimizer={batteryOptimizer} prices={prices} />
             </aside>
           </>
         ) : activeTab === 'battery' ? (
@@ -308,6 +270,7 @@ export function DesktopDashboard({
             }}
             onGoOverview={() => setActiveTab('overview')}
             onOpenEvCharger={onOpenEvCharger}
+            onOpenNotifications={() => setActiveTab('notifications')}
             onOpenSettings={() => setActiveTab('settings')}
             weather={weather}
           />
@@ -320,6 +283,7 @@ export function DesktopDashboard({
             onGoBattery={() => setActiveTab('battery')}
             onGoOverview={() => setActiveTab('overview')}
             onOpenEvCharger={onOpenEvCharger}
+            onOpenNotifications={() => setActiveTab('notifications')}
           />
         ) : (
           <DesktopNotificationsPage
@@ -330,6 +294,10 @@ export function DesktopDashboard({
             preferences={notificationPreferences}
             setPreference={onNotificationPreferenceChange}
             weather={weather}
+            onGoBattery={() => setActiveTab('battery')}
+            onGoOverview={() => setActiveTab('overview')}
+            onOpenEvCharger={onOpenEvCharger}
+            onOpenSettings={() => setActiveTab('settings')}
           />
         )}
 

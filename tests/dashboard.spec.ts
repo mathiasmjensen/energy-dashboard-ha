@@ -32,9 +32,10 @@ test.describe('energy dashboard', () => {
     await page.goto('/')
 
     await expect(page.getByAltText(/night house with solar panels/i)).toBeVisible()
-    await expect(page.locator('.overview-sidebar')).toBeVisible()
-    await expect(page.locator('.nav-item')).toHaveCount(4)
-    await expect(page.getByRole('button', { name: 'Overview' })).toBeVisible()
+    const topNavigation = page.getByRole('navigation', { name: 'Dashboard sections' })
+    await expect(topNavigation).toBeVisible()
+    await expect(topNavigation.getByRole('button')).toHaveCount(6)
+    await expect(topNavigation.getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
     await expect(page.locator('.overview-panel')).toHaveCount(6)
     await expect(page.locator('.overview-flow-path')).toHaveCount(4)
     await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible()

@@ -203,43 +203,59 @@ export function BatteryStatusPanel({
   )
 }
 
-export function MarketRatesPanel({ optimizer }: { optimizer: BatteryOptimizerState }) {
-  const rows = optimizer.snapshot?.planRows.slice(0, 24) ?? []
+type MarketRatePoint = {
+  buy: number
+  export?: number
+  label: string
+}
+
+export function MarketRatesPanel({ optimizer, prices }: { optimizer: BatteryOptimizerState; prices: EnergyPriceInsight }) {
+  const optimizerRows = optimizer.snapshot?.planRows.slice(0, 24) ?? []
   const status = optimizer.snapshot?.status
-  const buyNow = status?.fullBuyPriceDkkPerKwh ?? rows[0]?.fullBuyPriceDkkPerKwh
-  const exportNow = status?.sellPriceDkkPerKwh ?? rows[0]?.sellPriceDkkPerKwh
-  const maxRate = Math.max(0.1, ...rows.flatMap((row) => [row.fullBuyPriceDkkPerKwh, row.sellPriceDkkPerKwh]))
+  const rows: MarketRatePoint[] = optimizerRows.length
+    ? optimizerRows.map((row) => ({
+        buy: row.fullBuyPriceDkkPerKwh,
+        export: row.sellPriceDkkPerKwh,
+        label: new Date(row.startIso).toLocaleTimeString([], { hour: '2-digit', hour12: false }),
+      }))
+    : prices.points.slice(0, 24).map((price, index) => ({
+        buy: price,
+        label: prices.pointLabels[index] ?? `${String(index).padStart(2, '0')}:00`,
+      }))
+  const buyNow = status?.fullBuyPriceDkkPerKwh ?? rows[0]?.buy
+  const exportNow = status?.sellPriceDkkPerKwh ?? rows[0]?.export
+  const maxRate = Math.max(0.1, ...rows.flatMap((row) => [row.buy, row.export ?? 0]))
 
   return (
     <Panel className="market-rates-panel h-[144px] px-4 py-[13px]">
       <div className="flex items-center justify-between gap-3">
         <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Energy market</h2>
-        <span className="rounded-full border border-white/10 bg-white/[0.035] px-2.5 py-1 text-[10px] font-semibold text-dashboard-soft">Next 24h</span>
+        <span className="rounded-full border border-white/10 bg-white/[0.035] px-2.5 py-1 text-[10px] font-semibold text-dashboard-soft">{optimizerRows.length ? 'Next 24h' : prices.windowLabel}</span>
       </div>
 
       <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-        <MarketRate label="Buy now" tone="buy" value={formatOptimizerPrice(buyNow)} />
-        <MarketRate label="Export now" tone="export" value={formatOptimizerPrice(exportNow)} />
+        <MarketRate label="Buy now" tone="buy" value={buyNow === undefined ? prices.primaryValue : formatOptimizerPrice(buyNow)} />
+        <MarketRate label="Export now" tone="export" value={exportNow === undefined ? 'Not available' : formatOptimizerPrice(exportNow)} />
       </div>
 
       <div className="mt-2.5 flex h-[42px] items-end gap-[3px] rounded-[12px] border border-white/[0.06] bg-[#09101a]/72 px-2 pb-1.5 pt-1">
         {rows.length ? (
           rows.map((row, index) => {
-            const buyHeight = Math.max(3, Math.round((row.fullBuyPriceDkkPerKwh / maxRate) * 30))
-            const exportHeight = Math.max(2, Math.round((row.sellPriceDkkPerKwh / maxRate) * 30))
+            const buyHeight = Math.max(3, Math.round((row.buy / maxRate) * 30))
+            const exportHeight = row.export === undefined ? 0 : Math.max(2, Math.round((row.export / maxRate) * 30))
             return (
-              <div className="group relative flex h-full min-w-0 flex-1 items-end justify-center gap-px" key={row.startIso}>
+              <div className="group relative flex h-full min-w-0 flex-1 items-end justify-center gap-px" key={`${row.label}-${index}`}>
                 <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-blue/80 transition group-hover:bg-dashboard-blue" style={{ height: `${buyHeight}px` }} />
-                <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-green/80 transition group-hover:bg-dashboard-green" style={{ height: `${exportHeight}px` }} />
+                {exportHeight > 0 ? <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-green/80 transition group-hover:bg-dashboard-green" style={{ height: `${exportHeight}px` }} /> : null}
                 <span className="pointer-events-none absolute -top-8 z-10 hidden whitespace-nowrap rounded-md border border-white/10 bg-[#0b111d] px-2 py-1 text-[10px] text-white shadow-xl group-hover:block">
-                  {new Date(row.startIso).toLocaleTimeString([], { hour: '2-digit', hour12: false })}: buy {formatOptimizerPrice(row.fullBuyPriceDkkPerKwh).replace(' DKK/kWh', '')}, export {formatOptimizerPrice(row.sellPriceDkkPerKwh).replace(' DKK/kWh', '')}
+                  {row.label}: buy {formatOptimizerPrice(row.buy).replace(' DKK/kWh', '')}{row.export === undefined ? '' : `, export ${formatOptimizerPrice(row.export).replace(' DKK/kWh', '')}`}
                 </span>
                 {index === 0 ? <span className="sr-only">Current price hour</span> : null}
               </div>
             )
           })
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-[11px] text-dashboard-soft">Waiting for Predbat price data</div>
+          <div className="flex h-full w-full items-center justify-center text-[11px] text-dashboard-soft">Waiting for energy price data</div>
         )}
       </div>
     </Panel>
