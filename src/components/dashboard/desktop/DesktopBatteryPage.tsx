@@ -74,10 +74,10 @@ export function DesktopBatteryPage({
   })
   return (
     <section
-      className="absolute inset-0 overflow-y-auto overscroll-contain px-6 pb-8 pt-5 [scrollbar-gutter:stable]"
+      className="absolute inset-0 overflow-y-auto overscroll-contain bg-[radial-gradient(circle_at_50%_0%,rgba(27,47,68,0.22),transparent_35%),#080d14] px-6 pb-8 pt-5 [scrollbar-gutter:stable]"
       aria-label="Battery details"
     >
-      <header className="flex h-[76px] items-start justify-between">
+      <header className="relative mx-auto flex h-[82px] w-full max-w-[1530px] items-start justify-between">
         <div>
           <h1 className="m-0 text-[24px] leading-[1.1] text-white">Battery</h1>
           <p className="mt-[7px] text-[15px] text-[#d7dbe1]">
@@ -86,14 +86,14 @@ export function DesktopBatteryPage({
               : 'Live battery state, energy flow, and the next best decision'}
           </p>
         </div>
-        <nav className="absolute left-1/2 top-[18px] flex -translate-x-1/2 items-center rounded-[18px] border border-white/10 bg-[#090e16]/88 p-1 shadow-[0_16px_42px_rgba(0,0,0,0.28)] backdrop-blur-xl" aria-label="Dashboard sections">
+        <nav className="absolute left-1/2 top-[9px] flex -translate-x-1/2 items-center rounded-[18px] border border-white/10 bg-[#090e16]/88 p-1 shadow-[0_16px_42px_rgba(0,0,0,0.28)] backdrop-blur-xl" aria-label="Dashboard sections">
           <BatteryPageMenuItem label="Overview" onClick={onGoOverview} />
           <BatteryPageMenuItem label="Solar" onClick={onGoOverview} />
           <BatteryPageMenuItem active label="Battery" onClick={() => setBatterySection('Dashboard')} />
           <BatteryPageMenuItem label="EV Charger" onClick={onOpenEvCharger} />
           <BatteryPageMenuItem label="Settings" onClick={onOpenSettings} />
         </nav>
-        <div className="fixed left-[1196px] top-[31px] z-[3] grid grid-cols-[126px_146px_142px] gap-6">
+        <div className="absolute right-0 top-[7px] z-[3] grid grid-cols-[104px_126px_126px] gap-4">
           <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
           <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />
           <StatusPill primary="All systems" secondary="Normal" tone="ok" />

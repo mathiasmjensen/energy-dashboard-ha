@@ -104,30 +104,31 @@ export function BatteryPlannerDashboard({
   const targetSoc = snapshot?.planRows[0]?.targetSocPercent ?? status?.socPercent
 
   return (
-    <section className="grid gap-4 pb-2">
+    <section className="mx-auto grid w-full max-w-[1530px] gap-4 pb-5">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
-        <BatteryHeroMetric compact label="State of charge" meta={battery.energy ? `${battery.energy} kWh / ${battery.capacity} kWh` : undefined} tone="green" value={battery.soc}>
+        <BatteryHeroMetric compact label="State of charge" meta={battery.energy ? `${battery.energy} kWh stored` : undefined} tone="green" value={battery.soc}>
           <BatteryVisual level={battery.socValue} />
         </BatteryHeroMetric>
         <BatteryHeroMetric compact label="Battery power" meta={battery.status} tone={battery.status === 'Discharging' ? 'violet' : 'green'} value={`${battery.power} kW`} />
         <BatteryHeroMetric compact label="Stored energy" meta={battery.capacity ? `Usable ${battery.capacity} kWh` : undefined} tone="blue" value={`${battery.energy} kWh`} />
-        <BatteryHeroMetric compact label="Next action" meta={nextAction ? formatOptimizerHourRange(nextAction) : undefined} tone="violet" value={nextAction?.action ?? 'HOLD'} />
-        <BatteryHeroMetric compact label="Battery target" meta="Next planned hour" tone="green" value={targetSoc === undefined ? '---' : `${Math.round(targetSoc)}%`} />
+        <BatteryHeroMetric compact label="Next action" meta={nextAction ? formatOptimizerHourRange(nextAction) : 'No plan window'} tone="violet" value={nextAction?.action ?? 'HOLD'} />
+        <BatteryHeroMetric compact label="Battery target" meta="Next planned target" tone="green" value={targetSoc === undefined ? '---' : `${Math.round(targetSoc)}%`} />
         <BatteryHeroMetric compact label="Buy price" meta="Full price / kWh" tone="blue" value={shortPrice(status?.fullBuyPriceDkkPerKwh)} />
         <BatteryHeroMetric compact label="Export payout" meta="After export costs" tone="green" value={shortPrice(status?.sellPriceDkkPerKwh)} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(250px,0.8fr)_minmax(460px,1.5fr)_minmax(250px,0.8fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(300px,0.9fr)_minmax(440px,1.25fr)_minmax(300px,0.9fr)]">
         <BatteryFlowCard battery={battery} flow={flow} />
         <BatteryOutlookCard optimizer={optimizer} />
         <BatteryActionsCard nextAction={nextAction} optimizer={optimizer} onOpenDetails={onOpenDetails} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.8fr)_minmax(320px,1fr)_minmax(0,1.45fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(250px,0.85fr)_minmax(340px,1.15fr)_minmax(340px,1.15fr)]">
         <EnergySummaryCard distribution={distribution} />
         <PriceDecisionCard optimizer={optimizer} />
         {history.points.length ? <BatteryHistoryMiniCard history={history} status={status?.recommendation} /> : <BatteryEconomicsCard optimizer={optimizer} />}
       </div>
+      {status?.updatedAt ? <p className="px-1 text-[11px] text-dashboard-muted">Last optimized {formatOptimizerUpdatedAt(status.updatedAt)}. Decisions use the current price feed, solar forecast, and battery target.</p> : null}
     </section>
   )
 }
@@ -191,14 +192,15 @@ export function BatteryDetailsWorkspace({
 
 function BatteryHeroMetric({ children, compact = false, label, meta, tone, value }: { children?: ReactNode; compact?: boolean; label: string; meta?: string; tone: 'blue' | 'green' | 'violet'; value: string }) {
   return (
-    <section className={cn('min-h-[128px] rounded-[15px] border bg-[linear-gradient(145deg,rgba(21,34,47,0.96),rgba(10,16,24,0.98))] p-4 shadow-[0_16px_38px_rgba(0,0,0,0.26)]', tone === 'green' ? 'border-dashboard-green/35' : tone === 'violet' ? 'border-dashboard-purple/30' : 'border-dashboard-blue/30')}>
-      <div className="flex h-full items-center justify-between gap-3">
+    <section className={cn('relative min-h-[116px] overflow-hidden rounded-[16px] border bg-[linear-gradient(145deg,rgba(24,35,49,0.96),rgba(11,17,27,0.98))] p-4 shadow-[0_16px_38px_rgba(0,0,0,0.28)]', tone === 'green' ? 'border-dashboard-green/30' : tone === 'violet' ? 'border-dashboard-purple/30' : 'border-dashboard-blue/30')}>
+      <span className={cn('absolute left-0 top-0 h-[2px] w-2/3', tone === 'green' ? 'bg-dashboard-green/70' : tone === 'violet' ? 'bg-dashboard-purple/70' : 'bg-dashboard-blue/70')} />
+      <div className="flex h-full items-center justify-between gap-2">
         <div>
-          <span className="text-[13px] text-dashboard-soft">{label}</span>
-          <strong className={cn('mt-2 block font-semibold leading-none text-white', compact ? 'text-[1.45rem]' : 'text-[1.65rem]')}>{value}</strong>
-          {meta ? <span className="mt-2 block text-[12px] text-dashboard-soft">{meta}</span> : null}
+          <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-dashboard-soft">{label}</span>
+          <strong className={cn('mt-2 block font-semibold leading-none text-white', compact ? 'text-[1.35rem]' : 'text-[1.65rem]')}>{value}</strong>
+          {meta ? <span className="mt-2 block text-[11px] text-dashboard-soft">{meta}</span> : null}
         </div>
-        {children ?? <MetricPulseGlyph tone={tone} />}
+        <div className="shrink-0 opacity-90">{children ?? <MetricPulseGlyph tone={tone} />}</div>
       </div>
     </section>
   )
@@ -206,23 +208,31 @@ function BatteryHeroMetric({ children, compact = false, label, meta, tone, value
 
 function BatteryFlowCard({ battery, flow }: { battery: BatteryModel; flow: { evPower: string; evStatus: string; gridPower: string; gridStatus: string; homePower: string; solarPower: string } }) {
   return (
-    <section className="rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_50%_34%,rgba(43,132,99,0.12),transparent_42%),#101925] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
-      <div className="mb-4 flex items-center gap-2"><h2 className="text-base font-semibold text-white">Battery flow</h2><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
-      <div className="relative h-[284px]">
-        <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 360 280" aria-hidden="true">
-          <path d="M112 62H124Q133 62 133 92" fill="none" stroke="rgba(245,166,35,0.9)" strokeDasharray="5 6" strokeLinecap="round" strokeWidth="3" />
-          <path d="M248 62H236Q227 62 227 92" fill="none" stroke="rgba(61,134,255,0.8)" strokeDasharray="5 6" strokeLinecap="round" strokeWidth="3" />
-          <path d="M112 218H124Q133 218 133 190" fill="none" stroke="rgba(166,77,245,0.82)" strokeDasharray="5 6" strokeLinecap="round" strokeWidth="3" />
-          <path d="M248 218H236Q227 218 227 190" fill="none" stroke="rgba(166,173,182,0.7)" strokeDasharray="5 6" strokeLinecap="round" strokeWidth="3" />
+    <section className="min-h-[346px] rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_50%_52%,rgba(71,202,119,0.13),transparent_31%),linear-gradient(145deg,#152334,#0c131f_74%)] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
+      <div className="mb-2 flex items-center justify-between gap-2"><div><h2 className="text-base font-semibold text-white">Battery flow</h2><p className="mt-1 text-xs text-dashboard-soft">Live energy routing</p></div><span className="rounded-full border border-dashboard-green/20 bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
+      <div className="relative h-[260px]">
+        <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 420 260" aria-hidden="true">
+          <defs>
+            <filter id="battery-flow-glow"><feGaussianBlur stdDeviation="2.2" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          </defs>
+          <path d="M120 54 C164 54 164 86 184 104" fill="none" stroke="rgba(245,166,35,0.2)" strokeWidth="7" />
+          <path d="M120 54 C164 54 164 86 184 104" className="desktop-battery-flow-pulse" fill="none" stroke="#f5a623" strokeDasharray="5 17" strokeLinecap="round" strokeWidth="3" filter="url(#battery-flow-glow)" />
+          <path d="M300 54 C258 54 258 86 238 104" fill="none" stroke="rgba(65,160,255,0.2)" strokeWidth="7" />
+          <path d="M300 54 C258 54 258 86 238 104" className="desktop-battery-flow-pulse desktop-battery-flow-pulse--reverse" fill="none" stroke="#5a9cff" strokeDasharray="5 17" strokeLinecap="round" strokeWidth="3" filter="url(#battery-flow-glow)" />
+          <path d="M120 204 C164 204 164 174 184 156" fill="none" stroke="rgba(173,86,255,0.2)" strokeWidth="7" />
+          <path d="M120 204 C164 204 164 174 184 156" className="desktop-battery-flow-pulse" fill="none" stroke="#a75cff" strokeDasharray="5 17" strokeLinecap="round" strokeWidth="3" filter="url(#battery-flow-glow)" />
+          <path d="M300 204 C258 204 258 174 238 156" fill="none" stroke="rgba(201,210,222,0.16)" strokeWidth="7" />
+          <path d="M300 204 C258 204 258 174 238 156" className="desktop-battery-flow-pulse desktop-battery-flow-pulse--reverse" fill="none" stroke="#c5cedb" strokeDasharray="5 17" strokeLinecap="round" strokeWidth="3" filter="url(#battery-flow-glow)" />
         </svg>
-        <div className="absolute left-0 top-1 w-[112px]"><FlowRead icon="solar" label="Solar" tone="sun" value={`${flow.solarPower} kW`} /></div>
-        <div className="absolute right-0 top-1 w-[112px]"><FlowRead icon="home" label="Home" tone="blue" value={`${flow.homePower} kW`} /></div>
-        <div className="absolute left-0 bottom-0 w-[112px]"><FlowRead icon="grid" label="Grid" meta={flow.gridStatus} tone="purple" value={`${flow.gridPower} kW`} /></div>
-        <div className="absolute right-0 bottom-0 w-[112px]"><FlowRead icon="car" label="EV charger" meta={flow.evStatus} tone="muted" value={`${flow.evPower} kW`} /></div>
-        <div className="absolute left-1/2 top-1/2 flex h-[128px] w-[94px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[22px] border border-dashboard-green/35 bg-[#0b1717]/95 shadow-[0_0_30px_rgba(96,234,93,0.12)]">
+        <div className="absolute left-0 top-2 w-[120px]"><FlowRead icon="solar" label="Solar" tone="sun" value={`${flow.solarPower} kW`} /></div>
+        <div className="absolute right-0 top-2 w-[120px]"><FlowRead icon="home" label="Home" tone="blue" value={`${flow.homePower} kW`} /></div>
+        <div className="absolute bottom-0 left-0 w-[120px]"><FlowRead icon="grid" label="Grid" meta={flow.gridStatus} tone="purple" value={`${flow.gridPower} kW`} /></div>
+        <div className="absolute bottom-0 right-0 w-[120px]"><FlowRead icon="car" label="EV charger" meta={flow.evStatus} tone="muted" value={`${flow.evPower} kW`} /></div>
+        <div className="absolute left-1/2 top-1/2 flex h-[124px] w-[110px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[26px] border border-dashboard-green/40 bg-[#0c1a1b]/95 shadow-[0_0_42px_rgba(96,234,93,0.18)]">
+          <span className="absolute -top-3 rounded-full border border-dashboard-green/35 bg-[#132425] px-2 py-0.5 text-[9px] font-bold tracking-[0.11em] text-dashboard-green">BATTERY</span>
           <BatteryVisual level={battery.socValue} />
-          <strong className="mt-1 text-[1.1rem] leading-none text-white">{battery.soc}</strong>
-          <span className="mt-1 text-xs text-dashboard-green">{battery.status}</span>
+          <strong className="mt-1 text-[1.2rem] leading-none text-white">{battery.soc}</strong>
+          <span className="mt-1 text-[11px] text-dashboard-green">{battery.status}</span>
           <strong className="mt-1 text-sm text-white">{battery.power} kW</strong>
         </div>
       </div>
@@ -234,16 +244,28 @@ function BatteryOutlookCard({ optimizer }: { optimizer: BatteryOptimizerState })
   const snapshot = optimizer.snapshot
   if (!snapshot) return <OptimizerStateBanner optimizer={optimizer} variant="desktop" />
   const { charts, status } = snapshot
+  const scheduledTargets = snapshot.planRows
+    .filter((row) => Number.isFinite(row.targetSocPercent))
+    .map((row) => ({ label: new Date(row.startIso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), point: row.targetSocPercent }))
+  const hasForecast = charts.socForecast.points.length > 1
+  const scheduleLabels = hasForecast ? charts.socForecast.labels : scheduledTargets.map((item) => item.label)
+  const schedulePoints = hasForecast ? charts.socForecast.points : scheduledTargets.map((item) => item.point)
   return (
-    <section className="rounded-[15px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,34,45,0.96),rgba(12,20,29,0.96))] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
-      <div className="flex items-center justify-between gap-3"><div><h2 className="text-base font-semibold text-white">Optimization outlook</h2><p className="mt-1 text-sm text-dashboard-soft">Battery target and predicted state of charge</p></div><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
+    <section className="min-h-[346px] rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(22,39,53,0.96),rgba(12,19,29,0.98))] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
+      <div className="flex items-center justify-between gap-3"><div><h2 className="text-base font-semibold text-white">Optimization schedule</h2><p className="mt-1 text-xs text-dashboard-soft">Predicted state of charge</p></div><span className="rounded-full border border-dashboard-green/20 bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
       <div className="mt-3 grid grid-cols-3 gap-2 border-b border-white/10 pb-3">
         <MiniRead label="Strategy" value={getOptimizerModeLabel(status.mode)} />
         <MiniRead label="Target SoC" value={`${Math.round(snapshot.planRows[0]?.targetSocPercent ?? status.socPercent)}%`} />
         <MiniRead label="Recommendation" value={status.recommendation} />
       </div>
-      <LineChart className="insight-line-chart mt-3 h-[178px]" color="#60ea5d" label="Battery state of charge forecast" labels={charts.socForecast.labels} points={charts.socForecast.points} unit="%" />
-      <div className="mt-2 flex items-center gap-4 text-[11px] text-dashboard-soft"><span className="flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-dashboard-green" />Predicted SoC</span><span className="flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-dashboard-purple" />Charge window</span><span className="flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-white/60" />Target</span></div>
+      <div className="relative mt-3 border-b border-white/10 pb-2">
+        {schedulePoints.length > 1 ? (
+          <><LineChart className="insight-line-chart h-[163px]" color="#60ea5d" label="Battery state of charge forecast" labels={scheduleLabels} points={schedulePoints} unit="%" /><span className="absolute left-0 right-0 top-[36%] border-t border-dashed border-dashboard-green/45" /><span className="absolute right-1 top-[27%] rounded bg-[#102420] px-1.5 py-0.5 text-[9px] font-semibold text-dashboard-green">TARGET</span></>
+        ) : (
+          <div className="flex h-[163px] items-center justify-center rounded-xl border border-dashed border-white/10 bg-black/10 px-6 text-center text-xs leading-5 text-dashboard-soft">No battery target series has been supplied yet. The next optimization refresh will populate this schedule.</div>
+        )}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-dashboard-soft"><span className="flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-dashboard-green" />Predicted SoC</span><span className="flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-dashboard-purple" />Charge</span><span className="flex items-center gap-1.5"><i className="h-1.5 w-4 rounded-full bg-white/60" />Target</span></div>
     </section>
   )
 }
@@ -251,8 +273,8 @@ function BatteryOutlookCard({ optimizer }: { optimizer: BatteryOptimizerState })
 function BatteryActionsCard({ nextAction, optimizer, onOpenDetails }: { nextAction: import('../../../models/batteryOptimizer').BatteryOptimizerPlanRow | undefined; optimizer: BatteryOptimizerState; onOpenDetails: () => void }) {
   const status = optimizer.snapshot?.status
   return (
-    <section className="rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
-      <h2 className="text-base font-semibold text-white">Optimizer actions</h2>
+    <section className="min-h-[346px] rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#152131,#0c141f)] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
+      <div className="flex items-center justify-between gap-2"><h2 className="text-base font-semibold text-white">Optimization actions</h2><span className="rounded-full border border-dashboard-blue/25 bg-dashboard-blue/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-blue">AUTO</span></div>
       <div className="mt-3 grid divide-y divide-white/10 rounded-[14px] border border-white/8 bg-[#0a111b]/70 px-3">
         <ActionRead label="Current action" value={status?.recommendation ?? 'Waiting'} />
         <ActionRead label="Next action" value={nextAction ? `${nextAction.action} · ${formatOptimizerHourRange(nextAction)}` : 'No plan yet'} />
@@ -260,7 +282,7 @@ function BatteryActionsCard({ nextAction, optimizer, onOpenDetails }: { nextActi
         <ActionRead label="Export payout" value={formatOptimizerPrice(status?.sellPriceDkkPerKwh)} />
         <ActionRead label="Updated" value={formatOptimizerUpdatedAt(status?.updatedAt)} />
       </div>
-      <button className="mt-3 w-full rounded-xl border border-dashboard-blue/35 bg-dashboard-blue/10 px-3 py-2.5 text-sm font-semibold text-dashboard-text transition hover:bg-dashboard-blue/20" type="button" onClick={onOpenDetails}>View full plan</button>
+      <button className="mt-4 w-full rounded-xl border border-dashboard-green/35 bg-dashboard-green/15 px-3 py-3 text-sm font-semibold text-dashboard-green transition hover:bg-dashboard-green/25" type="button" onClick={onOpenDetails}>View full optimization</button>
     </section>
   )
 }

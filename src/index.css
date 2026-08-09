@@ -43,6 +43,26 @@
   .dashboard-glass-card {
     @apply border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.014))] bg-dashboard-bg/90 shadow-glass;
   }
+
+  .desktop-battery-flow-pulse {
+    animation: desktop-battery-flow-forward 2.8s linear infinite;
+  }
+
+  .desktop-battery-flow-pulse--reverse {
+    animation-direction: reverse;
+  }
+}
+
+@keyframes desktop-battery-flow-forward {
+  to {
+    stroke-dashoffset: -44;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-battery-flow-pulse {
+    animation: none;
+  }
 }
 
 @media (max-width: 1180px) {
