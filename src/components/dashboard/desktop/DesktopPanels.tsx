@@ -230,47 +230,53 @@ export function MarketRatesPanel({ optimizer, prices }: { optimizer: BatteryOpti
   const highestBuy = rows.length ? Math.max(...rows.map((row) => row.buy)) : undefined
 
   return (
-    <Panel className="market-rates-panel h-[172px] px-4 pb-3 pt-[13px]">
+    <Panel className="market-rates-panel h-[204px] px-4 pb-3 pt-[13px]">
       <div className="flex items-center justify-between gap-3">
         <h2 className="m-0 text-[18px] font-[780] leading-none text-white">Energy market</h2>
         <span className="rounded-full border border-white/10 bg-white/[0.035] px-2.5 py-1 text-[10px] font-semibold text-dashboard-soft">{optimizerRows.length ? '24h rates' : prices.windowLabel}</span>
       </div>
 
-      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-        <MarketRate description="All-in grid cost" label="Buy now" tone="buy" value={buyNow === undefined ? prices.primaryValue : formatOptimizerPrice(buyNow)} />
-        <MarketRate description={hasExportRates ? 'Estimated feed-in value' : 'Waiting for export rate'} label="Export now" tone="export" value={exportNow === undefined ? '---' : formatOptimizerPrice(exportNow)} />
+      <div className="mt-2.5 grid grid-cols-2 gap-2">
+        <MarketRate description="All-in cost" label="Buying" tone="buy" value={buyNow === undefined ? prices.primaryValue : formatOptimizerPrice(buyNow)} />
+        <MarketRate description={hasExportRates ? 'Feed-in value' : 'No rate available'} label="Selling" tone="export" value={exportNow === undefined ? '---' : formatOptimizerPrice(exportNow)} />
       </div>
 
-      <div className="mt-2.5 rounded-[12px] border border-white/[0.06] bg-[#09101a]/72 px-2.5 pb-2 pt-1.5">
-        <div className="mb-1 flex items-center justify-between text-[9px] font-medium text-dashboard-soft">
-          <span>Lowest {lowestBuy === undefined ? '---' : formatOptimizerPrice(lowestBuy)}</span>
-          <span>Highest {highestBuy === undefined ? '---' : formatOptimizerPrice(highestBuy)}</span>
+      <div className="mt-2 rounded-[11px] border border-white/[0.06] bg-[#09101a]/72 px-2.5 pb-1.5 pt-1.5">
+        <div className="mb-1 flex items-center justify-between gap-3 text-[9px] font-medium text-dashboard-soft">
+          <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-dashboard-blue" />Buy</span>
+          {hasExportRates ? <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-dashboard-green" />Sell</span> : null}
+          <span className="ml-auto">Current hour</span>
         </div>
-        <div className="flex h-[38px] items-end gap-[3px]" aria-label="Energy market rates for the next 24 hours">
-        {rows.length ? (
-          rows.map((row, index) => {
-            const buyHeight = Math.max(3, Math.round((row.buy / maxRate) * 28))
-            const exportHeight = row.export === undefined ? 0 : Math.max(2, Math.round((row.export / maxRate) * 28))
-            return (
-              <button
-                aria-label={`${row.label}: buy ${formatOptimizerPrice(row.buy)}${row.export === undefined ? '' : `, export ${formatOptimizerPrice(row.export)}`}`}
-                className={cn(
-                  'group relative flex h-full min-w-0 flex-1 items-end justify-center gap-px rounded-sm outline-none transition focus-visible:ring-1 focus-visible:ring-dashboard-blue',
-                  index === 0 && 'bg-white/[0.045]',
-                )}
-                key={`${row.label}-${index}`}
-                title={`${row.label}: buy ${formatOptimizerPrice(row.buy)}${row.export === undefined ? '' : `, export ${formatOptimizerPrice(row.export)}`}`}
-                type="button"
-              >
-                <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-blue/80 transition group-hover:bg-dashboard-blue" style={{ height: `${buyHeight}px` }} />
-                {exportHeight > 0 ? <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-green/80 transition group-hover:bg-dashboard-green" style={{ height: `${exportHeight}px` }} /> : null}
-                {index === 0 ? <span className="sr-only">Current price hour</span> : null}
-              </button>
-            )
-          })
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-[11px] text-dashboard-soft">Waiting for energy price data</div>
-        )}
+        <div className="flex h-[34px] items-end gap-[3px]" aria-label="Energy market rates for the next 24 hours">
+          {rows.length ? (
+            rows.map((row, index) => {
+              const buyHeight = Math.max(3, Math.round((row.buy / maxRate) * 25))
+              const exportHeight = row.export === undefined ? 0 : Math.max(2, Math.round((row.export / maxRate) * 25))
+              const title = `${row.label}: buy ${formatOptimizerPrice(row.buy)}${row.export === undefined ? '' : `, sell ${formatOptimizerPrice(row.export)}`}`
+
+              return (
+                <div
+                  aria-label={title}
+                  className={cn(
+                    'group relative flex h-full min-w-0 flex-1 items-end justify-center gap-px rounded-sm',
+                    index === 0 && 'bg-white/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]',
+                  )}
+                  key={`${row.label}-${index}`}
+                  title={title}
+                >
+                  <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-blue/85 transition group-hover:bg-dashboard-blue" style={{ height: `${buyHeight}px` }} />
+                  {exportHeight > 0 ? <span className="w-full max-w-[5px] rounded-t-sm bg-dashboard-green/80 transition group-hover:bg-dashboard-green" style={{ height: `${exportHeight}px` }} /> : null}
+                  {index === 0 ? <span className="sr-only">Current price hour</span> : null}
+                </div>
+              )
+            })
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[11px] text-dashboard-soft">Waiting for energy price data</div>
+          )}
+        </div>
+        <div className="mt-1 flex items-center justify-between text-[9px] text-[#8f9aaa]">
+          <span>Low {formatCompactRate(lowestBuy)}</span>
+          <span>High {formatCompactRate(highestBuy)}</span>
         </div>
       </div>
     </Panel>
@@ -279,15 +285,19 @@ export function MarketRatesPanel({ optimizer, prices }: { optimizer: BatteryOpti
 
 function MarketRate({ description, label, tone, value }: { description: string; label: string; tone: 'buy' | 'export'; value: string }) {
   return (
-    <div className="min-w-0 rounded-[12px] border border-white/[0.07] bg-white/[0.025] px-2.5 py-1.5">
+    <div className="min-w-0 rounded-[10px] border border-white/[0.07] bg-white/[0.025] px-2.5 py-1.5">
       <span className="flex items-center gap-1.5 text-[10px] text-dashboard-soft">
         <span className={cn('h-1.5 w-1.5 rounded-full', tone === 'buy' ? 'bg-dashboard-blue' : 'bg-dashboard-green')} />
         {label}
       </span>
-      <strong className="mt-1 block truncate text-[12px] font-semibold text-white">{value}</strong>
+      <strong className="mt-0.5 block truncate text-[13px] font-semibold leading-tight text-white">{value}</strong>
       <span className="mt-0.5 block truncate text-[9px] text-[#8f9aaa]">{description}</span>
     </div>
   )
+}
+
+function formatCompactRate(value: number | undefined) {
+  return value === undefined ? '---' : `${value.toFixed(2)} DKK`
 }
 
 export function SolarForecastCard({
