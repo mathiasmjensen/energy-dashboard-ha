@@ -14,7 +14,7 @@ export function EnergyFlowMap({
   const evState = evChargePowerValue !== null && Math.abs(evChargePowerValue) > 0.05 ? 'active' : 'idle'
 
   return (
-    <svg className="absolute left-[42px] top-[372px] h-[198px] w-[860px] overflow-visible" viewBox="0 0 860 198" aria-hidden="true">
+    <svg className="absolute left-[122px] top-[372px] h-[198px] w-[860px] overflow-visible" viewBox="0 0 860 198" aria-hidden="true">
       <FlowPath color="#6b8bff" d="M425 0V40" />
       <FlowPath color="#f5a623" d="M204 32H300Q326 32 342 62" />
       <FlowPath color="#33d66b" d="M506 62Q522 24 566 24H674" reverse={batteryDirection === 'reverse'} />
