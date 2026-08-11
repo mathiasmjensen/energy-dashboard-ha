@@ -50,8 +50,7 @@ export function DesktopNotificationsPage({
         active="notifications"
         displayDate={displayDate}
         displayTime={displayTime}
-        onOpenEvCharger={onOpenEvCharger}
-        onSelect={(page) => page === 'battery' ? onGoBattery() : page === 'settings' ? onOpenSettings() : page === 'overview' ? onGoOverview() : undefined}
+        onSelect={(page) => page === 'battery' ? onGoBattery() : page === 'ev' ? onOpenEvCharger() : page === 'settings' ? onOpenSettings() : page === 'overview' ? onGoOverview() : undefined}
         subtitle="Push alerts, delivery status, and recent dashboard activity."
         title="Notifications"
         weather={weather}

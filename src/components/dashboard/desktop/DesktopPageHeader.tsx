@@ -6,7 +6,6 @@ export function DesktopPageHeader({
   active,
   displayDate,
   displayTime,
-  onOpenEvCharger,
   onSelect,
   subtitle,
   title,
@@ -15,7 +14,6 @@ export function DesktopPageHeader({
   active: DesktopPageKey
   displayDate: string
   displayTime: string
-  onOpenEvCharger: () => void
   onSelect: (page: DesktopPageKey) => void
   subtitle: string
   title: string
@@ -28,7 +26,7 @@ export function DesktopPageHeader({
           <h1 className="m-0 text-[24px] leading-[1.1] text-white">{title}</h1>
           <p className="mt-[7px] text-[15px] text-[#d7dbe1]">{subtitle}</p>
         </div>
-        <DesktopTopNavigation active={active} onOpenEvCharger={onOpenEvCharger} onSelect={onSelect} />
+        <DesktopTopNavigation active={active} onSelect={onSelect} />
         <div className="absolute right-0 top-0 grid grid-cols-[120px_138px_138px] gap-5">
           <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
           <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />

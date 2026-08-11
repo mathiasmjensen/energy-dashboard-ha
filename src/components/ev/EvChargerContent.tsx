@@ -56,7 +56,7 @@ export function EvChargerOverviewSection({
 
 export function EvChargerSettingsSection({ controller }: { controller: EvChargerController }) {
   return (
-    <section className="grid gap-3" aria-label="Charger settings">
+    <section className="grid h-full content-start gap-3 rounded-[22px] border border-white/10 bg-[#0c121d]/88 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.24)]" aria-label="Charger settings">
       <h3 className="text-lg font-semibold text-dashboard-text">Charger settings</h3>
       <div className="grid overflow-hidden rounded-[22px] border border-white/10 bg-[#0c121d]/88 shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
         <SettingRow description="EVCC loadpoint mode" label="Charge mode">

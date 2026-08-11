@@ -27,8 +27,7 @@ export function DesktopSettingsPage({
         active="settings"
         displayDate={displayDate}
         displayTime={displayTime}
-        onOpenEvCharger={onOpenEvCharger}
-        onSelect={(page) => page === 'battery' ? onGoBattery() : page === 'notifications' ? onOpenNotifications() : page === 'overview' ? onGoOverview() : undefined}
+        onSelect={(page) => page === 'battery' ? onGoBattery() : page === 'ev' ? onOpenEvCharger() : page === 'notifications' ? onOpenNotifications() : page === 'overview' ? onGoOverview() : undefined}
         subtitle="Battery automation and optimizer preferences"
         title="Settings"
         weather={weather}

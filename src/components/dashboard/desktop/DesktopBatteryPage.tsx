@@ -82,8 +82,7 @@ export function DesktopBatteryPage({
         active="battery"
         displayDate={displayDate}
         displayTime={displayTime}
-        onOpenEvCharger={onOpenEvCharger}
-        onSelect={(page) => page === 'settings' ? onOpenSettings() : page === 'notifications' ? onOpenNotifications() : page === 'overview' ? onGoOverview() : setBatterySection('Dashboard')}
+        onSelect={(page) => page === 'ev' ? onOpenEvCharger() : page === 'settings' ? onOpenSettings() : page === 'notifications' ? onOpenNotifications() : page === 'overview' ? onGoOverview() : setBatterySection('Dashboard')}
         subtitle={batterySection === 'Details' ? 'Battery history and the complete optimization schedule' : 'Detailed overview of your battery system and optimization'}
         title="Battery"
         weather={weather}

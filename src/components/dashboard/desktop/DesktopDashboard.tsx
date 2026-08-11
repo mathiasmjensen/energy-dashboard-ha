@@ -1,14 +1,14 @@
 import type { CSSProperties } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
 import type { DataStateBadgeModel } from '../../../models/dataState'
 import type { EnergyPriceInsight, InsightHeaderControls, SolarForecastInsight } from '../../../models/dashboardInsights'
 import type { EvChargerController } from '../../../models/evChargePlan'
 import type { NotificationPreferences, NotificationsState } from '../../../models/notifications'
 import { assetPath } from '../../../utils/assetPath'
-import { EvChargerModal } from '../../EvChargerModal'
 import { DesktopNotificationsPage } from '../../notifications/NotificationsScreen'
 import { DesktopBatteryPage } from './DesktopBatteryPage'
+import { DesktopEvChargerPage } from './DesktopEvChargerPage'
 import { DesktopSettingsPage } from './DesktopSettingsPage'
 import { DesktopPageHeader } from './DesktopPageHeader'
 import { EnergyFlowMap, FlowNode } from './DesktopFlow'
@@ -23,7 +23,7 @@ import {
   MarketRatesPanel,
 } from './DesktopPanels'
 
-type DesktopTab = 'battery' | 'notifications' | 'overview' | 'settings'
+type DesktopTab = 'battery' | 'ev' | 'notifications' | 'overview' | 'settings'
 
 export type DesktopDashboardProps = {
   battery: {
@@ -78,7 +78,6 @@ export type DesktopDashboardProps = {
   }
   homePower: string
   insightControls: InsightHeaderControls
-  isEvChargerOpen: boolean
   notificationPreferences: NotificationPreferences
   notifications: NotificationsState & {
     disable: () => Promise<boolean>
@@ -86,8 +85,6 @@ export type DesktopDashboardProps = {
     refresh: () => Promise<boolean>
   }
   onNotificationPreferenceChange: (key: keyof NotificationPreferences, value: boolean) => void
-  onCloseEvCharger: () => void
-  onOpenEvCharger: () => void
   weather: {
     condition: string
     dataState: DataStateBadgeModel
@@ -121,20 +118,37 @@ export function DesktopDashboard({
   grid,
   homePower,
   insightControls,
-  isEvChargerOpen,
   notificationPreferences,
   notifications,
   onNotificationPreferenceChange,
-  onCloseEvCharger,
-  onOpenEvCharger,
   prices,
   sceneStyle,
   shellStyle,
   solar,
   weather,
 }: DesktopDashboardProps) {
-  const [activeTab, setActiveTab] = useState<DesktopTab>('overview')
-  const openBatteryPage = () => setActiveTab('battery')
+  const [activeTab, setActiveTab] = useState<DesktopTab>(() => getDesktopTabFromLocation())
+  const selectTab = (tab: DesktopTab) => {
+    if (tab === 'ev') {
+      if (window.location.hash !== '#/ev-charger') {
+        window.location.hash = '/ev-charger'
+      }
+    } else if (window.location.hash === '#/ev-charger') {
+      window.history.pushState({}, '', `${window.location.pathname}${window.location.search}`)
+    }
+    setActiveTab(tab)
+  }
+  const openBatteryPage = () => selectTab('battery')
+
+  useEffect(() => {
+    const syncFromLocation = () => setActiveTab(getDesktopTabFromLocation())
+    window.addEventListener('hashchange', syncFromLocation)
+    window.addEventListener('popstate', syncFromLocation)
+    return () => {
+      window.removeEventListener('hashchange', syncFromLocation)
+      window.removeEventListener('popstate', syncFromLocation)
+    }
+  }, [])
 
   return (
     <main className="relative grid place-items-center overflow-hidden" style={shellStyle}>
@@ -149,8 +163,7 @@ export function DesktopDashboard({
               active="overview"
               displayDate={displayDate}
               displayTime={displayTime}
-              onOpenEvCharger={onOpenEvCharger}
-              onSelect={setActiveTab}
+              onSelect={selectTab}
               subtitle="Live overview of your home energy system"
               title="Overview"
               weather={weather}
@@ -203,7 +216,7 @@ export function DesktopDashboard({
               <EvChargerOverviewCard
                 battery={charger.battery}
                 chargeRate={charger.chargeRate}
-                onOpen={onOpenEvCharger}
+                onOpen={() => selectTab('ev')}
                 range={charger.range}
                 status={charger.status}
               />
@@ -263,10 +276,19 @@ export function DesktopDashboard({
               homePower,
               solarPower: solar.power,
             }}
-            onGoOverview={() => setActiveTab('overview')}
-            onOpenEvCharger={onOpenEvCharger}
-            onOpenNotifications={() => setActiveTab('notifications')}
-            onOpenSettings={() => setActiveTab('settings')}
+            onGoOverview={() => selectTab('overview')}
+            onOpenEvCharger={() => selectTab('ev')}
+            onOpenNotifications={() => selectTab('notifications')}
+            onOpenSettings={() => selectTab('settings')}
+            weather={weather}
+          />
+        ) : activeTab === 'ev' ? (
+          <DesktopEvChargerPage
+            charger={charger}
+            controller={controller}
+            displayDate={displayDate}
+            displayTime={displayTime}
+            onSelect={selectTab}
             weather={weather}
           />
         ) : activeTab === 'settings' ? (
@@ -275,10 +297,10 @@ export function DesktopDashboard({
             displayTime={displayTime}
             optimizer={batteryOptimizer}
             weather={weather}
-            onGoBattery={() => setActiveTab('battery')}
-            onGoOverview={() => setActiveTab('overview')}
-            onOpenEvCharger={onOpenEvCharger}
-            onOpenNotifications={() => setActiveTab('notifications')}
+            onGoBattery={() => selectTab('battery')}
+            onGoOverview={() => selectTab('overview')}
+            onOpenEvCharger={() => selectTab('ev')}
+            onOpenNotifications={() => selectTab('notifications')}
           />
         ) : (
           <DesktopNotificationsPage
@@ -289,25 +311,18 @@ export function DesktopDashboard({
             preferences={notificationPreferences}
             setPreference={onNotificationPreferenceChange}
             weather={weather}
-            onGoBattery={() => setActiveTab('battery')}
-            onGoOverview={() => setActiveTab('overview')}
-            onOpenEvCharger={onOpenEvCharger}
-            onOpenSettings={() => setActiveTab('settings')}
+            onGoBattery={() => selectTab('battery')}
+            onGoOverview={() => selectTab('overview')}
+            onOpenEvCharger={() => selectTab('ev')}
+            onOpenSettings={() => selectTab('settings')}
           />
         )}
-
-        {isEvChargerOpen ? (
-          <EvChargerModal
-            chargeRate={charger.chargeRate}
-            controller={controller}
-            onClose={onCloseEvCharger}
-            sessionDuration={charger.sessionDuration}
-            sessionEnergy={charger.sessionEnergy}
-            status={charger.status}
-          />
-        ) : null}
         </div>
       </div>
     </main>
   )
+}
+
+function getDesktopTabFromLocation(): DesktopTab {
+  return typeof window !== 'undefined' && window.location.hash === '#/ev-charger' ? 'ev' : 'overview'
 }

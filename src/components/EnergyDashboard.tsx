@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DesktopDashboard } from './dashboard/desktop/DesktopDashboard'
 import {
   appendUnit,
@@ -39,12 +39,9 @@ export function EnergyDashboard() {
   const todayTotals = useTodayEnergyTotals()
   const notifications = useNotifications()
   const notificationPreferences = useNotificationPreferences()
-  const [isEvChargerOpen, setIsEvChargerOpen] = useState(false)
   const [insightDayOffset, setInsightDayOffset] = useState(0)
   const [insightViewMode, setInsightViewMode] = useState<InsightViewMode>('today')
   const [now, setNow] = useState(() => new Date())
-  const openEvCharger = useCallback(() => setIsEvChargerOpen(true), [])
-  const closeEvCharger = useCallback(() => setIsEvChargerOpen(false), [])
 
   useEffect(() => {
     const clockId = window.setInterval(() => setNow(new Date()), 60_000)
@@ -264,12 +261,9 @@ export function EnergyDashboard() {
       homePower={data.homePower}
       energyDayControls={historicalEnergyDay.controls}
       insightControls={insightControls}
-      isEvChargerOpen={isEvChargerOpen}
       notificationPreferences={notificationPreferences.preferences}
       notifications={notifications}
       onNotificationPreferenceChange={notificationPreferences.setPreference}
-      onCloseEvCharger={closeEvCharger}
-      onOpenEvCharger={openEvCharger}
       prices={{ ...energyPriceInsight, dataState: pricesDataState }}
       sceneStyle={sceneStyle}
       shellStyle={shellStyle}
