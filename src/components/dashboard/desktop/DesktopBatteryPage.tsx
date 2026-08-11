@@ -65,6 +65,7 @@ export function DesktopBatteryPage({
 }) {
   const [period, setPeriod] = useState<BatteryHistoryPeriod>('24h')
   const [batterySection, setBatterySection] = useState<BatterySection>('Dashboard')
+  const isDashboard = batterySection === 'Dashboard'
 
   const timeEstimate = getBatteryTimeEstimate({
     capacityKwh: parseDisplayNumber(battery.capacity),
@@ -75,7 +76,7 @@ export function DesktopBatteryPage({
   })
   return (
     <section
-      className="absolute inset-0 overflow-y-auto overscroll-contain bg-[radial-gradient(circle_at_50%_0%,rgba(27,47,68,0.22),transparent_35%),#080d14] px-7 pb-6 pt-[94px] [scrollbar-gutter:stable]"
+      className={`absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(27,47,68,0.22),transparent_35%),#080d14] px-7 pt-[94px] ${isDashboard ? 'overflow-hidden pb-0' : 'overflow-y-auto overscroll-contain pb-6 [scrollbar-gutter:stable]'}`}
       aria-label="Battery details"
     >
       <DesktopPageHeader
@@ -88,7 +89,7 @@ export function DesktopBatteryPage({
         weather={weather}
       />
 
-      <div className="flex min-h-full flex-col gap-4">
+      <div className={`flex flex-col gap-3 ${isDashboard ? 'h-full overflow-hidden' : 'min-h-full'}`}>
         {batterySection === 'Details' ? (
           <>
             <button className="w-fit rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-dashboard-soft transition hover:border-white/20 hover:text-white" type="button" onClick={() => setBatterySection('Dashboard')}>

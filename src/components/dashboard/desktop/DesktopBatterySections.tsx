@@ -104,7 +104,7 @@ export function BatteryPlannerDashboard({
   const targetSoc = snapshot?.planRows[0]?.targetSocPercent ?? status?.socPercent
 
   return (
-    <section className="grid w-full gap-4 pb-5">
+    <section className="grid h-full w-full grid-rows-[116px_350px_248px_minmax(0,1fr)] gap-3 overflow-hidden">
       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-7">
         <BatteryHeroMetric compact label="State of charge" meta={battery.energy ? `${battery.energy} kWh stored` : undefined} progress={battery.socValue} tone="green" value={battery.soc}>
           <BatteryVisual className="!h-[78px] !w-[46px]" level={battery.socValue} />
@@ -117,13 +117,13 @@ export function BatteryPlannerDashboard({
         <BatteryHeroMetric compact label="Export payout" meta="After export costs" tone="green" value={shortPrice(status?.sellPriceDkkPerKwh)} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[minmax(340px,0.9fr)_minmax(500px,1.45fr)_minmax(300px,0.72fr)]">
+      <div className="grid min-h-0 gap-3 md:grid-cols-[minmax(340px,0.9fr)_minmax(500px,1.45fr)_minmax(300px,0.72fr)]">
         <BatteryFlowCard battery={battery} flow={flow} />
         <BatteryOutlookCard optimizer={optimizer} />
         <BatteryActionsCard nextAction={nextAction} optimizer={optimizer} onOpenDetails={onOpenDetails} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[minmax(240px,0.76fr)_minmax(310px,1fr)_minmax(280px,0.92fr)_minmax(390px,1.32fr)]">
+      <div className="grid min-h-0 gap-3 md:grid-cols-[minmax(240px,0.76fr)_minmax(310px,1fr)_minmax(280px,0.92fr)_minmax(390px,1.32fr)]">
         <EnergySummaryCard distribution={distribution} />
         <PriceDecisionCard optimizer={optimizer} />
         <BatteryUsageCard distribution={distribution} />
@@ -193,7 +193,7 @@ export function BatteryDetailsWorkspace({
 
 function BatteryHeroMetric({ children, compact = false, label, meta, progress, tone, value }: { children?: ReactNode; compact?: boolean; label: string; meta?: string; progress?: number; tone: 'blue' | 'green' | 'violet'; value: string }) {
   return (
-    <section className={cn('relative h-[128px] min-h-0 overflow-hidden rounded-[16px] border bg-[linear-gradient(145deg,rgba(24,35,49,0.96),rgba(11,17,27,0.98))] p-4 shadow-[0_16px_38px_rgba(0,0,0,0.28)]', tone === 'green' ? 'border-dashboard-green/30' : tone === 'violet' ? 'border-dashboard-purple/30' : 'border-dashboard-blue/30')}>
+    <section className={cn('relative h-full min-h-0 overflow-hidden rounded-[16px] border bg-[linear-gradient(145deg,rgba(24,35,49,0.96),rgba(11,17,27,0.98))] p-4 shadow-[0_16px_38px_rgba(0,0,0,0.28)]', tone === 'green' ? 'border-dashboard-green/30' : tone === 'violet' ? 'border-dashboard-purple/30' : 'border-dashboard-blue/30')}>
       <span className={cn('absolute left-0 top-0 h-[2px] w-2/3', tone === 'green' ? 'bg-dashboard-green/70' : tone === 'violet' ? 'bg-dashboard-purple/70' : 'bg-dashboard-blue/70')} />
       <div className="flex h-full items-center justify-between gap-2">
         <div>
@@ -210,9 +210,9 @@ function BatteryHeroMetric({ children, compact = false, label, meta, progress, t
 
 function BatteryFlowCard({ battery, flow }: { battery: BatteryModel; flow: { evPower: string; evStatus: string; gridPower: string; gridStatus: string; homePower: string; solarPower: string } }) {
   return (
-    <section className="min-h-[379px] rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_50%_52%,rgba(71,202,119,0.13),transparent_31%),linear-gradient(145deg,#152334,#0c131f_74%)] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
+    <section className="h-full min-h-0 rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_50%_52%,rgba(71,202,119,0.13),transparent_31%),linear-gradient(145deg,#152334,#0c131f_74%)] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
       <div className="mb-2 flex items-center justify-between gap-2"><div><h2 className="text-base font-semibold text-white">Battery flow</h2><p className="mt-1 text-xs text-dashboard-soft">Live energy routing</p></div><span className="rounded-full border border-dashboard-green/20 bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
-      <div className="relative h-[293px]">
+      <div className="relative h-[264px]">
         <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 420 260" aria-hidden="true">
           <defs>
             <filter id="battery-flow-glow"><feGaussianBlur stdDeviation="2.2" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
@@ -230,12 +230,14 @@ function BatteryFlowCard({ battery, flow }: { battery: BatteryModel; flow: { evP
         <div className="absolute right-0 top-2 w-[120px]"><FlowRead icon="home" label="Home" tone="blue" value={`${flow.homePower} kW`} /></div>
         <div className="absolute bottom-0 left-0 w-[120px]"><FlowRead icon="grid" label="Grid" meta={flow.gridStatus} tone="purple" value={`${flow.gridPower} kW`} /></div>
         <div className="absolute bottom-0 right-0 w-[120px]"><FlowRead icon="car" label="EV charger" meta={flow.evStatus} tone="muted" value={`${flow.evPower} kW`} /></div>
-        <div className="absolute left-1/2 top-1/2 flex h-[124px] w-[110px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[26px] border border-dashboard-green/40 bg-[#0c1a1b]/95 shadow-[0_0_42px_rgba(96,234,93,0.18)]">
-          <span className="absolute -top-3 rounded-full border border-dashboard-green/35 bg-[#132425] px-2 py-0.5 text-[9px] font-bold tracking-[0.11em] text-dashboard-green">BATTERY</span>
-          <BatteryVisual level={battery.socValue} />
-          <strong className="mt-1 text-[1.2rem] leading-none text-white">{battery.soc}</strong>
-          <span className="mt-1 text-[11px] text-dashboard-green">{battery.status}</span>
-          <strong className="mt-1 text-sm text-white">{battery.power} kW</strong>
+        <div className="absolute left-1/2 top-1/2 flex h-[104px] w-[126px] -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-[20px] border border-dashboard-green/40 bg-[#0c1a1b]/95 px-3 py-2 shadow-[0_0_34px_rgba(96,234,93,0.16)]">
+          <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full border border-dashboard-green/35 bg-[#132425] px-2 py-0.5 text-[8px] font-bold tracking-[0.11em] text-dashboard-green">BATTERY</span>
+          <BatteryVisual className="!h-[56px] !w-[34px] !border-[3px]" level={battery.socValue} />
+          <div className="min-w-0">
+            <strong className="block text-[1.15rem] leading-none text-white">{battery.soc}</strong>
+            <span className="mt-1 block text-[10px] leading-tight text-dashboard-green">{battery.status}</span>
+            <strong className="mt-1 block whitespace-nowrap text-xs text-white">{battery.power} kW</strong>
+          </div>
         </div>
       </div>
     </section>
@@ -253,7 +255,7 @@ function BatteryOutlookCard({ optimizer }: { optimizer: BatteryOptimizerState })
   const scheduleLabels = hasForecast ? charts.socForecast.labels : scheduledTargets.map((item) => item.label)
   const schedulePoints = hasForecast ? charts.socForecast.points : scheduledTargets.map((item) => item.point)
   return (
-    <section className="min-h-[379px] rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(22,39,53,0.96),rgba(12,19,29,0.98))] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
+    <section className="h-full min-h-0 rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(22,39,53,0.96),rgba(12,19,29,0.98))] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
       <div className="flex items-center justify-between gap-3"><div><h2 className="text-base font-semibold text-white">Optimization schedule</h2><p className="mt-1 text-xs text-dashboard-soft">Predicted state of charge</p></div><span className="rounded-full border border-dashboard-green/20 bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
       <div className="mt-3 grid grid-cols-3 gap-2 border-b border-white/10 pb-3">
         <MiniRead label="Strategy" value={getOptimizerModeLabel(status.mode)} />
@@ -278,7 +280,7 @@ function BatteryActionsCard({ nextAction, optimizer, onOpenDetails }: { nextActi
   const target = optimizer.snapshot?.planRows[0]?.targetSocPercent ?? status?.socPercent
   const reason = summary?.reserveForHouseUsage?.toLowerCase().includes('reserv') ? 'Reserve house energy' : 'Current price and forecast'
   return (
-    <section className="min-h-[379px] rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#152131,#0c141f)] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
+    <section className="h-full min-h-0 rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#152131,#0c141f)] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.28)]">
       <div className="flex items-center justify-between gap-2"><h2 className="text-base font-semibold text-white">Optimization actions</h2><span className="rounded-full border border-dashboard-blue/25 bg-dashboard-blue/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-blue">AUTO</span></div>
       <div className="mt-3 grid divide-y divide-white/10 rounded-[14px] border border-white/8 bg-[#0a111b]/70 px-3">
         <ActionRead label="Current action" value={status?.recommendation ?? 'Waiting'} />
@@ -294,7 +296,7 @@ function BatteryActionsCard({ nextAction, optimizer, onOpenDetails }: { nextActi
 }
 
 function EnergySummaryCard({ distribution }: { distribution: { batteryCharge: string; batteryDischarge: string; gridExport: string; gridImport: string } }) {
-  return <section className="h-[270px] rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]"><h2 className="text-base font-semibold text-white">Energy summary <span className="ml-1 text-xs font-medium text-dashboard-soft">Today</span></h2><div className="mt-3 grid gap-2"><ActionRead label="Charged" value={`${distribution.batteryCharge} kWh`} /><ActionRead label="Discharged" value={`${distribution.batteryDischarge} kWh`} /><ActionRead label="Import from grid" value={`${distribution.gridImport} kWh`} /><ActionRead label="Export to grid" value={`${distribution.gridExport} kWh`} /></div></section>
+  return <section className="h-full min-h-0 rounded-[18px] border border-white/10 bg-[#101925]/86 p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]"><h2 className="text-base font-semibold text-white">Energy summary <span className="ml-1 text-xs font-medium text-dashboard-soft">Today</span></h2><div className="mt-3 grid gap-2"><ActionRead label="Charged" value={`${distribution.batteryCharge} kWh`} /><ActionRead label="Discharged" value={`${distribution.batteryDischarge} kWh`} /><ActionRead label="Import from grid" value={`${distribution.gridImport} kWh`} /><ActionRead label="Export to grid" value={`${distribution.gridExport} kWh`} /></div></section>
 }
 
 function PriceDecisionCard({ optimizer }: { optimizer: BatteryOptimizerState }) {
@@ -305,7 +307,7 @@ function PriceDecisionCard({ optimizer }: { optimizer: BatteryOptimizerState }) 
   const bestSell = describeWindow(summary?.bestSellHours)
 
   return (
-    <section className="h-[270px] rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#132334,#0b141e)] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
+    <section className="h-full min-h-0 rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#132334,#0b141e)] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
       <div className="flex items-center justify-between"><h2 className="text-base font-semibold text-white">Price optimization</h2><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <PriceWindow accent="purple" icon="zap" label="Best charge window" price={formatOptimizerPrice(status?.fullBuyPriceDkkPerKwh)} time={bestBuy} />
@@ -355,7 +357,7 @@ function BatteryUsageCard({ distribution }: { distribution: { batteryCharge: str
   const importShare = total ? Math.round((imported / total) * 100) : 0
 
   return (
-    <section className="h-[270px] rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#132334,#0c141f)] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
+    <section className="h-full min-h-0 rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,#132334,#0c141f)] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.24)]">
       <div className="flex items-center justify-between"><h2 className="text-base font-semibold text-white">Battery usage</h2><span className="rounded-full bg-dashboard-green/10 px-2 py-0.5 text-[10px] font-semibold text-dashboard-green">LIVE</span></div>
       <div className="mt-4 flex items-center gap-4">
         <div className="grid h-[118px] w-[118px] shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(#5ddc78 0 ${chargeShare}%, #ffc229 ${chargeShare}% ${chargeShare + dischargeShare}%, #9a62ef ${chargeShare + dischargeShare}% ${chargeShare + dischargeShare + importShare}%, #aeb7c6 ${chargeShare + dischargeShare + importShare}% 100%)` }}>
