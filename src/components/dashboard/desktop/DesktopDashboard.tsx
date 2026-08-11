@@ -208,7 +208,7 @@ export function DesktopDashboard({
             </section>
 
             <section
-              className="absolute bottom-3 left-3 grid h-[264px] w-[918px] grid-cols-[320px_330px_248px] gap-[10px]"
+              className="absolute bottom-3 left-7 grid h-[264px] w-[1128px] grid-cols-[360px_390px_350px] gap-[14px]"
               aria-label="Bottom analytics"
             >
               <SolarForecastCard badge={solar.forecast.dataState} controls={insightControls} insight={solar.forecast} />

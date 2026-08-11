@@ -34,7 +34,7 @@ test.describe('energy dashboard', () => {
     await expect(page.getByAltText(/night house with solar panels/i)).toBeVisible()
     const topNavigation = page.getByRole('navigation', { name: 'Dashboard sections' })
     await expect(topNavigation).toBeVisible()
-    await expect(topNavigation.getByRole('button')).toHaveCount(6)
+    await expect(topNavigation.getByRole('button')).toHaveCount(5)
     await expect(topNavigation.getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
     await expect(page.locator('.overview-panel')).toHaveCount(6)
     await expect(page.locator('.overview-flow-path')).toHaveCount(4)

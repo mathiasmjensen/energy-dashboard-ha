@@ -6,7 +6,6 @@ export type DesktopPageKey = 'battery' | 'ev' | 'notifications' | 'overview' | '
 
 const MENU_ITEMS: Array<{ icon: IconName; key: DesktopPageKey; label: string }> = [
   { icon: 'home', key: 'overview', label: 'Overview' },
-  { icon: 'solar', key: 'overview', label: 'Solar' },
   { icon: 'battery', key: 'battery', label: 'Battery' },
   { icon: 'car', key: 'ev', label: 'EV Charger' },
   { icon: 'bell', key: 'notifications', label: 'Notifications' },
