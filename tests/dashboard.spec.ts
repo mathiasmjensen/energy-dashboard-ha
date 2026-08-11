@@ -61,6 +61,21 @@ test.describe('energy dashboard', () => {
     await expect(page.locator('.mobile-dashboard')).toHaveCount(0)
   })
 
+  test('keeps desktop destinations on the same canvas and header rhythm', async ({ page }) => {
+    await page.setViewportSize({ width: 1672, height: 941 })
+    await page.goto('/')
+
+    for (const title of ['Overview', 'Battery', 'Notifications', 'Settings'] as const) {
+      await page.getByRole('button', { name: title, exact: true }).click()
+      const navigation = page.getByRole('navigation', { name: 'Dashboard sections' })
+
+      await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible()
+      await expect(navigation).toBeVisible()
+      expect((await navigation.boundingBox())?.y).toBe(24)
+      await expect(navigation.getByRole('button', { name: title, exact: true })).toHaveAttribute('aria-current', 'page')
+    }
+  })
+
   test('lets desktop energy distribution and solar production step back to previous days together', async ({ page }) => {
     await page.setViewportSize({ width: 1672, height: 941 })
     await page.goto('/')

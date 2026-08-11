@@ -305,12 +305,12 @@ export function BatteryOptimizerPlanTable({
         <div className={planPillClassName()}>{planHours}h horizon</div>
       </div>
 
-      <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="grid content-start gap-3 sm:grid-cols-2 xl:grid-cols-1">
+      <div className="grid h-full min-h-0 gap-4 md:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="grid content-start gap-3 sm:grid-cols-2 md:grid-cols-1">
           <SummaryBlock compact label="Next action" value={planSummary.nextAction} />
           <SummaryBlock compact label="Best projected window" value={planSummary.bestWindow} />
           <SummaryBlock compact label="Projected plan result" value={planSummary.projectedProfit} />
-          <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] sm:col-span-2 xl:col-span-1">
+          <div className="rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] sm:col-span-2 md:col-span-1">
             <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">How to read</span>
             <div className="mt-3 flex flex-wrap gap-2">
               <OptimizerPlanActionChip action="BUY" />
@@ -323,7 +323,7 @@ export function BatteryOptimizerPlanTable({
               Rows are ordered by time. Target shows where the optimizer wants battery state of charge to land by the end of that hour.
             </p>
           </div>
-          <div className="grid gap-2 rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] sm:col-span-2 sm:grid-cols-3 xl:col-span-1 xl:grid-cols-1">
+          <div className="grid gap-2 rounded-[18px] border border-white/8 bg-[#0b111d]/88 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] sm:col-span-2 sm:grid-cols-3 md:col-span-1 md:grid-cols-1">
             <PlanMiniStat
               label="Highest sell price"
               value={rows.length ? formatOptimizerPrice(Math.max(...rows.map((row) => row.sellPriceDkkPerKwh))) : '---'}

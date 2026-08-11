@@ -105,7 +105,7 @@ export function BatteryPlannerDashboard({
 
   return (
     <section className="grid w-full gap-4 pb-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-7">
         <BatteryHeroMetric compact label="State of charge" meta={battery.energy ? `${battery.energy} kWh stored` : undefined} progress={battery.socValue} tone="green" value={battery.soc}>
           <BatteryVisual className="!h-[78px] !w-[46px]" level={battery.socValue} />
         </BatteryHeroMetric>
@@ -117,13 +117,13 @@ export function BatteryPlannerDashboard({
         <BatteryHeroMetric compact label="Export payout" meta="After export costs" tone="green" value={shortPrice(status?.sellPriceDkkPerKwh)} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(340px,0.9fr)_minmax(500px,1.45fr)_minmax(300px,0.72fr)]">
+      <div className="grid gap-4 md:grid-cols-[minmax(340px,0.9fr)_minmax(500px,1.45fr)_minmax(300px,0.72fr)]">
         <BatteryFlowCard battery={battery} flow={flow} />
         <BatteryOutlookCard optimizer={optimizer} />
         <BatteryActionsCard nextAction={nextAction} optimizer={optimizer} onOpenDetails={onOpenDetails} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(240px,0.76fr)_minmax(310px,1fr)_minmax(280px,0.92fr)_minmax(390px,1.32fr)]">
+      <div className="grid gap-4 md:grid-cols-[minmax(240px,0.76fr)_minmax(310px,1fr)_minmax(280px,0.92fr)_minmax(390px,1.32fr)]">
         <EnergySummaryCard distribution={distribution} />
         <PriceDecisionCard optimizer={optimizer} />
         <BatteryUsageCard distribution={distribution} />

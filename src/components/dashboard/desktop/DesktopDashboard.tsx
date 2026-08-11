@@ -10,7 +10,7 @@ import { EvChargerModal } from '../../EvChargerModal'
 import { DesktopNotificationsPage } from '../../notifications/NotificationsScreen'
 import { DesktopBatteryPage } from './DesktopBatteryPage'
 import { DesktopSettingsPage } from './DesktopSettingsPage'
-import { DesktopTopNavigation } from './DesktopTopNavigation'
+import { DesktopPageHeader } from './DesktopPageHeader'
 import { EnergyFlowMap, FlowNode } from './DesktopFlow'
 import type { DayHeaderControls } from './DesktopShared'
 import {
@@ -22,7 +22,6 @@ import {
   SolarProductionPanel,
   MarketRatesPanel,
 } from './DesktopPanels'
-import { StatusPill } from './DesktopShared'
 
 type DesktopTab = 'battery' | 'notifications' | 'overview' | 'settings'
 
@@ -137,34 +136,29 @@ export function DesktopDashboard({
   const [activeTab, setActiveTab] = useState<DesktopTab>('overview')
   const openBatteryPage = () => setActiveTab('battery')
 
-  const usesFixedOverviewCanvas = activeTab === 'overview'
-
   return (
-    <main className={usesFixedOverviewCanvas ? 'relative grid place-items-center overflow-hidden' : 'relative h-screen w-screen overflow-hidden'} style={usesFixedOverviewCanvas ? shellStyle : undefined}>
-      <div className={usesFixedOverviewCanvas ? 'absolute left-1/2 top-1/2 h-[941px] w-[1672px] -translate-x-1/2 -translate-y-1/2 overflow-hidden' : 'absolute inset-0 overflow-hidden'}>
+    <main className="relative grid place-items-center overflow-hidden" style={shellStyle}>
+      <div className="absolute left-1/2 top-1/2 h-[941px] w-[1672px] -translate-x-1/2 -translate-y-1/2 overflow-hidden">
         <div
-          className={usesFixedOverviewCanvas ? 'relative h-[941px] w-[1672px] overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)] font-sans tracking-[0] text-dashboard-text' : 'relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)] font-sans tracking-[0] text-dashboard-text'}
-          style={usesFixedOverviewCanvas ? sceneStyle : undefined}
+          className="relative h-[941px] w-[1672px] overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)] font-sans tracking-[0] text-dashboard-text"
+          style={sceneStyle}
         >
         {activeTab === 'overview' ? (
           <>
+            <DesktopPageHeader
+              active="overview"
+              displayDate={displayDate}
+              displayTime={displayTime}
+              onOpenEvCharger={onOpenEvCharger}
+              onSelect={setActiveTab}
+              subtitle="Live overview of your home energy system"
+              title="Overview"
+              weather={weather}
+            />
             <section
-              className="absolute left-0 top-0 h-[941px] w-[1172px] px-[28px] pb-3 pr-3 pt-6"
+              className="absolute left-0 top-[94px] h-[575px] w-[1172px] px-[28px] pr-3"
               aria-label="Home energy overview"
             >
-              <header className="flex h-[70px] items-start justify-between">
-                <div>
-                  <h1 className="m-0 text-[24px] leading-[1.1] text-white">Overview</h1>
-                  <p className="mt-[7px] text-[15px] text-[#d7dbe1]">Live overview of your home energy system</p>
-                </div>
-                <DesktopTopNavigation active="overview" onOpenEvCharger={onOpenEvCharger} onSelect={setActiveTab} />
-                <div className="fixed left-[1196px] top-[24px] z-[3] grid grid-cols-[120px_138px_138px] gap-5">
-                  <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
-                  <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />
-                  <StatusPill primary="All systems" secondary="Normal" tone="ok" />
-                </div>
-              </header>
-
               <section className="relative h-[575px]" aria-label="Energy flow">
                 <img
                   className="absolute left-[18px] top-[46px] h-[344px] w-[900px] select-none object-cover object-center"
@@ -198,20 +192,21 @@ export function DesktopDashboard({
                 />
               </section>
 
-              <section
-                className="absolute bottom-3 left-3 right-[10px] grid h-[264px] grid-cols-[320px_330px_248px] gap-[10px]"
-                aria-label="Bottom analytics"
-              >
-                <SolarForecastCard badge={solar.forecast.dataState} controls={insightControls} insight={solar.forecast} />
-                <EnergyPricesCard badge={prices.dataState} controls={insightControls} insight={prices} />
-                <EvChargerOverviewCard
-                  battery={charger.battery}
-                  chargeRate={charger.chargeRate}
-                  onOpen={onOpenEvCharger}
-                  range={charger.range}
-                  status={charger.status}
-                />
-              </section>
+            </section>
+
+            <section
+              className="absolute bottom-3 left-3 grid h-[264px] w-[918px] grid-cols-[320px_330px_248px] gap-[10px]"
+              aria-label="Bottom analytics"
+            >
+              <SolarForecastCard badge={solar.forecast.dataState} controls={insightControls} insight={solar.forecast} />
+              <EnergyPricesCard badge={prices.dataState} controls={insightControls} insight={prices} />
+              <EvChargerOverviewCard
+                battery={charger.battery}
+                chargeRate={charger.chargeRate}
+                onOpen={onOpenEvCharger}
+                range={charger.range}
+                status={charger.status}
+              />
             </section>
 
             <aside className="absolute right-4 top-[96px] grid w-[484px] gap-[10px]" aria-label="Energy details">

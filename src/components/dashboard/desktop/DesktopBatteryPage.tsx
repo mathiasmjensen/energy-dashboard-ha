@@ -2,8 +2,7 @@ import { useState } from 'react'
 import type { BatteryOptimizerState } from '../../../models/batteryOptimizer'
 import { getBatteryTimeEstimate, parseDisplayNumber } from '../../../services/batteryMetrics'
 import { BatteryDetailsWorkspace, BatteryPlannerDashboard } from './DesktopBatterySections'
-import { StatusPill } from './DesktopShared'
-import { DesktopTopNavigation } from './DesktopTopNavigation'
+import { DesktopPageHeader } from './DesktopPageHeader'
 
 type BatterySection = 'Dashboard' | 'Details'
 type BatteryHistoryPeriod = '24h' | '7d' | '30d' | '90d'
@@ -76,27 +75,21 @@ export function DesktopBatteryPage({
   })
   return (
     <section
-      className="absolute inset-0 overflow-y-auto overscroll-contain bg-[radial-gradient(circle_at_50%_0%,rgba(27,47,68,0.22),transparent_35%),#080d14] px-5 pb-8 pt-5 [scrollbar-gutter:stable]"
+      className="absolute inset-0 overflow-y-auto overscroll-contain bg-[radial-gradient(circle_at_50%_0%,rgba(27,47,68,0.22),transparent_35%),#080d14] px-7 pb-6 pt-[94px] [scrollbar-gutter:stable]"
       aria-label="Battery details"
     >
-      <header className="relative flex h-[89px] w-full items-start justify-between">
-        <div>
-          <h1 className="m-0 text-[24px] leading-[1.1] text-white">Battery</h1>
-          <p className="mt-[7px] text-[15px] text-[#d7dbe1]">
-            {batterySection === 'Details'
-              ? 'Battery history and the complete optimization schedule'
-              : 'Detailed overview of your battery system and optimization'}
-          </p>
-        </div>
-        <DesktopTopNavigation active="battery" onOpenEvCharger={onOpenEvCharger} onSelect={(page) => page === 'settings' ? onOpenSettings() : page === 'notifications' ? onOpenNotifications() : page === 'overview' ? onGoOverview() : setBatterySection('Dashboard')} />
-        <div className="absolute right-0 top-[7px] z-[3] grid grid-cols-[104px_126px_126px] gap-4">
-          <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
-          <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />
-          <StatusPill primary="All systems" secondary="Normal" tone="ok" />
-        </div>
-      </header>
+      <DesktopPageHeader
+        active="battery"
+        displayDate={displayDate}
+        displayTime={displayTime}
+        onOpenEvCharger={onOpenEvCharger}
+        onSelect={(page) => page === 'settings' ? onOpenSettings() : page === 'notifications' ? onOpenNotifications() : page === 'overview' ? onGoOverview() : setBatterySection('Dashboard')}
+        subtitle={batterySection === 'Details' ? 'Battery history and the complete optimization schedule' : 'Detailed overview of your battery system and optimization'}
+        title="Battery"
+        weather={weather}
+      />
 
-      <div className="flex min-h-[calc(100%-82px)] flex-col gap-4">
+      <div className="flex min-h-full flex-col gap-4">
         {batterySection === 'Details' ? (
           <>
             <button className="w-fit rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-dashboard-soft transition hover:border-white/20 hover:text-white" type="button" onClick={() => setBatterySection('Dashboard')}>

@@ -1,7 +1,7 @@
 import { cn } from '../../lib/cn'
 import type { NotificationPreferences, NotificationsState } from '../../models/notifications'
-import { DataStateBadge, OverviewIcon, Panel, StatusPill } from '../dashboard/desktop/DesktopShared'
-import { DesktopTopNavigation } from '../dashboard/desktop/DesktopTopNavigation'
+import { DataStateBadge, OverviewIcon, Panel } from '../dashboard/desktop/DesktopShared'
+import { DesktopPageHeader } from '../dashboard/desktop/DesktopPageHeader'
 import { GlassCard, MobileDataStateBadge, MobileIcon, SectionHeading, StatusChip } from '../mobile/MobilePrimitives'
 
 type NotificationController = Pick<ReturnType<typeof import('../../hooks/useNotifications').useNotifications>, 'disable' | 'enable' | 'refresh'>
@@ -43,23 +43,21 @@ export function DesktopNotificationsPage({
 }) {
   return (
     <section
-      className="absolute inset-0 overflow-y-auto overscroll-contain px-6 pb-8 pt-5 [scrollbar-gutter:stable]"
+      className="absolute inset-0 overflow-y-auto overscroll-contain px-7 pb-6 pt-[94px] [scrollbar-gutter:stable]"
       aria-label="Notifications"
     >
-      <header className="relative flex h-[89px] items-start justify-between">
-        <div>
-          <h1 className="m-0 text-[24px] leading-[1.1] text-white">Notifications</h1>
-          <p className="mt-[7px] text-[15px] text-[#d7dbe1]">Push alerts, delivery status, and recent dashboard activity.</p>
-        </div>
-        <DesktopTopNavigation active="notifications" onOpenEvCharger={onOpenEvCharger} onSelect={(page) => page === 'battery' ? onGoBattery() : page === 'settings' ? onOpenSettings() : page === 'overview' ? onGoOverview() : undefined} />
-        <div className="absolute right-0 top-[7px] z-[3] grid grid-cols-[104px_126px_126px] gap-4">
-          <StatusPill icon="sun" primary={weather.temperature} secondary={weather.condition} tone="sun" />
-          <StatusPill icon="clock" primary={displayTime} secondary={displayDate} />
-          <StatusPill primary="All systems" secondary="Normal" tone="ok" />
-        </div>
-      </header>
+      <DesktopPageHeader
+        active="notifications"
+        displayDate={displayDate}
+        displayTime={displayTime}
+        onOpenEvCharger={onOpenEvCharger}
+        onSelect={(page) => page === 'battery' ? onGoBattery() : page === 'settings' ? onOpenSettings() : page === 'overview' ? onGoOverview() : undefined}
+        subtitle="Push alerts, delivery status, and recent dashboard activity."
+        title="Notifications"
+        weather={weather}
+      />
 
-      <div className="grid min-h-[calc(100%-89px)] grid-cols-[minmax(0,0.9fr)_minmax(320px,0.72fr)] gap-5">
+      <div className="grid min-h-full grid-cols-[minmax(0,0.9fr)_minmax(320px,0.72fr)] gap-5">
         <section className="grid min-h-0 gap-5">
           <Panel className="p-5">
             <div className="flex items-center justify-between gap-3">
@@ -77,14 +75,14 @@ export function DesktopNotificationsPage({
               </div>
             </div>
 
-            <div className="mt-5 grid gap-4 lg:grid-cols-4">
+            <div className="mt-5 grid gap-4 md:grid-cols-4">
               <NotificationStat label="Permission" value={formatPermission(notifications.permission)} />
               <NotificationStat label="Subscription" value={notifications.isSubscribed ? 'Active' : 'Inactive'} tone={notifications.isSubscribed ? 'green' : 'neutral'} />
               <NotificationStat label="Backend" value={notifications.backendAvailable ? 'Connected' : 'Unavailable'} tone={notifications.backendAvailable ? 'green' : 'danger'} />
               <NotificationStat label="Last sync" value={notifications.lastSyncedAt ? formatTimestamp(notifications.lastSyncedAt) : 'Not yet'} />
             </div>
 
-            <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_260px]">
               <div className="rounded-[20px] border border-white/8 bg-[#0b111d]/88 p-4 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
                 <div className="flex items-center gap-2">
                   <OverviewIcon name="history" />
@@ -113,7 +111,7 @@ export function DesktopNotificationsPage({
             <div className="flex items-center gap-2">
               <h2 className="text-[20px] font-semibold text-white">Alert preferences</h2>
             </div>
-            <div className="mt-5 grid gap-3 lg:grid-cols-2">
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
               {PREFERENCE_ITEMS.map((item) => (
                 <PreferenceCard
                   key={item.key}
