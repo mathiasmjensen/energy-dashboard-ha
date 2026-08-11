@@ -49,11 +49,12 @@ export function EnergyDashboard() {
   }, [])
 
   const shellStyle = {
-    width: `${DESIGN_WIDTH * scale}px`,
-    height: `${DESIGN_HEIGHT * scale}px`,
+    width: `${DESIGN_WIDTH * scale.width}px`,
+    height: `${DESIGN_HEIGHT * scale.height}px`,
   }
   const sceneStyle = {
-    transform: `scale(${scale})`,
+    transform: `translate(-50%, -50%) scale(${scale.width}, ${scale.height})`,
+    transformOrigin: 'center',
   } satisfies CSSProperties
 
   const solarProductionEnergyKwh = data.solarProductionToday

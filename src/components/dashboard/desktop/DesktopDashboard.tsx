@@ -151,11 +151,13 @@ export function DesktopDashboard({
   }, [])
 
   return (
-    <main className="relative grid place-items-center overflow-hidden" style={shellStyle}>
-      <div className="absolute left-1/2 top-1/2 h-[941px] w-[1672px] -translate-x-1/2 -translate-y-1/2 overflow-hidden">
+    <main className="relative overflow-hidden" style={shellStyle}>
+      <div
+        className="absolute left-1/2 top-1/2 h-[941px] w-[1672px] overflow-hidden"
+        style={sceneStyle}
+      >
         <div
           className="relative h-[941px] w-[1672px] overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)] font-sans tracking-[0] text-dashboard-text"
-          style={sceneStyle}
         >
         {activeTab === 'overview' ? (
           <>
