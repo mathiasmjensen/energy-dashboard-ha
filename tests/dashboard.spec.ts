@@ -37,7 +37,7 @@ test.describe('energy dashboard', () => {
     await expect(topNavigation.getByRole('button')).toHaveCount(5)
     await expect(topNavigation.getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
     await expect(page.locator('.overview-panel')).toHaveCount(6)
-    await expect(page.locator('.overview-flow-path')).toHaveCount(4)
+    await expect(page.locator('.overview-flow-path')).toHaveCount(5)
     await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Energy distribution' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Solar production' })).toBeVisible()
