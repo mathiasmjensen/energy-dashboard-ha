@@ -26,9 +26,6 @@ import { useSolarForecast } from '../hooks/useSolarForecast'
 import { useTodayEnergyTotals } from '../hooks/useTodayEnergyTotals'
 import './EnergyDashboard.css'
 
-const DESIGN_WIDTH = 1672
-const DESIGN_HEIGHT = 941
-
 export function EnergyDashboard() {
   const scale = useSceneScale()
   const isMobileView = useIsMobileView()
@@ -49,11 +46,11 @@ export function EnergyDashboard() {
   }, [])
 
   const shellStyle = {
-    width: `${DESIGN_WIDTH * scale.width}px`,
-    height: `${DESIGN_HEIGHT * scale.height}px`,
+    width: '100vw',
+    height: '100vh',
   }
   const sceneStyle = {
-    transform: `translate(-50%, -50%) scale(${scale.width}, ${scale.height})`,
+    transform: `translate(-50%, -50%) scale(${scale})`,
     transformOrigin: 'center',
   } satisfies CSSProperties
 

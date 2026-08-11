@@ -151,7 +151,7 @@ export function DesktopDashboard({
   }, [])
 
   return (
-    <main className="relative overflow-hidden" style={shellStyle}>
+    <main className="relative overflow-hidden bg-[radial-gradient(circle_at_48%_25%,rgba(45,63,80,0.22),transparent_31%),linear-gradient(180deg,#060a0f,#030509_62%,#030407)]" style={shellStyle}>
       <div
         className="absolute left-1/2 top-1/2 h-[941px] w-[1672px] overflow-hidden"
         style={sceneStyle}
