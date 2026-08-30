@@ -165,6 +165,12 @@ Handled through the Home Assistant EVCC package:
 Primary package file:
 - `home-assistant/energy_dashboard_evcc.yaml`
 
+The charge-plan helpers use full date-and-time values so one-off plans can
+start in the current hour and cross midnight. After updating the helper package,
+recreate `input_datetime.evcc_charge_start` and `input_datetime.evcc_charge_end`
+in Home Assistant if they were originally created as time-only helpers. Both
+helpers must have **date** and **time** enabled before reloading the EVCC package.
+
 ### FoxESS
 
 Handled through the Home Assistant FoxESS package:

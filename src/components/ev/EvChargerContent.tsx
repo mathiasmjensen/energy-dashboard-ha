@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import type { EvChargerBottomMode, EvChargerController, EvPlanPriceHour } from '../../models/evChargePlan'
 import { cn } from '../../lib/cn'
+import { formatClock } from '../../services/evChargePlan'
 import { assetPath } from '../../utils/assetPath'
 
 const DASH = '---'
@@ -55,6 +56,8 @@ export function EvChargerOverviewSection({
 }
 
 export function EvChargerSettingsSection({ controller }: { controller: EvChargerController }) {
+  const hasUnsavedPlan = controller.planStatus.startsWith('Unsaved')
+
   return (
     <section className="grid h-full content-start gap-3 rounded-[22px] border border-white/10 bg-[#0c121d]/88 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.24)]" aria-label="Charger settings">
       <h3 className="text-lg font-semibold text-dashboard-text">Charger settings</h3>
@@ -74,7 +77,10 @@ export function EvChargerSettingsSection({ controller }: { controller: EvCharger
           </select>
         </SettingRow>
 
-        <SettingRow description={`Current window ${controller.planWindowLabel}`} label="Charge plan">
+        <SettingRow
+          description={hasUnsavedPlan ? `Draft window ${controller.planWindowLabel}. Save to apply.` : `Scheduled window ${controller.planWindowLabel}`}
+          label="Charge plan"
+        >
           <Toggle checked={controller.isPlanEnabled} label="Charge plan enabled">
             <input
               aria-label="Charge plan enabled"
@@ -192,33 +198,18 @@ export function EvChargerActivitySection({
             </div>
           )}
 
-          <div className="grid grid-cols-[42px_1fr_42px] items-center gap-2">
-            <button
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-lg text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="Select previous price day"
-              disabled={controller.safePriceDayIndex === 0}
-              type="button"
-              onClick={controller.handlePreviousPriceDay}
-            >
-              ‹
-            </button>
+          <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-3 py-2.5">
             <span aria-label="Energy price day" className="grid min-w-0 justify-items-center gap-0.5 text-center">
               <strong className="text-sm font-semibold text-dashboard-text">{controller.selectedPriceDay.label}</strong>
-              <small className="text-xs text-dashboard-soft">{controller.selectedPriceDay.date}</small>
+              <small className="text-xs text-dashboard-soft">
+                {controller.selectedPriceDay.date} · Current hour from {formatClock(controller.earliestPlanStartMs)}
+              </small>
             </span>
-            <button
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-lg text-dashboard-text transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="Select next price day"
-              disabled={controller.safePriceDayIndex >= controller.priceDayCount - 1}
-              type="button"
-              onClick={controller.handleNextPriceDay}
-            >
-              ›
-            </button>
           </div>
 
           <PricePlanChart
             endMs={controller.planEndMs}
+            nowMs={controller.nowMs}
             prices={controller.priceHours}
             startMs={controller.planStartMs}
             onHourClick={controller.handlePriceHourClick}
@@ -261,12 +252,15 @@ export function EvChargerContent({
 function ActivePlanSummary({ controller }: { controller: EvChargerController }) {
   const modeLabel =
     controller.modeOptions.find((option) => option.value === controller.selectedMode)?.label ?? controller.selectedMode
+  const hasUnsavedPlan = controller.planStatus.startsWith('Unsaved')
 
   return (
     <section className="grid gap-3 rounded-[20px] border border-white/8 bg-white/[0.03] p-3" aria-label="Active charge plan">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Active plan</span>
+          <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
+            {hasUnsavedPlan ? 'Plan draft' : 'Active plan'}
+          </span>
           <strong className="mt-1 block text-xl font-semibold text-dashboard-text">{controller.planWindowLabel}</strong>
         </div>
         <Toggle checked={controller.isPlanEnabled} label="Active charge plan enabled">
@@ -282,11 +276,13 @@ function ActivePlanSummary({ controller }: { controller: EvChargerController }) 
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-2xl border border-white/8 bg-[#09101a]/80 px-3 py-2.5">
           <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Status</span>
-          <strong className="mt-1 block truncate text-sm font-semibold text-dashboard-text">{controller.isPlanEnabled ? 'Enabled' : 'Paused'}</strong>
+          <strong className="mt-1 block truncate text-sm font-semibold text-dashboard-text">
+            {hasUnsavedPlan ? 'Unsaved' : controller.isPlanEnabled ? 'Enabled' : 'Paused'}
+          </strong>
         </div>
         <div className="rounded-2xl border border-white/8 bg-[#09101a]/80 px-3 py-2.5">
-          <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Price day</span>
-          <strong className="mt-1 block truncate text-sm font-semibold text-dashboard-text">{controller.selectedPriceDay.label}</strong>
+          <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Price range</span>
+          <strong className="mt-1 block text-sm font-semibold text-dashboard-text">Next 24h</strong>
         </div>
         <div className="rounded-2xl border border-white/8 bg-[#09101a]/80 px-3 py-2.5">
           <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Charge mode</span>
@@ -429,6 +425,7 @@ function SettingRow({
 
 function PricePlanChart({
   endMs,
+  nowMs,
   onHourClick,
   onHourPointerDown,
   onHourPointerEnter,
@@ -438,6 +435,7 @@ function PricePlanChart({
   startMs,
 }: {
   endMs: number
+  nowMs: number
   onHourClick: (window: EvPlanPriceHour) => void
   onHourPointerDown: (window: EvPlanPriceHour) => void
   onHourPointerEnter: (window: EvPlanPriceHour) => void
@@ -457,22 +455,25 @@ function PricePlanChart({
       onPointerLeave={onHourPointerLeave}
     >
       {values.map((priceWindow, index) => {
-        const selected = priceWindow.startMs >= startMs && priceWindow.startMs < endMs
+        const selected = priceWindow.endMs > startMs && priceWindow.startMs < endMs
+        const includesNow = priceWindow.startMs <= nowMs && nowMs < priceWindow.endMs
         const datePrefix = index === 0 || values[index - 1]?.date !== priceWindow.date ? `${priceWindow.date} ` : ''
         const hourLabel = `${datePrefix}${priceWindow.label}`
         const price = priceWindow.price
         const priceLabel = `${price.toFixed(2)} DKK/kWh`
+        const currentHourLabel = includesNow ? `Now · ${hourLabel}` : hourLabel
 
         return (
           <button
-            aria-label={`Select ${hourLabel} energy price ${priceLabel}`}
+            aria-label={`Select ${currentHourLabel} energy price ${priceLabel}`}
             className="group relative z-[1] h-full min-h-0 min-w-0 flex-1 self-end rounded-none border-0 bg-transparent p-0 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:-translate-y-0.5 focus-visible:brightness-110 disabled:cursor-not-allowed disabled:opacity-30"
             data-price-label={`${hourLabel} · ${priceLabel}`}
+            data-current={includesNow}
             data-selected={selected}
             disabled={priceWindow.disabled}
             key={index}
             style={{ '--bar-height': `${Math.max(5, (price / max) * 100)}%` } as CSSProperties}
-            title={`${hourLabel} ${priceLabel}`}
+            title={`${currentHourLabel} ${priceLabel}`}
             type="button"
             onClick={() => onHourClick(priceWindow)}
             onPointerDown={() => onHourPointerDown(priceWindow)}
@@ -488,8 +489,9 @@ function PricePlanChart({
               )}
               style={{ height: 'var(--bar-height)' }}
             />
+            {includesNow ? <span aria-hidden="true" className="absolute inset-y-0 left-1/2 w-px bg-white/70 shadow-[0_0_10px_rgba(255,255,255,0.7)]" /> : null}
             <span className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-[calc(100%+8px)] rounded-lg border border-white/12 bg-[#070d16]/95 px-2 py-1 text-[11px] text-white opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.35)] transition group-hover:opacity-100 group-focus-visible:opacity-100">
-              {`${hourLabel} · ${priceLabel}`}
+              {`${currentHourLabel} · ${priceLabel}`}
             </span>
           </button>
         )

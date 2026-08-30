@@ -55,19 +55,23 @@ script:
     variables:
       selected_plan: "{{ charge_plan if charge_plan is defined else (plan if plan is defined else {}) }}"
       plan_enabled: "{{ selected_plan.enabled | default(selected_plan.active | default(true)) | bool }}"
+      plan_start_date: "{{ selected_plan.start_date | default(selected_plan.date | default(now().strftime('%Y-%m-%d'))) }}"
       plan_start_time: "{{ selected_plan.start_time | default(selected_plan.start | default(selected_plan.from | default('22:00'))) }}"
+      plan_end_date: "{{ selected_plan.end_date | default(plan_start_date) }}"
       plan_end_time: "{{ selected_plan.end_time | default(selected_plan.end | default(selected_plan.to | default('06:00'))) }}"
     sequence:
       - service: input_datetime.set_datetime
         target:
           entity_id: input_datetime.evcc_charge_start
         data:
+          date: "{{ plan_start_date }}"
           time: "{{ (plan_start_time | string) ~ ':00' if (plan_start_time | string | length) == 5 else plan_start_time }}"
 
       - service: input_datetime.set_datetime
         target:
           entity_id: input_datetime.evcc_charge_end
         data:
+          date: "{{ plan_end_date }}"
           time: "{{ (plan_end_time | string) ~ ':00' if (plan_end_time | string | length) == 5 else plan_end_time }}"
 
       - choose:

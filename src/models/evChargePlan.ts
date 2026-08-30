@@ -16,7 +16,9 @@ export type UseEvChargerControllerProps = {
   chargeModeOptions: string[]
   chargePlanEnabled: boolean
   chargePlanFrom: string
+  chargePlanStartMs: number | null
   chargePlanTo: string
+  chargePlanEndMs: number | null
   priceAverage: string
   priceCurrent: string
   priceDays: PeakRateDay[]
@@ -28,30 +30,28 @@ export type EvChargerController = {
   bottomMode: EvChargerBottomMode
   isPlanEnabled: boolean
   modeOptions: Array<{ label: string; value: EvccChargeMode }>
+  earliestPlanStartMs: number
   planFrom: string
   planEndMs: number
   planStatus: string
   planStartMs: number
   planTo: string
   planWindowLabel: string
-  priceDayCount: number
   priceHours: EvPlanPriceHour[]
   priceSummary: {
     average: string
     current: string
     peak: string
   }
-  safePriceDayIndex: number
+  nowMs: number
   selectedMode: EvccChargeMode
   selectedPriceDay: PeakRateDay
   sessionHistory: EvccChargeSession[]
   setBottomMode: (mode: EvChargerBottomMode) => void
   handleModeChange: (mode: EvccChargeMode) => void
-  handleNextPriceDay: () => void
   handlePlanEnabledChange: (enabled: boolean) => void
   handlePlanFromChange: (value: string) => void
   handlePlanToChange: (value: string) => void
-  handlePreviousPriceDay: () => void
   handlePriceHourClick: (window: EvPlanPriceHour) => void
   handlePriceHourPointerDown: (window: EvPlanPriceHour) => void
   handlePriceHourPointerEnter: (window: EvPlanPriceHour) => void

@@ -10,12 +10,12 @@
 input_datetime:
   evcc_charge_start:
     name: EVCC charge start
-    has_date: false
+    has_date: true
     has_time: true
 
   evcc_charge_end:
     name: EVCC charge end
-    has_date: false
+    has_date: true
     has_time: true
 
 input_boolean:

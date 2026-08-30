@@ -10,7 +10,8 @@ import {
   formatClock,
   formatLocalDateKey,
   formatPlanRangeLabel,
-  getNextFullHourMs,
+  getCurrentHourMs,
+  getNextSafePlanStartMs,
   isClockValue,
   normalizeClockValue,
   resolvePlanEndAfterStart,
@@ -22,7 +23,9 @@ export function useEvChargerController({
   chargeMode,
   chargeModeOptions,
   chargePlanEnabled,
+  chargePlanEndMs,
   chargePlanFrom,
+  chargePlanStartMs,
   chargePlanTo,
   priceAverage,
   priceCurrent,
@@ -38,12 +41,21 @@ export function useEvChargerController({
   const [selectedMode, setSelectedMode] = useState<EvccChargeMode>(() => normalizeEvccMode(chargeMode))
   const [bottomMode, setBottomMode] = useState<EvChargerBottomMode>('plan')
   const [nowMs, setNowMs] = useState(() => Date.now())
-  const nextFullHourMs = useMemo(() => getNextFullHourMs(nowMs), [nowMs])
+  const currentHourMs = useMemo(() => getCurrentHourMs(nowMs), [nowMs])
+  const earliestPlanStartMs = useMemo(() => getNextSafePlanStartMs(nowMs), [nowMs])
   const [planFrom, setPlanFrom] = useState(() => normalizeClockValue(chargePlanFrom, '22:00'))
   const [planTo, setPlanTo] = useState(() => normalizeClockValue(chargePlanTo, '06:00'))
-  const [planRange, setPlanRange] = useState(() =>
-    resolvePlanRange(normalizeClockValue(chargePlanFrom, '22:00'), normalizeClockValue(chargePlanTo, '06:00'), getNextFullHourMs(Date.now())),
-  )
+  const [planRange, setPlanRange] = useState(() => {
+    if (chargePlanStartMs !== null && chargePlanEndMs !== null && chargePlanEndMs > chargePlanStartMs && chargePlanEndMs > Date.now()) {
+      return { endMs: chargePlanEndMs, startMs: chargePlanStartMs }
+    }
+
+    return resolvePlanRange(
+      normalizeClockValue(chargePlanFrom, '22:00'),
+      normalizeClockValue(chargePlanTo, '06:00'),
+      getNextSafePlanStartMs(Date.now()),
+    )
+  })
   const [isPlanEnabled, setIsPlanEnabled] = useState(chargePlanEnabled)
   const [planStatus, setPlanStatus] = useState('Ready to save plan')
   const [chartAnchorMs, setChartAnchorMs] = useState<number | null>(null)
@@ -65,14 +77,26 @@ export function useEvChargerController({
   useEffect(() => {
     const nextFrom = normalizeClockValue(chargePlanFrom, '22:00')
     setPlanFrom(nextFrom)
-    setPlanRange((current) => resolvePlanRange(nextFrom, formatClock(current.endMs), getNextFullHourMs(Date.now())))
-  }, [chargePlanFrom])
+    setPlanRange((current) => {
+      if (chargePlanStartMs !== null && chargePlanEndMs !== null && chargePlanEndMs > chargePlanStartMs && chargePlanEndMs > Date.now()) {
+        return { endMs: chargePlanEndMs, startMs: chargePlanStartMs }
+      }
+
+      return resolvePlanRange(nextFrom, formatClock(current.endMs), getNextSafePlanStartMs(Date.now()))
+    })
+  }, [chargePlanEndMs, chargePlanFrom, chargePlanStartMs])
 
   useEffect(() => {
     const nextTo = normalizeClockValue(chargePlanTo, '06:00')
     setPlanTo(nextTo)
-    setPlanRange((current) => resolvePlanRange(formatClock(current.startMs), nextTo, getNextFullHourMs(Date.now())))
-  }, [chargePlanTo])
+    setPlanRange((current) => {
+      if (chargePlanStartMs !== null && chargePlanEndMs !== null && chargePlanEndMs > chargePlanStartMs && chargePlanEndMs > Date.now()) {
+        return { endMs: chargePlanEndMs, startMs: chargePlanStartMs }
+      }
+
+      return resolvePlanRange(formatClock(current.startMs), nextTo, getNextSafePlanStartMs(Date.now()))
+    })
+  }, [chargePlanEndMs, chargePlanStartMs, chargePlanTo])
 
   useEffect(() => {
     setIsPlanEnabled(chargePlanEnabled)
@@ -227,22 +251,28 @@ export function useEvChargerController({
         return
       }
 
-      if (chartAnchorMs === null) {
-        setChartAnchorMs(window.startMs)
-        applyChartWindow(window.startMs, window.endMs)
+      const selectableStartMs = Math.max(window.startMs, earliestPlanStartMs)
+
+      if (selectableStartMs >= window.endMs) {
         return
       }
 
-      if (window.startMs <= chartAnchorMs) {
+      if (chartAnchorMs === null) {
+        setChartAnchorMs(selectableStartMs)
+        applyChartWindow(selectableStartMs, window.endMs)
+        return
+      }
+
+      if (selectableStartMs <= chartAnchorMs) {
         setChartAnchorMs(null)
-        applyChartWindow(window.startMs, window.endMs)
+        applyChartWindow(selectableStartMs, window.endMs)
         return
       }
 
       applyChartWindow(chartAnchorMs, window.startMs)
       setChartAnchorMs(null)
     },
-    [applyChartWindow, chartAnchorMs, didDragChart],
+    [applyChartWindow, chartAnchorMs, didDragChart, earliestPlanStartMs],
   )
 
   const handlePriceHourPointerDown = useCallback(
@@ -251,11 +281,16 @@ export function useEvChargerController({
         return
       }
 
-      setDragStartMs(window.startMs)
+      const selectableStartMs = Math.max(window.startMs, earliestPlanStartMs)
+      if (selectableStartMs >= window.endMs) {
+        return
+      }
+
+      setDragStartMs(selectableStartMs)
       setDidDragChart(false)
-      applyChartWindow(window.startMs, window.endMs)
+      applyChartWindow(selectableStartMs, window.endMs)
     },
-    [applyChartWindow],
+    [applyChartWindow, earliestPlanStartMs],
   )
 
   const handlePriceHourPointerEnter = useCallback(
@@ -282,13 +317,13 @@ export function useEvChargerController({
   const handlePlanFromChange = useCallback((value: string) => {
     setPlanFrom(value)
     if (isClockValue(value)) {
-      const nextRange = resolvePlanRange(value, planTo, nextFullHourMs)
+      const nextRange = resolvePlanRange(value, planTo, earliestPlanStartMs)
       setPlanRange(nextRange)
       setPlanTo(formatClock(nextRange.endMs))
     }
     setPlanStatus('Unsaved changes')
     setChartAnchorMs(null)
-  }, [nextFullHourMs, planTo])
+  }, [earliestPlanStartMs, planTo])
 
   const handlePlanToChange = useCallback((value: string) => {
     setPlanTo(value)
@@ -310,19 +345,9 @@ export function useEvChargerController({
     setDragStartMs(null)
   }, [])
 
-  const handlePreviousPriceDay = useCallback(() => {
-    setChartAnchorMs(null)
-    setDragStartMs(null)
-  }, [])
-
-  const handleNextPriceDay = useCallback(() => {
-    setChartAnchorMs(null)
-    setDragStartMs(null)
-  }, [])
-
   const priceHours = useMemo(
-    () => createRollingPriceHours(priceDays, priceSeries, nextFullHourMs),
-    [nextFullHourMs, priceDays, priceSeries],
+    () => createRollingPriceHours(priceDays, priceSeries, currentHourMs),
+    [currentHourMs, priceDays, priceSeries],
   )
 
   const selectedPriceDay = useMemo(() => createRollingPriceDay(priceHours), [priceHours])
@@ -339,11 +364,9 @@ export function useEvChargerController({
   return {
     bottomMode,
     handleModeChange,
-    handleNextPriceDay,
     handlePlanEnabledChange,
     handlePlanFromChange,
     handlePlanToChange,
-    handlePreviousPriceDay,
     handlePriceHourClick,
     handlePriceHourPointerDown,
     handlePriceHourPointerEnter,
@@ -352,16 +375,16 @@ export function useEvChargerController({
     handleSavePlan,
     isPlanEnabled,
     modeOptions: EVCC_CHARGE_MODES,
+    earliestPlanStartMs,
+    nowMs,
     planFrom,
     planEndMs: planRange.endMs,
     planStatus,
     planStartMs: planRange.startMs,
     planTo,
     planWindowLabel: formatPlanRangeLabel(planRange.startMs, planRange.endMs),
-    priceDayCount: 1,
     priceHours,
     priceSummary,
-    safePriceDayIndex: 0,
     selectedMode,
     selectedPriceDay,
     sessionHistory,

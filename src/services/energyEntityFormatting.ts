@@ -73,11 +73,22 @@ export function formatPlanTime(resolved: ResolvedEnergyEntities, key: EnergyEnti
     return fallback
   }
 
-  if (/^\d{2}:\d{2}/.test(state)) {
-    return state.slice(0, 5)
+  const clockMatch = state.match(/(?:T|\s|^)(\d{2}:\d{2})(?::\d{2})?$/)
+  if (clockMatch?.[1]) {
+    return clockMatch[1]
   }
 
   return fallback
+}
+
+export function getPlanDateTime(resolved: ResolvedEnergyEntities, key: EnergyEntityKey) {
+  const state = getEntityState(resolved, key)
+  if (!state || /^\d{2}:\d{2}(?::\d{2})?$/.test(state)) {
+    return null
+  }
+
+  const timestamp = Date.parse(state.includes(' ') ? state.replace(' ', 'T') : state)
+  return Number.isFinite(timestamp) ? timestamp : null
 }
 
 export function formatPlanEnabled(resolved: ResolvedEnergyEntities, key: EnergyEntityKey) {

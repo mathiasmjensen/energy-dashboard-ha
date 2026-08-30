@@ -23,6 +23,25 @@ export function getNextFullHourMs(timestamp: number) {
   return date.getTime()
 }
 
+export function getCurrentHourMs(timestamp: number) {
+  const date = new Date(timestamp)
+  date.setMinutes(0, 0, 0)
+
+  return date.getTime()
+}
+
+/**
+ * Home Assistant time triggers are precise to the minute. Leave one complete
+ * minute for the helper update to arrive before scheduling a current-hour plan.
+ */
+export function getNextSafePlanStartMs(timestamp: number) {
+  const date = new Date(timestamp)
+  date.setSeconds(0, 0)
+  date.setMinutes(date.getMinutes() + 1)
+
+  return date.getTime()
+}
+
 export function isClockValue(value: string) {
   return /^\d{2}:\d{2}$/.test(value)
 }

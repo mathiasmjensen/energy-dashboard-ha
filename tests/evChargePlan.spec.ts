@@ -4,7 +4,9 @@ import {
   createRollingPriceHours,
   formatLocalDateKey,
   formatPlanRangeLabel,
+  getCurrentHourMs,
   getNextFullHourMs,
+  getNextSafePlanStartMs,
   normalizeClockValue,
   resolvePlanRange,
 } from '../src/services/evChargePlan'
@@ -74,6 +76,22 @@ test.describe('EV charge plan service', () => {
     expect(hours[1].price).toBe(3)
     expect(day.prices).toHaveLength(24)
     expect(day.label).toBe('Next 24 hours')
+  })
+
+  test('keeps the current price hour visible while scheduling a safe future minute', () => {
+    const now = new Date(2026, 5, 12, 16, 42, 18).getTime()
+    const today = new Date(2026, 5, 12)
+    const tomorrow = new Date(2026, 5, 13)
+    const hours = createRollingPriceHours(
+      [makePriceDay(today, Array.from({ length: 24 }, (_, hour) => hour)), makePriceDay(tomorrow, Array.from({ length: 24 }, (_, hour) => hour))],
+      [],
+      getCurrentHourMs(now),
+    )
+
+    expect(hours[0]?.label).toBe('16:00')
+    expect(hours[0]?.disabled).toBe(false)
+    expect(new Date(getNextSafePlanStartMs(now)).getHours()).toBe(16)
+    expect(new Date(getNextSafePlanStartMs(now)).getMinutes()).toBe(43)
   })
 
   test('normalizes HA clock values without leaking invalid values into inputs', () => {
