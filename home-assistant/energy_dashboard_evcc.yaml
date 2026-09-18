@@ -18,6 +18,10 @@ rest_command:
     url: "http://EVCC_HOST:7070/api/loadpoints/1/mode/pv"
     method: POST
 
+  evcc_stop_charge:
+    url: "http://EVCC_HOST:7070/api/loadpoints/1/mode/off"
+    method: POST
+
 command_line:
   - sensor:
       name: Energy Dashboard EVCC Charge Sessions

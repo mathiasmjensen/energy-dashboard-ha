@@ -1,0 +1,260 @@
+# EVCC + Predbat solar-priority EV charging.
+#
+# Install to:
+#   /config/packages/energy_dashboard_ev_solar_priority.yaml
+#
+# This package deliberately uses EVCC's `pv` mode, never `now`, so enabling
+# solar priority cannot turn a forecast decision into grid charging.
+#
+# It depends on:
+# - energy_dashboard_evcc.yaml
+# - energy_dashboard_battery_optimizer.yaml
+# - sensor.evcc_battery_soc
+# - sensor.evcc_carport_vehicle_soc
+# - binary_sensor.evcc_carport_connected
+#
+# Replace those three entity ids below if your EVCC installation uses different
+# names. The input numbers are deliberately explicit instead of guessing the
+# battery or vehicle capacity.
+
+input_boolean:
+  energy_dashboard_ev_solar_automation_enabled:
+    name: Energy Dashboard EV solar automation
+    icon: mdi:car-electric-outline
+    initial: true
+
+  energy_dashboard_ev_solar_priority_active:
+    name: Energy Dashboard EV solar priority active
+    icon: mdi:solar-power-variant-outline
+
+input_number:
+  energy_dashboard_home_battery_capacity_kwh:
+    name: Energy Dashboard home battery capacity
+    icon: mdi:battery
+    min: 1
+    max: 100
+    step: 0.1
+    unit_of_measurement: kWh
+    initial: 10
+
+  energy_dashboard_ev_battery_capacity_kwh:
+    name: Energy Dashboard EV battery capacity
+    icon: mdi:car-battery
+    min: 10
+    max: 150
+    step: 0.1
+    unit_of_measurement: kWh
+    initial: 75
+
+  energy_dashboard_ev_solar_target_soc:
+    name: Energy Dashboard EV solar target
+    icon: mdi:target
+    min: 50
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    initial: 80
+
+  energy_dashboard_ev_solar_reserve_percent:
+    name: Energy Dashboard EV solar battery reserve
+    icon: mdi:battery-lock
+    min: 4
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    initial: 50
+
+  energy_dashboard_predbat_normal_reserve_percent:
+    name: Energy Dashboard Predbat normal reserve
+    icon: mdi:battery-sync-outline
+    min: 4
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    initial: 10
+
+  energy_dashboard_ev_solar_house_buffer_kwh:
+    name: Energy Dashboard EV solar house buffer
+    icon: mdi:home-lightning-bolt-outline
+    min: 0
+    max: 30
+    step: 0.1
+    unit_of_measurement: kWh
+    initial: 3
+
+template:
+  - sensor:
+      - name: Energy Dashboard EV solar forecast remaining
+        unique_id: energy_dashboard_ev_solar_forecast_remaining
+        icon: mdi:weather-sunny
+        unit_of_measurement: kWh
+        state_class: measurement
+        state: >-
+          {% set rates = state_attr('sensor.energy_dashboard_solar_forecast', 'rates') | default([], true) %}
+          {% set now_local = now() %}
+          {% set ns = namespace(kwh=0) %}
+          {% for rate in rates %}
+            {% set start = as_local(as_datetime(rate.get('start'))) %}
+            {% set end = as_local(as_datetime(rate.get('end'))) %}
+            {% if start and end and end > now_local and start.date() == now_local.date() %}
+              {% set effective_start = start if start > now_local else now_local %}
+              {% set duration = (as_timestamp(end) - as_timestamp(effective_start)) / 3600 %}
+              {% set ns.kwh = ns.kwh + ((rate.get('value', 0) | float(0) / 1000) * duration) %}
+            {% endif %}
+          {% endfor %}
+          {{ [ns.kwh, 0] | max | round(2) }}
+        attributes:
+          battery_to_full_kwh: >-
+            {% set capacity = states('input_number.energy_dashboard_home_battery_capacity_kwh') | float(0) %}
+            {% set soc = states('sensor.evcc_battery_soc') | float(0) %}
+            {{ [capacity * (100 - soc) / 100, 0] | max | round(2) }}
+          ev_to_target_kwh: >-
+            {% set capacity = states('input_number.energy_dashboard_ev_battery_capacity_kwh') | float(0) %}
+            {% set target = states('input_number.energy_dashboard_ev_solar_target_soc') | float(80) %}
+            {% set soc = states('sensor.evcc_carport_vehicle_soc') | float(0) %}
+            {{ [capacity * (target - soc) / 100, 0] | max | round(2) }}
+          house_buffer_kwh: "{{ states('input_number.energy_dashboard_ev_solar_house_buffer_kwh') | float(0) | round(2) }}"
+          required_solar_kwh: >-
+            {% set capacity = states('input_number.energy_dashboard_home_battery_capacity_kwh') | float(0) %}
+            {% set battery_soc = states('sensor.evcc_battery_soc') | float(0) %}
+            {% set ev_capacity = states('input_number.energy_dashboard_ev_battery_capacity_kwh') | float(0) %}
+            {% set target = states('input_number.energy_dashboard_ev_solar_target_soc') | float(80) %}
+            {% set ev_soc = states('sensor.evcc_carport_vehicle_soc') | float(0) %}
+            {% set house = states('input_number.energy_dashboard_ev_solar_house_buffer_kwh') | float(0) %}
+            {% set battery_needed = [capacity * (100 - battery_soc) / 100, 0] | max %}
+            {% set ev_needed = [ev_capacity * (target - ev_soc) / 100, 0] | max %}
+            {{ (battery_needed + ev_needed + house) | round(2) }}
+          forecast_source: sensor.energy_dashboard_solar_forecast
+
+  - binary_sensor:
+      - name: Energy Dashboard EV solar ready
+        unique_id: energy_dashboard_ev_solar_ready
+        icon: mdi:car-electric-outline
+        state: >-
+          {% set forecast = states('sensor.energy_dashboard_ev_solar_forecast_remaining') | float(-1) %}
+          {% set battery_to_full = state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'battery_to_full_kwh') | float(-1) %}
+          {% set ev_to_target = state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'ev_to_target_kwh') | float(-1) %}
+          {% set required = state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'required_solar_kwh') | float(-1) %}
+          {% set target = states('input_number.energy_dashboard_ev_solar_target_soc') | float(80) %}
+          {% set ev_soc = states('sensor.evcc_carport_vehicle_soc') | float(101) %}
+          {{ is_state('input_boolean.energy_dashboard_ev_solar_automation_enabled', 'on')
+             and is_state('input_boolean.evcc_charge_plan_enabled', 'off')
+             and is_state('binary_sensor.evcc_carport_connected', 'on')
+             and ev_soc < target
+             and forecast >= battery_to_full
+             and forecast >= required
+             and ev_to_target > 0 }}
+        attributes:
+          reason: >-
+            {% set forecast = states('sensor.energy_dashboard_ev_solar_forecast_remaining') | float(-1) %}
+            {% set battery_to_full = state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'battery_to_full_kwh') | float(-1) %}
+            {% set required = state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'required_solar_kwh') | float(-1) %}
+            {% if not is_state('input_boolean.energy_dashboard_ev_solar_automation_enabled', 'on') %}
+              Automation disabled
+            {% elif is_state('input_boolean.evcc_charge_plan_enabled', 'on') %}
+              Manual charge plan owns EVCC
+            {% elif not is_state('binary_sensor.evcc_carport_connected', 'on') %}
+              Vehicle not connected
+            {% elif forecast < battery_to_full %}
+              Forecast cannot fill the home battery
+            {% elif forecast < required %}
+              Forecast cannot cover battery, EV target, and house buffer
+            {% else %}
+              Solar budget available
+            {% endif %}
+          forecast_remaining_kwh: "{{ states('sensor.energy_dashboard_ev_solar_forecast_remaining') }}"
+          required_solar_kwh: "{{ state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'required_solar_kwh') }}"
+
+script:
+  energy_dashboard_evcc_predbat_evaluate_solar_priority:
+    alias: Energy Dashboard EVCC Predbat evaluate solar priority
+    description: >-
+      Releases EVCC solar charging only when today's remaining solar forecast can
+      fill the home battery, charge the connected EV to its target, and cover the
+      configured house buffer. Manual EV plans always take priority.
+    mode: restart
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.energy_dashboard_ev_solar_ready
+                state: "on"
+            sequence:
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.energy_dashboard_ev_solar_priority_active
+              - action: input_number.set_value
+                continue_on_error: true
+                target:
+                  entity_id: input_number.predbat_set_reserve_min
+                data:
+                  value: "{{ states('input_number.energy_dashboard_ev_solar_reserve_percent') | int(50) }}"
+              - action: switch.turn_on
+                continue_on_error: true
+                target:
+                  entity_id: switch.predbat_car_charging_from_battery
+              - action: select.select_option
+                target:
+                  entity_id: select.evcc_carport_mode
+                data:
+                  option: pv
+              - action: rest_command.evcc_disable_charge
+              - action: script.turn_on
+                continue_on_error: true
+                target:
+                  entity_id: script.energy_dashboard_predbat_refresh
+        default:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_boolean.energy_dashboard_ev_solar_priority_active
+                    state: "on"
+                sequence:
+                  - action: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.energy_dashboard_ev_solar_priority_active
+                  - action: input_number.set_value
+                    continue_on_error: true
+                    target:
+                      entity_id: input_number.predbat_set_reserve_min
+                    data:
+                      value: "{{ states('input_number.energy_dashboard_predbat_normal_reserve_percent') | int(10) }}"
+                  - action: switch.turn_off
+                    continue_on_error: true
+                    target:
+                      entity_id: switch.predbat_car_charging_from_battery
+                  - condition: state
+                    entity_id: input_boolean.evcc_charge_plan_enabled
+                    state: "off"
+                  - action: select.select_option
+                    target:
+                      entity_id: select.evcc_carport_mode
+                    data:
+                      option: off
+                  - action: rest_command.evcc_stop_charge
+
+automation:
+  - id: energy_dashboard_evcc_predbat_solar_priority
+    alias: Energy Dashboard EVCC Predbat solar priority
+    description: Re-evaluates EV solar eligibility when the forecast or relevant live state changes.
+    mode: restart
+    trigger:
+      - platform: homeassistant
+        event: start
+      - platform: time_pattern
+        minutes: "/15"
+      - platform: state
+        entity_id:
+          - sensor.energy_dashboard_solar_forecast
+          - sensor.evcc_battery_soc
+          - sensor.evcc_carport_vehicle_soc
+          - binary_sensor.evcc_carport_connected
+          - input_boolean.energy_dashboard_ev_solar_automation_enabled
+          - input_boolean.evcc_charge_plan_enabled
+          - input_number.energy_dashboard_ev_solar_target_soc
+          - input_number.energy_dashboard_ev_solar_reserve_percent
+          - input_number.energy_dashboard_ev_solar_house_buffer_kwh
+    action:
+      - action: script.turn_on
+        target:
+          entity_id: script.energy_dashboard_evcc_predbat_evaluate_solar_priority

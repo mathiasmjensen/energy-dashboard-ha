@@ -1,0 +1,33 @@
+# Merge these entries into Predbat's apps.yaml.
+#
+# The Home Assistant solar-priority package decides whether enough remaining
+# solar is forecast to fill the home battery, reach the EV target, and cover
+# the configured house buffer. Predbat receives that decision as a planned EV
+# load and continues to protect the battery reserve.
+
+num_cars: 1
+
+car_charging_exclusive:
+  - true
+
+# Live EVCC charger power. This makes the EV visible in Predbat's flow model.
+car_charging_power:
+  - sensor.evcc_carport_charge_power
+
+# Home Assistant entity ids for the connected EV.
+car_charging_soc:
+  - sensor.evcc_carport_vehicle_soc
+car_charging_limit:
+  - input_number.energy_dashboard_ev_solar_target_soc
+
+# Set this to your vehicle's usable battery capacity in kWh.
+car_charging_battery_size:
+  - 75
+
+# The forecast gate acts as Predbat's planned-car signal. Do not configure
+# car_charging_now for this integration: Predbat documents that it can create
+# a planning loop for Predbat-led charging.
+car_charging_planned:
+  - binary_sensor.energy_dashboard_ev_solar_ready
+car_charging_planned_response:
+  - "on"

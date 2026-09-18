@@ -119,6 +119,7 @@ Preferred split package layout:
 home-assistant/
   energy_dashboard_helpers.yaml
   energy_dashboard_evcc.yaml
+  energy_dashboard_ev_solar_priority.yaml
   energy_dashboard_foxess.yaml
   energy_dashboard_battery_optimizer.yaml
   energy_dashboard_notifications.yaml
@@ -170,6 +171,31 @@ start in the current hour and cross midnight. After updating the helper package,
 recreate `input_datetime.evcc_charge_start` and `input_datetime.evcc_charge_end`
 in Home Assistant if they were originally created as time-only helpers. Both
 helpers must have **date** and **time** enabled before reloading the EVCC package.
+
+### EV solar priority with Predbat
+
+`home-assistant/energy_dashboard_ev_solar_priority.yaml` adds a conservative
+solar-first coordinator between EVCC and Predbat. Every 15 minutes and whenever
+the connected vehicle, battery, or forecast changes, it evaluates today’s
+remaining EVCC solar forecast.
+
+It enables EVCC `pv` charging only when all of these are true:
+- the car is connected and below the configured target (80% by default)
+- forecast solar can fill the home battery to 100%
+- forecast solar can additionally reach the EV target and cover the configured house buffer
+- no manual dashboard charge plan is active
+
+When enabled, it applies a 50% Predbat reserve by default and returns to the
+normal reserve when the forecast no longer qualifies. It never calls EVCC
+`now` mode, so this automation cannot deliberately start grid charging.
+
+Before enabling it:
+- copy `energy_dashboard_ev_solar_priority.yaml` to `/config/packages/`
+- set the input-number capacities and normal reserve to match the installation
+- confirm `sensor.evcc_battery_soc`, `sensor.evcc_carport_vehicle_soc`, and
+  `binary_sensor.evcc_carport_connected`; replace those ids in the package if needed
+- merge `home-assistant/predbat-apps-evcc.example.yaml` into Predbat’s `apps.yaml`, changing the 75 kWh example to the vehicle’s usable capacity
+- do not configure Predbat `car_charging_now` for this path
 
 ### FoxESS
 
@@ -233,7 +259,7 @@ Predbat is now the recommended planning engine:
 Predbat migration checklist:
 - install and configure Predbat in Home Assistant / AppDaemon
 - set the `resource` in `home-assistant/energy_dashboard_battery_optimizer.yaml`
-  to your Predbat endpoint, for example `http://192.168.1.156:5052/api/plan_data`
+  to your Predbat endpoint, for example `http://PREDBAT_HOST:5052/api/plan_data`
 - confirm these core entities exist:
   - `select.predbat_mode`
   - `switch.predbat_active`
