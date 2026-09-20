@@ -117,13 +117,9 @@ template:
           required_solar_kwh: >-
             {% set capacity = states('input_number.energy_dashboard_home_battery_capacity_kwh') | float(0) %}
             {% set battery_soc = states('sensor.evcc_battery_soc') | float(0) %}
-            {% set ev_capacity = states('input_number.energy_dashboard_ev_battery_capacity_kwh') | float(0) %}
-            {% set target = states('input_number.energy_dashboard_ev_solar_target_soc') | float(80) %}
-            {% set ev_soc = states('sensor.evcc_carport_vehicle_soc') | float(0) %}
             {% set house = states('input_number.energy_dashboard_ev_solar_house_buffer_kwh') | float(0) %}
             {% set battery_needed = [capacity * (100 - battery_soc) / 100, 0] | max %}
-            {% set ev_needed = [ev_capacity * (target - ev_soc) / 100, 0] | max %}
-            {{ (battery_needed + ev_needed + house) | round(2) }}
+            {{ (battery_needed + house) | round(2) }}
           forecast_source: sensor.energy_dashboard_solar_forecast
 
   - binary_sensor:
@@ -133,7 +129,6 @@ template:
         state: >-
           {% set forecast = states('sensor.energy_dashboard_ev_solar_forecast_remaining') | float(-1) %}
           {% set battery_to_full = state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'battery_to_full_kwh') | float(-1) %}
-          {% set ev_to_target = state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'ev_to_target_kwh') | float(-1) %}
           {% set required = state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'required_solar_kwh') | float(-1) %}
           {% set target = states('input_number.energy_dashboard_ev_solar_target_soc') | float(80) %}
           {% set ev_soc = states('sensor.evcc_carport_vehicle_soc') | float(101) %}
@@ -142,8 +137,7 @@ template:
              and is_state('binary_sensor.evcc_carport_connected', 'on')
              and ev_soc < target
              and forecast >= battery_to_full
-             and forecast >= required
-             and ev_to_target > 0 }}
+             and forecast >= required }}
         attributes:
           reason: >-
             {% set forecast = states('sensor.energy_dashboard_ev_solar_forecast_remaining') | float(-1) %}
@@ -158,9 +152,9 @@ template:
             {% elif forecast < battery_to_full %}
               Forecast cannot fill the home battery
             {% elif forecast < required %}
-              Forecast cannot cover battery, EV target, and house buffer
+              Forecast cannot cover the home battery and house buffer
             {% else %}
-              Solar budget available
+              Solar surplus available for EV charging
             {% endif %}
           forecast_remaining_kwh: "{{ states('sensor.energy_dashboard_ev_solar_forecast_remaining') }}"
           required_solar_kwh: "{{ state_attr('sensor.energy_dashboard_ev_solar_forecast_remaining', 'required_solar_kwh') }}"
@@ -170,8 +164,8 @@ script:
     alias: Energy Dashboard EVCC Predbat evaluate solar priority
     description: >-
       Releases EVCC solar charging only when today's remaining solar forecast can
-      fill the home battery, charge the connected EV to its target, and cover the
-      configured house buffer. Manual EV plans always take priority.
+      fill the home battery and cover the configured house buffer. EVCC then
+      consumes only the solar surplus, up to the EV target. Manual plans win.
     mode: restart
     sequence:
       - choose:

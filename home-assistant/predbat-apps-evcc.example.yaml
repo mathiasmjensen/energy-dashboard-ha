@@ -1,9 +1,9 @@
 # Merge these entries into Predbat's apps.yaml.
 #
 # The Home Assistant solar-priority package decides whether enough remaining
-# solar is forecast to fill the home battery, reach the EV target, and cover
-# the configured house buffer. Predbat receives that decision as a planned EV
-# load and continues to protect the battery reserve.
+# solar is forecast to fill the home battery and cover the configured house
+# buffer. EVCC then uses only the remaining solar surplus. Predbat receives
+# that decision as a planned EV load and protects the battery reserve.
 
 num_cars: 1
 

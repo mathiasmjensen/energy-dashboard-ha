@@ -182,12 +182,14 @@ remaining EVCC solar forecast.
 It enables EVCC `pv` charging only when all of these are true:
 - the car is connected and below the configured target (80% by default)
 - forecast solar can fill the home battery to 100%
-- forecast solar can additionally reach the EV target and cover the configured house buffer
+- forecast solar can cover the configured house buffer after the home battery
 - no manual dashboard charge plan is active
 
 When enabled, it applies a 50% Predbat reserve by default and returns to the
 normal reserve when the forecast no longer qualifies. It never calls EVCC
-`now` mode, so this automation cannot deliberately start grid charging.
+`now` mode, so this automation cannot deliberately start grid charging. The EV
+target is a ceiling, not a forecast requirement: EVCC uses only the solar left
+after the home battery and house buffer are protected.
 
 Before enabling it:
 - copy `energy_dashboard_ev_solar_priority.yaml` to `/config/packages/`
