@@ -78,7 +78,13 @@ export function EvChargerSettingsSection({ controller }: { controller: EvCharger
         </SettingRow>
 
         <SettingRow
-          description={hasUnsavedPlan ? `Draft window ${controller.planWindowLabel}. Save to apply.` : `Scheduled window ${controller.planWindowLabel}`}
+          description={
+            controller.isPlanPendingConfirmation
+              ? `Saving ${controller.planWindowLabel}. HA currently reports ${controller.haPlanWindowLabel}.`
+              : hasUnsavedPlan
+                ? `Draft window ${controller.planWindowLabel}. Save to apply.`
+                : `HA schedule ${controller.haPlanWindowLabel}`
+          }
           label="Charge plan"
         >
           <Toggle checked={controller.isPlanEnabled} label="Charge plan enabled">
@@ -132,7 +138,7 @@ export function EvChargerActivitySection({
             <span className="text-sm font-semibold text-dashboard-green">{controller.planStatus}</span>
           </div>
 
-          {layout === 'mobile' ? <ActivePlanSummary controller={controller} /> : null}
+          <PlanConfirmationSummary controller={controller} layout={layout} />
 
       <div className={cn('grid gap-3', layout === 'mobile' ? 'grid-cols-1' : 'grid-cols-[1fr_1fr_auto] items-end')}>
             <label className="grid gap-2">
@@ -249,17 +255,27 @@ export function EvChargerContent({
   )
 }
 
-function ActivePlanSummary({ controller }: { controller: EvChargerController }) {
+function PlanConfirmationSummary({
+  controller,
+  layout,
+}: {
+  controller: EvChargerController
+  layout: 'mobile' | 'modal'
+}) {
   const modeLabel =
     controller.modeOptions.find((option) => option.value === controller.selectedMode)?.label ?? controller.selectedMode
   const hasUnsavedPlan = controller.planStatus.startsWith('Unsaved')
+  const planStateLabel = controller.isPlanPendingConfirmation ? 'Awaiting HA' : hasUnsavedPlan ? 'Draft' : 'Confirmed'
 
   return (
-    <section className="grid gap-3 rounded-[20px] border border-white/8 bg-white/[0.03] p-3" aria-label="Active charge plan">
+    <section
+      className={cn('grid gap-3 rounded-[20px] border p-3', controller.isPlanPendingConfirmation ? 'border-amber-400/40 bg-amber-400/10' : 'border-white/8 bg-white/[0.03]')}
+      aria-label="Charge plan confirmation"
+    >
       <div className="flex items-center justify-between gap-3">
         <div>
           <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
-            {hasUnsavedPlan ? 'Plan draft' : 'Active plan'}
+            {controller.isPlanPendingConfirmation ? 'Saving plan' : hasUnsavedPlan ? 'Plan draft' : 'Home Assistant plan'}
           </span>
           <strong className="mt-1 block text-xl font-semibold text-dashboard-text">{controller.planWindowLabel}</strong>
         </div>
@@ -273,21 +289,27 @@ function ActivePlanSummary({ controller }: { controller: EvChargerController }) 
         </Toggle>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className={cn('grid gap-2', layout === 'mobile' ? 'grid-cols-2' : 'grid-cols-4')}>
         <div className="rounded-2xl border border-white/8 bg-[#09101a]/80 px-3 py-2.5">
           <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Status</span>
           <strong className="mt-1 block truncate text-sm font-semibold text-dashboard-text">
-            {hasUnsavedPlan ? 'Unsaved' : controller.isPlanEnabled ? 'Enabled' : 'Paused'}
+            {planStateLabel}
           </strong>
         </div>
         <div className="rounded-2xl border border-white/8 bg-[#09101a]/80 px-3 py-2.5">
-          <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Price range</span>
-          <strong className="mt-1 block text-sm font-semibold text-dashboard-text">Next 24h</strong>
+          <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">HA schedule</span>
+          <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{controller.haPlanWindowLabel}</strong>
         </div>
         <div className="rounded-2xl border border-white/8 bg-[#09101a]/80 px-3 py-2.5">
           <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Charge mode</span>
           <strong className="mt-1 block truncate text-sm font-semibold text-dashboard-text">{modeLabel}</strong>
         </div>
+        {layout === 'modal' ? (
+          <div className="rounded-2xl border border-white/8 bg-[#09101a]/80 px-3 py-2.5">
+            <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">Plan enabled</span>
+            <strong className="mt-1 block text-sm font-semibold text-dashboard-text">{controller.isPlanEnabled ? 'Enabled' : 'Paused'}</strong>
+          </div>
+        ) : null}
       </div>
     </section>
   )

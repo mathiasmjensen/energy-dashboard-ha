@@ -33,6 +33,8 @@ export type EvChargerController = {
   earliestPlanStartMs: number
   planFrom: string
   planEndMs: number
+  haPlanWindowLabel: string
+  isPlanPendingConfirmation: boolean
   planStatus: string
   planStartMs: number
   planTo: string

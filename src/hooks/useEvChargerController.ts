@@ -38,6 +38,18 @@ function isSamePlanRange(left: PlanRange, right: PlanRange) {
   return Math.abs(left.startMs - right.startMs) < minuteMs && Math.abs(left.endMs - right.endMs) < minuteMs
 }
 
+function getHaPlanWindowLabel(
+  persistedRange: PlanRange | null,
+  chargePlanFrom: string,
+  chargePlanTo: string,
+) {
+  if (persistedRange) {
+    return formatPlanRangeLabel(persistedRange.startMs, persistedRange.endMs)
+  }
+
+  return `${normalizeClockValue(chargePlanFrom, '--:--')} - ${normalizeClockValue(chargePlanTo, '--:--')}`
+}
+
 export function useEvChargerController({
   chargeMode,
   chargeModeOptions,
@@ -87,6 +99,10 @@ export function useEvChargerController({
   const persistedPlanRange = useMemo(
     () => getPersistedPlanRange(chargePlanStartMs, chargePlanEndMs),
     [chargePlanEndMs, chargePlanStartMs],
+  )
+  const haPlanWindowLabel = useMemo(
+    () => getHaPlanWindowLabel(persistedPlanRange, chargePlanFrom, chargePlanTo),
+    [chargePlanFrom, chargePlanTo, persistedPlanRange],
   )
 
   useEffect(() => {
@@ -414,6 +430,8 @@ export function useEvChargerController({
     isPlanEnabled,
     modeOptions: EVCC_CHARGE_MODES,
     earliestPlanStartMs,
+    haPlanWindowLabel,
+    isPlanPendingConfirmation: pendingPlanRange !== null,
     nowMs,
     planFrom,
     planEndMs: planRange.endMs,
