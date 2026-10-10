@@ -169,10 +169,12 @@ Assistant WebSocket. The package automations then switch EVCC to Fast at the
 saved start and Solar at the saved end. `script.evcc_set_charge_plan` remains
 available for manual Home Assistant calls.
 
-The start and stop automations also reconcile every five minutes and after a
+The start and stop automations also reconcile every ten seconds and after a
 Home Assistant restart. A plan saved for `01:37` through `08:00` therefore
 starts immediately at `01:37`, or at the next reconciliation if its exact
-trigger was missed; it always returns to Solar once `08:00` has passed.
+trigger was missed; it always returns to Solar once `08:00` has passed. The
+start automation does not repeat EVCC calls while the charger is already in
+Fast mode.
 
 Primary package file:
 - `home-assistant/energy_dashboard_evcc.yaml`

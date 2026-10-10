@@ -384,7 +384,7 @@ automation:
       - platform: time
         at: input_datetime.evcc_charge_start
       - platform: time_pattern
-        minutes: "/5"
+        seconds: "/10"
       - platform: homeassistant
         event: start
     condition:
@@ -396,6 +396,9 @@ automation:
           {% set start = as_datetime(states('input_datetime.evcc_charge_start')) %}
           {% set end = as_datetime(states('input_datetime.evcc_charge_end')) %}
           {{ start is not none and end is not none and start <= now() and now() < end }}
+      - condition: template
+        value_template: >-
+          {{ states('select.evcc_carport_mode') | lower not in ['now', 'fast'] }}
     action:
       - service: select.select_option
         continue_on_error: true
@@ -420,7 +423,7 @@ automation:
       - platform: time
         at: input_datetime.evcc_charge_end
       - platform: time_pattern
-        minutes: "/5"
+        seconds: "/10"
       - platform: homeassistant
         event: start
     condition:
