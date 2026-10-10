@@ -2,11 +2,13 @@ import { expect, test } from '@playwright/test'
 import {
   createRollingPriceDay,
   createRollingPriceHours,
+  formatClock,
   formatLocalDateKey,
   formatPlanRangeLabel,
   getCurrentHourMs,
   getNextFullHourMs,
   getNextSafePlanStartMs,
+  isClockValue,
   normalizeClockValue,
   resolvePlanRange,
 } from '../src/services/evChargePlan'
@@ -97,5 +99,12 @@ test.describe('EV charge plan service', () => {
   test('normalizes HA clock values without leaking invalid values into inputs', () => {
     expect(normalizeClockValue('06:30:00', '22:00')).toBe('06:30')
     expect(normalizeClockValue('unknown', '22:00')).toBe('22:00')
+  })
+
+  test('formats midnight as 00:00 and rejects invalid 24:00 input', () => {
+    expect(formatClock(new Date(2026, 9, 11, 0, 0).getTime())).toBe('00:00')
+    expect(isClockValue('00:00')).toBe(true)
+    expect(isClockValue('24:00')).toBe(false)
+    expect(normalizeClockValue('24:00:00', '22:00')).toBe('22:00')
   })
 })

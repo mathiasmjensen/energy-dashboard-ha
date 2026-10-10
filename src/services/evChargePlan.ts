@@ -43,7 +43,16 @@ export function getNextSafePlanStartMs(timestamp: number) {
 }
 
 export function isClockValue(value: string) {
-  return /^\d{2}:\d{2}$/.test(value)
+  const match = value.match(/^(\d{2}):(\d{2})$/)
+
+  if (!match) {
+    return false
+  }
+
+  const hour = Number.parseInt(match[1], 10)
+  const minute = Number.parseInt(match[2], 10)
+
+  return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59
 }
 
 export function resolvePlanEndAfterStart(value: string, startMs: number) {
@@ -64,11 +73,9 @@ export function resolvePlanRange(from: string, to: string, earliestStartMs: numb
 }
 
 export function formatClock(timestamp: number) {
-  return new Date(timestamp).toLocaleTimeString([], {
-    hour: '2-digit',
-    hour12: false,
-    minute: '2-digit',
-  })
+  const date = new Date(timestamp)
+
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
 export function formatPlanRangeLabel(startMs: number, endMs: number) {
@@ -130,7 +137,9 @@ export function normalizeClockValue(value: string | null | undefined, fallback: 
     return fallback
   }
 
-  return /^\d{2}:\d{2}/.test(value) ? value.slice(0, 5) : fallback
+  const clock = value.match(/^(\d{2}:\d{2})(?::\d{2})?$/)?.[1]
+
+  return clock && isClockValue(clock) ? clock : fallback
 }
 
 function getClockParts(value: string) {

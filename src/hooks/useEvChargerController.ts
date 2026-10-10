@@ -209,7 +209,7 @@ export function useEvChargerController({
     [callService, canCallService],
   )
 
-  const saveChargePlan = useCallback(async () => {
+  const saveChargePlan = useCallback(() => {
     const startEntityId = ENERGY_ENTITIES.evccChargePlanStart
     const endEntityId = ENERGY_ENTITIES.evccChargePlanEnd
 
@@ -226,35 +226,26 @@ export function useEvChargerController({
 
     // Persist the two HA helpers directly. The start/stop automations watch
     // these entities, so no script-variable handoff is needed for a plan save.
-    try {
-      await Promise.all([
-        callService({
-          domain: 'input_datetime',
-          service: 'set_datetime',
-          serviceData: {
-            date: formatLocalDateKey(start),
-            time: `${formatClock(planRange.startMs)}:00`,
-          },
-          target: startEntityId,
-          returnResponse: true,
-        }),
-        callService({
-          domain: 'input_datetime',
-          service: 'set_datetime',
-          serviceData: {
-            date: formatLocalDateKey(end),
-            time: `${formatClock(planRange.endMs)}:00`,
-          },
-          target: endEntityId,
-          returnResponse: true,
-        }),
-      ])
-      callInputBoolean(ENERGY_ENTITIES.evccChargePlanEnabled, isPlanEnabled)
-      setPlanStatus('Saved to Home Assistant; waiting for state update')
-    } catch (error) {
-      setPendingPlanRange(null)
-      setPlanStatus(`Home Assistant rejected the plan: ${error instanceof Error ? error.message : 'unknown error'}`)
-    }
+    callService({
+      domain: 'input_datetime',
+      service: 'set_datetime',
+      serviceData: {
+        date: formatLocalDateKey(start),
+        time: `${formatClock(planRange.startMs)}:00`,
+      },
+      target: startEntityId,
+    })
+    callService({
+      domain: 'input_datetime',
+      service: 'set_datetime',
+      serviceData: {
+        date: formatLocalDateKey(end),
+        time: `${formatClock(planRange.endMs)}:00`,
+      },
+      target: endEntityId,
+    })
+    callInputBoolean(ENERGY_ENTITIES.evccChargePlanEnabled, isPlanEnabled)
+    setPlanStatus('Saving to Home Assistant')
   }, [callInputBoolean, callService, canCallService, entityExists, isPlanEnabled, planRange])
 
   const handleModeChange = useCallback(
