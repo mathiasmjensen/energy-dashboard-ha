@@ -163,6 +163,12 @@ Handled through the Home Assistant EVCC package:
 - charge sessions
 - EVCC solar tariff/forecast feed
 
+The dashboard Save Plan action writes `input_datetime.evcc_charge_start` and
+`input_datetime.evcc_charge_end` directly through the authenticated Home
+Assistant WebSocket. The package automations then switch EVCC to Fast at the
+saved start and Solar at the saved end. `script.evcc_set_charge_plan` remains
+available for manual Home Assistant calls.
+
 Primary package file:
 - `home-assistant/energy_dashboard_evcc.yaml`
 

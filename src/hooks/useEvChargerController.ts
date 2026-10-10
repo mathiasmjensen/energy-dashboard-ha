@@ -209,54 +209,43 @@ export function useEvChargerController({
     [callService, canCallService],
   )
 
-  const callChargePlanScript = useCallback(() => {
-    const entityId = ENERGY_ENTITIES.evccSetChargePlanScript
+  const saveChargePlan = useCallback(() => {
+    const startEntityId = ENERGY_ENTITIES.evccChargePlanStart
+    const endEntityId = ENERGY_ENTITIES.evccChargePlanEnd
 
-    if (!canCallService || !entityExists(entityId)) {
-      setPlanStatus('Add script.evcc_set_charge_plan in Home Assistant')
+    if (!canCallService || !entityExists(startEntityId) || !entityExists(endEntityId)) {
+      setPlanStatus('Add the EVCC charge start and end helpers in Home Assistant')
       return
     }
 
-    const startDate = formatLocalDateKey(new Date(planRange.startMs))
-    const endDate = formatLocalDateKey(new Date(planRange.endMs))
-    const startTime = formatClock(planRange.startMs)
-    const endTime = formatClock(planRange.endMs)
-    const plan = {
-      active: isPlanEnabled,
-      date: startDate,
-      day: startDate,
-      enabled: isPlanEnabled,
-      end: endTime,
-      end_date: endDate,
-      end_time: endTime,
-      from: startTime,
-      mode_at_end: 'pv',
-      mode_at_start: 'now',
-      start: startTime,
-      start_date: startDate,
-      start_time: startTime,
-      to: endTime,
-    }
+    const start = new Date(planRange.startMs)
+    const end = new Date(planRange.endMs)
 
     setPendingPlanRange({ ...planRange })
     setPlanStatus(`Saving ${formatPlanRangeLabel(planRange.startMs, planRange.endMs)}…`)
 
+    // Persist the two HA helpers directly. The start/stop automations watch
+    // these entities, so no script-variable handoff is needed for a plan save.
     callService({
-      domain: 'script',
-      service: 'turn_on',
+      domain: 'input_datetime',
+      service: 'set_datetime',
       serviceData: {
-        variables: {
-          charge_plan: plan,
-          plan: {
-            ...plan,
-            id: 'manual-charge-window',
-          },
-        },
+        date: formatLocalDateKey(start),
+        time: `${formatClock(planRange.startMs)}:00`,
       },
-      target: entityId,
+      target: startEntityId,
     })
-
-  }, [callService, canCallService, entityExists, isPlanEnabled, planRange])
+    callService({
+      domain: 'input_datetime',
+      service: 'set_datetime',
+      serviceData: {
+        date: formatLocalDateKey(end),
+        time: `${formatClock(planRange.endMs)}:00`,
+      },
+      target: endEntityId,
+    })
+    callInputBoolean(ENERGY_ENTITIES.evccChargePlanEnabled, isPlanEnabled)
+  }, [callInputBoolean, callService, canCallService, entityExists, isPlanEnabled, planRange])
 
   const handleModeChange = useCallback(
     (mode: EvccChargeMode) => {
@@ -391,9 +380,8 @@ export function useEvChargerController({
   }, [planRange.startMs])
 
   const handleSavePlan = useCallback(() => {
-    callInputBoolean(ENERGY_ENTITIES.evccChargePlanEnabled, isPlanEnabled)
-    callChargePlanScript()
-  }, [callChargePlanScript, callInputBoolean, isPlanEnabled])
+    saveChargePlan()
+  }, [saveChargePlan])
 
   const handlePriceHourPointerLeave = useCallback(() => {
     setDragStartMs(null)
