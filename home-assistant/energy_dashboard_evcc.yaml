@@ -130,10 +130,20 @@ automation:
     trigger:
       - platform: time
         at: input_datetime.evcc_charge_start
+      # Recover a plan after HA/EVCC restarts or a late dashboard save.
+      - platform: time_pattern
+        minutes: "/5"
+      - platform: homeassistant
+        event: start
     condition:
       - condition: state
         entity_id: input_boolean.evcc_charge_plan_enabled
         state: "on"
+      - condition: template
+        value_template: >-
+          {% set start = as_datetime(states('input_datetime.evcc_charge_start')) %}
+          {% set end = as_datetime(states('input_datetime.evcc_charge_end')) %}
+          {{ start is not none and end is not none and start <= now() and now() < end }}
     action:
       - service: select.select_option
         continue_on_error: true
@@ -159,10 +169,19 @@ automation:
     trigger:
       - platform: time
         at: input_datetime.evcc_charge_end
+      # Stop an overdue plan even if its exact end trigger was missed.
+      - platform: time_pattern
+        minutes: "/5"
+      - platform: homeassistant
+        event: start
     condition:
       - condition: state
         entity_id: input_boolean.evcc_charge_plan_enabled
         state: "on"
+      - condition: template
+        value_template: >-
+          {% set end = as_datetime(states('input_datetime.evcc_charge_end')) %}
+          {{ end is not none and now() >= end }}
     action:
       - service: select.select_option
         continue_on_error: true
