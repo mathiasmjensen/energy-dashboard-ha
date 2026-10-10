@@ -140,7 +140,17 @@ automation:
         target:
           entity_id: select.evcc_carport_mode
         data:
-          option: now
+          # EVCC integrations normally expose `now`, while some HA frontends
+          # expose the same mode as `Fast`. Select the option this entity has.
+          option: >-
+            {% set options = state_attr('select.evcc_carport_mode', 'options') or [] %}
+            {% set choice = namespace(value='now') %}
+            {% for option in options %}
+              {% if option | lower in ['now', 'fast'] %}
+                {% set choice.value = option %}
+              {% endif %}
+            {% endfor %}
+            {{ choice.value }}
       - service: rest_command.evcc_enable_charge
 
   - id: energy_dashboard_evcc_stop_planned_charging
@@ -159,7 +169,16 @@ automation:
         target:
           entity_id: select.evcc_carport_mode
         data:
-          option: pv
+          # Likewise, return to the exact solar option exposed by EVCC in HA.
+          option: >-
+            {% set options = state_attr('select.evcc_carport_mode', 'options') or [] %}
+            {% set choice = namespace(value='pv') %}
+            {% for option in options %}
+              {% if option | lower in ['pv', 'solar'] %}
+                {% set choice.value = option %}
+              {% endif %}
+            {% endfor %}
+            {{ choice.value }}
       - service: rest_command.evcc_disable_charge
       - service: input_boolean.turn_off
         target:
