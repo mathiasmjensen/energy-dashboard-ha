@@ -141,9 +141,10 @@ automation:
         state: "on"
       - condition: template
         value_template: >-
-          {% set start = as_datetime(states('input_datetime.evcc_charge_start')) %}
-          {% set end = as_datetime(states('input_datetime.evcc_charge_end')) %}
-          {{ start is not none and end is not none and start <= now() and now() < end }}
+          {% set start = as_timestamp(states('input_datetime.evcc_charge_start'), 0) %}
+          {% set end = as_timestamp(states('input_datetime.evcc_charge_end'), 0) %}
+          {% set current = as_timestamp(now()) %}
+          {{ start > 0 and end > 0 and start <= current and current < end }}
       - condition: template
         value_template: >-
           {{ states('select.evcc_carport_mode') | lower not in ['now', 'fast'] }}
@@ -183,8 +184,8 @@ automation:
         state: "on"
       - condition: template
         value_template: >-
-          {% set end = as_datetime(states('input_datetime.evcc_charge_end')) %}
-          {{ end is not none and now() >= end }}
+          {% set end = as_timestamp(states('input_datetime.evcc_charge_end'), 0) %}
+          {{ end > 0 and as_timestamp(now()) >= end }}
     action:
       - service: select.select_option
         continue_on_error: true
