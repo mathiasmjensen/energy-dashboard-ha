@@ -393,8 +393,8 @@ automation:
         state: "on"
       - condition: template
         value_template: >-
-          {% set start = as_timestamp(states('input_datetime.evcc_charge_start'), 0) %}
-          {% set end = as_timestamp(states('input_datetime.evcc_charge_end'), 0) %}
+          {% set start = state_attr('input_datetime.evcc_charge_start', 'timestamp') | float(0) %}
+          {% set end = state_attr('input_datetime.evcc_charge_end', 'timestamp') | float(0) %}
           {% set current = as_timestamp(now()) %}
           {{ start > 0 and end > 0 and start <= current and current < end }}
       - condition: template
@@ -433,7 +433,7 @@ automation:
         state: "on"
       - condition: template
         value_template: >-
-          {% set end = as_timestamp(states('input_datetime.evcc_charge_end'), 0) %}
+          {% set end = state_attr('input_datetime.evcc_charge_end', 'timestamp') | float(0) %}
           {{ end > 0 and as_timestamp(now()) >= end }}
     action:
       - service: select.select_option
