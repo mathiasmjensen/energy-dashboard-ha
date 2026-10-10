@@ -19,6 +19,25 @@ import {
 } from '../services/evChargePlan'
 import { useEvccChargeSessions } from './useEvccChargeSessions'
 
+type PlanRange = {
+  endMs: number
+  startMs: number
+}
+
+function getPersistedPlanRange(startMs: number | null, endMs: number | null): PlanRange | null {
+  if (startMs === null || endMs === null || endMs <= startMs || endMs <= Date.now()) {
+    return null
+  }
+
+  return { endMs, startMs }
+}
+
+function isSamePlanRange(left: PlanRange, right: PlanRange) {
+  const minuteMs = 60_000
+
+  return Math.abs(left.startMs - right.startMs) < minuteMs && Math.abs(left.endMs - right.endMs) < minuteMs
+}
+
 export function useEvChargerController({
   chargeMode,
   chargeModeOptions,
@@ -46,8 +65,10 @@ export function useEvChargerController({
   const [planFrom, setPlanFrom] = useState(() => normalizeClockValue(chargePlanFrom, '22:00'))
   const [planTo, setPlanTo] = useState(() => normalizeClockValue(chargePlanTo, '06:00'))
   const [planRange, setPlanRange] = useState(() => {
-    if (chargePlanStartMs !== null && chargePlanEndMs !== null && chargePlanEndMs > chargePlanStartMs && chargePlanEndMs > Date.now()) {
-      return { endMs: chargePlanEndMs, startMs: chargePlanStartMs }
+    const persistedRange = getPersistedPlanRange(chargePlanStartMs, chargePlanEndMs)
+
+    if (persistedRange) {
+      return persistedRange
     }
 
     return resolvePlanRange(
@@ -58,10 +79,15 @@ export function useEvChargerController({
   })
   const [isPlanEnabled, setIsPlanEnabled] = useState(chargePlanEnabled)
   const [planStatus, setPlanStatus] = useState('Ready to save plan')
+  const [pendingPlanRange, setPendingPlanRange] = useState<PlanRange | null>(null)
   const [chartAnchorMs, setChartAnchorMs] = useState<number | null>(null)
   const [dragStartMs, setDragStartMs] = useState<number | null>(null)
   const [didDragChart, setDidDragChart] = useState(false)
   const canCallService = ready && Boolean(connection)
+  const persistedPlanRange = useMemo(
+    () => getPersistedPlanRange(chargePlanStartMs, chargePlanEndMs),
+    [chargePlanEndMs, chargePlanStartMs],
+  )
 
   useEffect(() => {
     const tickId = window.setInterval(() => setNowMs(Date.now()), 60_000)
@@ -75,28 +101,35 @@ export function useEvChargerController({
   }, [chargeMode])
 
   useEffect(() => {
-    const nextFrom = normalizeClockValue(chargePlanFrom, '22:00')
-    setPlanFrom(nextFrom)
-    setPlanRange((current) => {
-      if (chargePlanStartMs !== null && chargePlanEndMs !== null && chargePlanEndMs > chargePlanStartMs && chargePlanEndMs > Date.now()) {
-        return { endMs: chargePlanEndMs, startMs: chargePlanStartMs }
+    if (!persistedPlanRange) {
+      return
+    }
+
+    if (pendingPlanRange) {
+      if (!isSamePlanRange(persistedPlanRange, pendingPlanRange)) {
+        return
       }
 
-      return resolvePlanRange(nextFrom, formatClock(current.endMs), getNextSafePlanStartMs(Date.now()))
-    })
-  }, [chargePlanEndMs, chargePlanFrom, chargePlanStartMs])
+      setPendingPlanRange(null)
+      setPlanStatus(`Plan confirmed ${formatPlanRangeLabel(persistedPlanRange.startMs, persistedPlanRange.endMs)}`)
+    }
+
+    setPlanRange(persistedPlanRange)
+    setPlanFrom(formatClock(persistedPlanRange.startMs))
+    setPlanTo(formatClock(persistedPlanRange.endMs))
+  }, [pendingPlanRange, persistedPlanRange])
 
   useEffect(() => {
-    const nextTo = normalizeClockValue(chargePlanTo, '06:00')
-    setPlanTo(nextTo)
-    setPlanRange((current) => {
-      if (chargePlanStartMs !== null && chargePlanEndMs !== null && chargePlanEndMs > chargePlanStartMs && chargePlanEndMs > Date.now()) {
-        return { endMs: chargePlanEndMs, startMs: chargePlanStartMs }
-      }
+    if (!pendingPlanRange) {
+      return
+    }
 
-      return resolvePlanRange(formatClock(current.startMs), nextTo, getNextSafePlanStartMs(Date.now()))
-    })
-  }, [chargePlanEndMs, chargePlanStartMs, chargePlanTo])
+    const timeoutId = window.setTimeout(() => {
+      setPlanStatus('Waiting for Home Assistant to confirm the saved plan')
+    }, 12_000)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [pendingPlanRange])
 
   useEffect(() => {
     setIsPlanEnabled(chargePlanEnabled)
@@ -189,6 +222,9 @@ export function useEvChargerController({
       to: endTime,
     }
 
+    setPendingPlanRange({ ...planRange })
+    setPlanStatus(`Saving ${formatPlanRangeLabel(planRange.startMs, planRange.endMs)}…`)
+
     callService({
       domain: 'script',
       service: 'turn_on',
@@ -204,8 +240,7 @@ export function useEvChargerController({
       target: entityId,
     })
 
-    setPlanStatus(`Plan saved ${formatPlanRangeLabel(planRange.startMs, planRange.endMs)}`)
-  }, [callService, canCallService, entityExists, isPlanEnabled, planRange.endMs, planRange.startMs])
+  }, [callService, canCallService, entityExists, isPlanEnabled, planRange])
 
   const handleModeChange = useCallback(
     (mode: EvccChargeMode) => {
@@ -233,6 +268,7 @@ export function useEvChargerController({
   )
 
   const applyChartWindow = useCallback((startMs: number, endMs: number) => {
+    setPendingPlanRange(null)
     setPlanRange({ endMs, startMs })
     setPlanFrom(formatClock(startMs))
     setPlanTo(formatClock(endMs))
@@ -315,6 +351,7 @@ export function useEvChargerController({
   }, [])
 
   const handlePlanFromChange = useCallback((value: string) => {
+    setPendingPlanRange(null)
     setPlanFrom(value)
     if (isClockValue(value)) {
       const nextRange = resolvePlanRange(value, planTo, earliestPlanStartMs)
@@ -326,6 +363,7 @@ export function useEvChargerController({
   }, [earliestPlanStartMs, planTo])
 
   const handlePlanToChange = useCallback((value: string) => {
+    setPendingPlanRange(null)
     setPlanTo(value)
     if (isClockValue(value)) {
       const endMs = resolvePlanEndAfterStart(value, planRange.startMs)

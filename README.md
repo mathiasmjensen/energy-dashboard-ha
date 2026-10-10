@@ -172,6 +172,14 @@ recreate `input_datetime.evcc_charge_start` and `input_datetime.evcc_charge_end`
 in Home Assistant if they were originally created as time-only helpers. Both
 helpers must have **date** and **time** enabled before reloading the EVCC package.
 
+After saving a plan, verify these two helpers in **Developer Tools -> States**.
+Their states must be complete local datetimes, for example
+`2026-10-11 22:00:00`, rather than time-only values such as `22:00:00`.
+The dashboard keeps the selected range as a pending plan until those helper
+states confirm the exact start and end times. If it remains pending, do not
+trust the schedule yet: recreate the two helpers with both date and time
+enabled, reload the package, then save the plan again.
+
 ### EV solar priority with Predbat
 
 `home-assistant/energy_dashboard_ev_solar_priority.yaml` adds a conservative
