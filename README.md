@@ -169,6 +169,11 @@ Assistant WebSocket. The package automations then switch EVCC to Fast at the
 saved start and Solar at the saved end. `script.evcc_set_charge_plan` remains
 available for manual Home Assistant calls.
 
+Enabling the charge-plan toggle also synchronizes the helpers: a future window
+writes both start and end; a currently active window preserves its past start
+and updates only its end, allowing the reconciliation automation to start
+charging immediately.
+
 The start and stop automations also reconcile every ten seconds and after a
 Home Assistant restart. A plan saved for `01:37` through `08:00` therefore
 starts immediately at `01:37`, or at the next reconciliation if its exact

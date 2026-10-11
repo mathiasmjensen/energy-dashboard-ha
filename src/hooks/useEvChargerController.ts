@@ -12,6 +12,7 @@ import {
   formatPlanRangeLabel,
   getCurrentHourMs,
   getNextSafePlanStartMs,
+  isPlanWindowActive,
   isClockValue,
   normalizeClockValue,
   resolvePlanEndAfterStart,
@@ -209,7 +210,7 @@ export function useEvChargerController({
     [callService, canCallService],
   )
 
-  const saveChargePlan = useCallback(() => {
+  const persistChargePlan = useCallback((persistStart: boolean, enabled: boolean) => {
     const startEntityId = ENERGY_ENTITIES.evccChargePlanStart
     const endEntityId = ENERGY_ENTITIES.evccChargePlanEnd
 
@@ -221,20 +222,24 @@ export function useEvChargerController({
     const start = new Date(planRange.startMs)
     const end = new Date(planRange.endMs)
 
-    setPendingPlanRange({ ...planRange })
-    setPlanStatus(`Saving ${formatPlanRangeLabel(planRange.startMs, planRange.endMs)}…`)
+    if (persistStart) {
+      setPendingPlanRange({ ...planRange })
+    }
 
-    // Persist the two HA helpers directly. The start/stop automations watch
-    // these entities, so no script-variable handoff is needed for a plan save.
-    callService({
-      domain: 'input_datetime',
-      service: 'set_datetime',
-      serviceData: {
-        date: formatLocalDateKey(start),
-        time: `${formatClock(planRange.startMs)}:00`,
-      },
-      target: startEntityId,
-    })
+    // An active range deliberately retains its past start helper. This lets
+    // HA's reconciliation automation enter Fast mode immediately on enable.
+    if (persistStart) {
+      callService({
+        domain: 'input_datetime',
+        service: 'set_datetime',
+        serviceData: {
+          date: formatLocalDateKey(start),
+          time: `${formatClock(planRange.startMs)}:00`,
+        },
+        target: startEntityId,
+      })
+    }
+
     callService({
       domain: 'input_datetime',
       service: 'set_datetime',
@@ -244,9 +249,14 @@ export function useEvChargerController({
       },
       target: endEntityId,
     })
-    callInputBoolean(ENERGY_ENTITIES.evccChargePlanEnabled, isPlanEnabled)
+    callInputBoolean(ENERGY_ENTITIES.evccChargePlanEnabled, enabled)
+  }, [callInputBoolean, callService, canCallService, entityExists, planRange])
+
+  const saveChargePlan = useCallback(() => {
+    setPlanStatus(`Saving ${formatPlanRangeLabel(planRange.startMs, planRange.endMs)}…`)
+    persistChargePlan(true, isPlanEnabled)
     setPlanStatus('Saving to Home Assistant')
-  }, [callInputBoolean, callService, canCallService, entityExists, isPlanEnabled, planRange])
+  }, [isPlanEnabled, persistChargePlan, planRange.endMs, planRange.startMs])
 
   const handleModeChange = useCallback(
     (mode: EvccChargeMode) => {
@@ -259,18 +269,24 @@ export function useEvChargerController({
   const handlePlanEnabledChange = useCallback(
     (enabled: boolean) => {
       setIsPlanEnabled(enabled)
-      callInputBoolean(ENERGY_ENTITIES.evccChargePlanEnabled, enabled)
 
       if (!enabled) {
+        callInputBoolean(ENERGY_ENTITIES.evccChargePlanEnabled, false)
         callSelectOption(ENERGY_ENTITIES.evccLoadpointMode, getEvccModeServiceOption('pv', chargeModeOptions))
         callRestCommand('evcc_disable_charge')
         setPlanStatus('Plan disabled and charger returned to solar')
         return
       }
 
-      setPlanStatus('Plan enabled')
+      const isActiveNow = isPlanWindowActive(planRange.startMs, planRange.endMs, Date.now())
+      persistChargePlan(!isActiveNow, true)
+      setPlanStatus(
+        isActiveNow
+          ? `Plan enabled until ${formatPlanRangeLabel(planRange.startMs, planRange.endMs)}. Charging starts now.`
+          : `Plan enabled for ${formatPlanRangeLabel(planRange.startMs, planRange.endMs)}`,
+      )
     },
-    [callInputBoolean, callRestCommand, callSelectOption, chargeModeOptions],
+    [callInputBoolean, callRestCommand, callSelectOption, chargeModeOptions, persistChargePlan, planRange.endMs, planRange.startMs],
   )
 
   const applyChartWindow = useCallback((startMs: number, endMs: number) => {

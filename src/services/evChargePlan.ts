@@ -72,6 +72,15 @@ export function resolvePlanRange(from: string, to: string, earliestStartMs: numb
   return { endMs, startMs }
 }
 
+/**
+ * An active plan already has a valid start timestamp in Home Assistant. Keep
+ * it intact when re-enabling the timer so the reconciliation automation can
+ * begin charging immediately instead of moving the start into the future.
+ */
+export function isPlanWindowActive(startMs: number, endMs: number, nowMs: number) {
+  return startMs <= nowMs && nowMs < endMs
+}
+
 export function formatClock(timestamp: number) {
   const date = new Date(timestamp)
 

@@ -8,6 +8,7 @@ import {
   getCurrentHourMs,
   getNextFullHourMs,
   getNextSafePlanStartMs,
+  isPlanWindowActive,
   isClockValue,
   normalizeClockValue,
   resolvePlanRange,
@@ -106,5 +107,14 @@ test.describe('EV charge plan service', () => {
     expect(isClockValue('00:00')).toBe(true)
     expect(isClockValue('24:00')).toBe(false)
     expect(normalizeClockValue('24:00:00', '22:00')).toBe('22:00')
+  })
+
+  test('recognizes a current charging window without moving its start forward', () => {
+    const startMs = new Date(2026, 9, 11, 1, 40).getTime()
+    const nowMs = new Date(2026, 9, 11, 1, 48).getTime()
+    const endMs = new Date(2026, 9, 11, 7).getTime()
+
+    expect(isPlanWindowActive(startMs, endMs, nowMs)).toBe(true)
+    expect(isPlanWindowActive(startMs, endMs, new Date(2026, 9, 11, 7).getTime())).toBe(false)
   })
 })
