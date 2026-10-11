@@ -87,6 +87,17 @@ export function formatClock(timestamp: number) {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
+export function formatClockWithSeconds(timestamp: number) {
+  const date = new Date(timestamp)
+
+  return `${formatClock(timestamp)}:${String(date.getSeconds()).padStart(2, '0')}`
+}
+
+/** Returns the final second inside an hourly price slot. */
+export function getInclusivePriceHourEndMs(endMs: number) {
+  return endMs - 1_000
+}
+
 export function formatPlanRangeLabel(startMs: number, endMs: number) {
   const startDate = formatLocalDateKey(new Date(startMs))
   const endDate = formatLocalDateKey(new Date(endMs))

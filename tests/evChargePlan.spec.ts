@@ -3,9 +3,11 @@ import {
   createRollingPriceDay,
   createRollingPriceHours,
   formatClock,
+  formatClockWithSeconds,
   formatLocalDateKey,
   formatPlanRangeLabel,
   getCurrentHourMs,
+  getInclusivePriceHourEndMs,
   getNextFullHourMs,
   getNextSafePlanStartMs,
   isPlanWindowActive,
@@ -107,6 +109,14 @@ test.describe('EV charge plan service', () => {
     expect(isClockValue('00:00')).toBe(true)
     expect(isClockValue('24:00')).toBe(false)
     expect(normalizeClockValue('24:00:00', '22:00')).toBe('22:00')
+  })
+
+  test('uses the final second of a clicked price hour as the plan end', () => {
+    const hourEndMs = new Date(2026, 9, 11, 13, 0, 0).getTime()
+    const inclusiveEndMs = getInclusivePriceHourEndMs(hourEndMs)
+
+    expect(formatClock(inclusiveEndMs)).toBe('12:59')
+    expect(formatClockWithSeconds(inclusiveEndMs)).toBe('12:59:59')
   })
 
   test('recognizes a current charging window without moving its start forward', () => {

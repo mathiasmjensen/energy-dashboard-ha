@@ -8,9 +8,11 @@ import {
   createRollingPriceDay,
   createRollingPriceHours,
   formatClock,
+  formatClockWithSeconds,
   formatLocalDateKey,
   formatPlanRangeLabel,
   getCurrentHourMs,
+  getInclusivePriceHourEndMs,
   getNextSafePlanStartMs,
   isPlanWindowActive,
   isClockValue,
@@ -234,7 +236,7 @@ export function useEvChargerController({
         service: 'set_datetime',
         serviceData: {
           date: formatLocalDateKey(start),
-          time: `${formatClock(planRange.startMs)}:00`,
+          time: formatClockWithSeconds(planRange.startMs),
         },
         target: startEntityId,
       })
@@ -245,7 +247,7 @@ export function useEvChargerController({
       service: 'set_datetime',
       serviceData: {
         date: formatLocalDateKey(end),
-        time: `${formatClock(planRange.endMs)}:00`,
+        time: formatClockWithSeconds(planRange.endMs),
       },
       target: endEntityId,
     })
@@ -311,17 +313,17 @@ export function useEvChargerController({
 
       if (chartAnchorMs === null) {
         setChartAnchorMs(selectableStartMs)
-        applyChartWindow(selectableStartMs, window.endMs)
+        applyChartWindow(selectableStartMs, getInclusivePriceHourEndMs(window.endMs))
         return
       }
 
       if (selectableStartMs <= chartAnchorMs) {
         setChartAnchorMs(selectableStartMs)
-        applyChartWindow(selectableStartMs, window.endMs)
+        applyChartWindow(selectableStartMs, getInclusivePriceHourEndMs(window.endMs))
         return
       }
 
-      applyChartWindow(chartAnchorMs, window.startMs)
+      applyChartWindow(chartAnchorMs, getInclusivePriceHourEndMs(window.endMs))
       setChartAnchorMs(null)
     },
     [applyChartWindow, chartAnchorMs, earliestPlanStartMs],
@@ -357,7 +359,7 @@ export function useEvChargerController({
       }
 
       if (window.startMs > dragStartMs) {
-        applyChartWindow(dragStartMs, window.startMs)
+        applyChartWindow(dragStartMs, getInclusivePriceHourEndMs(window.endMs))
       }
     },
     [applyChartWindow],

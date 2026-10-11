@@ -210,7 +210,7 @@ export function EvChargerActivitySection({
               <small className="text-xs text-dashboard-soft">
                 {controller.selectedPriceDay.date} · Current hour from {formatClock(controller.earliestPlanStartMs)}
               </small>
-              <small className="text-[11px] text-dashboard-muted">Tap a start hour, then its end boundary, or drag across the bars.</small>
+              <small className="text-[11px] text-dashboard-muted">Tap a start hour, then the final charging hour, or drag across the bars.</small>
             </span>
           </div>
 
