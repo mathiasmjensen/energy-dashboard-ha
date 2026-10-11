@@ -58,6 +58,6 @@ export type EvChargerController = {
   handlePriceHourPointerDown: (window: EvPlanPriceHour) => void
   handlePriceHourPointerEnter: (window: EvPlanPriceHour) => void
   handlePriceHourPointerLeave: () => void
-  handlePriceHourPointerUp: () => void
+  handlePriceHourPointerUp: (window: EvPlanPriceHour) => void
   handleSavePlan: () => void
 }

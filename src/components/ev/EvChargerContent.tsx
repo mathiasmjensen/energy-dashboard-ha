@@ -210,6 +210,7 @@ export function EvChargerActivitySection({
               <small className="text-xs text-dashboard-soft">
                 {controller.selectedPriceDay.date} · Current hour from {formatClock(controller.earliestPlanStartMs)}
               </small>
+              <small className="text-[11px] text-dashboard-muted">Tap a start hour, then its end boundary, or drag across the bars.</small>
             </span>
           </div>
 
@@ -218,7 +219,6 @@ export function EvChargerActivitySection({
             nowMs={controller.nowMs}
             prices={controller.priceHours}
             startMs={controller.planStartMs}
-            onHourClick={controller.handlePriceHourClick}
             onHourPointerDown={controller.handlePriceHourPointerDown}
             onHourPointerEnter={controller.handlePriceHourPointerEnter}
             onHourPointerLeave={controller.handlePriceHourPointerLeave}
@@ -448,7 +448,6 @@ function SettingRow({
 function PricePlanChart({
   endMs,
   nowMs,
-  onHourClick,
   onHourPointerDown,
   onHourPointerEnter,
   onHourPointerLeave,
@@ -458,11 +457,10 @@ function PricePlanChart({
 }: {
   endMs: number
   nowMs: number
-  onHourClick: (window: EvPlanPriceHour) => void
   onHourPointerDown: (window: EvPlanPriceHour) => void
   onHourPointerEnter: (window: EvPlanPriceHour) => void
   onHourPointerLeave: () => void
-  onHourPointerUp: () => void
+  onHourPointerUp: (window: EvPlanPriceHour) => void
   prices: EvPlanPriceHour[]
   startMs: number
 }) {
@@ -472,7 +470,7 @@ function PricePlanChart({
 
   return (
     <div
-      className="relative flex h-[132px] items-end gap-1.5 overflow-hidden rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(47,134,255,0.12),rgba(8,12,18,0.18))] px-2 py-3"
+      className="relative grid h-[156px] grid-cols-[repeat(24,minmax(0,1fr))] items-end gap-1 overflow-hidden rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(47,134,255,0.12),rgba(8,12,18,0.18))] px-2 pb-3 pt-8"
       aria-label="Energy prices by hour"
       onPointerLeave={onHourPointerLeave}
     >
@@ -488,7 +486,7 @@ function PricePlanChart({
         return (
           <button
             aria-label={`Select ${currentHourLabel} energy price ${priceLabel}`}
-            className="group relative z-[1] h-full min-h-0 min-w-0 flex-1 self-end rounded-none border-0 bg-transparent p-0 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:-translate-y-0.5 focus-visible:brightness-110 disabled:cursor-not-allowed disabled:opacity-30"
+            className="group relative z-[1] h-full min-h-0 min-w-0 self-end rounded-none border-0 bg-transparent p-0 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:-translate-y-0.5 focus-visible:brightness-110 disabled:cursor-not-allowed disabled:opacity-30"
             data-price-label={`${hourLabel} · ${priceLabel}`}
             data-current={includesNow}
             data-selected={selected}
@@ -497,11 +495,19 @@ function PricePlanChart({
             style={{ '--bar-height': `${Math.max(5, (price / max) * 100)}%` } as CSSProperties}
             title={`${currentHourLabel} ${priceLabel}`}
             type="button"
-            onClick={() => onHourClick(priceWindow)}
             onPointerDown={() => onHourPointerDown(priceWindow)}
             onPointerEnter={() => onHourPointerEnter(priceWindow)}
-            onPointerUp={onHourPointerUp}
+            onPointerUp={() => onHourPointerUp(priceWindow)}
           >
+            <span
+              aria-hidden="true"
+              className={cn(
+                'pointer-events-none absolute left-1/2 top-[-25px] -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold tabular-nums text-dashboard-text',
+                index % 6 === 0 ? 'block' : 'hidden sm:block',
+              )}
+            >
+              {price.toFixed(2)}
+            </span>
             <span
               className={cn(
                 'absolute bottom-0 left-[8%] right-[8%] min-h-[4px] rounded-[10px] shadow-[0_0_18px_rgba(59,130,255,0.44)]',
@@ -512,7 +518,7 @@ function PricePlanChart({
               style={{ height: 'var(--bar-height)' }}
             />
             {includesNow ? <span aria-hidden="true" className="absolute inset-y-0 left-1/2 w-px bg-white/70 shadow-[0_0_10px_rgba(255,255,255,0.7)]" /> : null}
-            <span className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-[calc(100%+8px)] rounded-lg border border-white/12 bg-[#070d16]/95 px-2 py-1 text-[11px] text-white opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.35)] transition group-hover:opacity-100 group-focus-visible:opacity-100">
+            <span className="pointer-events-none absolute left-1/2 top-1 z-10 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/12 bg-[#070d16]/95 px-2 py-1 text-[11px] text-white opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.35)] transition group-hover:opacity-100 group-focus-visible:opacity-100">
               {`${currentHourLabel} · ${priceLabel}`}
             </span>
           </button>

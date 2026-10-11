@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useHass } from '@hakit/core'
 import { ENERGY_ENTITIES } from '../data/energyEntities'
 import { EVCC_CHARGE_MODES, getEvccModeServiceOption, normalizeEvccMode } from '../data/evcc'
@@ -94,8 +94,8 @@ export function useEvChargerController({
   const [planStatus, setPlanStatus] = useState('Ready to save plan')
   const [pendingPlanRange, setPendingPlanRange] = useState<PlanRange | null>(null)
   const [chartAnchorMs, setChartAnchorMs] = useState<number | null>(null)
-  const [dragStartMs, setDragStartMs] = useState<number | null>(null)
-  const [didDragChart, setDidDragChart] = useState(false)
+  const dragStartMsRef = useRef<number | null>(null)
+  const didDragChartRef = useRef(false)
   const canCallService = ready && Boolean(connection)
   const persistedPlanRange = useMemo(
     () => getPersistedPlanRange(chargePlanStartMs, chargePlanEndMs),
@@ -303,12 +303,6 @@ export function useEvChargerController({
         return
       }
 
-      if (didDragChart) {
-        setDidDragChart(false)
-        setChartAnchorMs(null)
-        return
-      }
-
       const selectableStartMs = Math.max(window.startMs, earliestPlanStartMs)
 
       if (selectableStartMs >= window.endMs) {
@@ -322,7 +316,7 @@ export function useEvChargerController({
       }
 
       if (selectableStartMs <= chartAnchorMs) {
-        setChartAnchorMs(null)
+        setChartAnchorMs(selectableStartMs)
         applyChartWindow(selectableStartMs, window.endMs)
         return
       }
@@ -330,7 +324,7 @@ export function useEvChargerController({
       applyChartWindow(chartAnchorMs, window.startMs)
       setChartAnchorMs(null)
     },
-    [applyChartWindow, chartAnchorMs, didDragChart, earliestPlanStartMs],
+    [applyChartWindow, chartAnchorMs, earliestPlanStartMs],
   )
 
   const handlePriceHourPointerDown = useCallback(
@@ -344,33 +338,41 @@ export function useEvChargerController({
         return
       }
 
-      setDragStartMs(selectableStartMs)
-      setDidDragChart(false)
-      applyChartWindow(selectableStartMs, window.endMs)
+      dragStartMsRef.current = selectableStartMs
+      didDragChartRef.current = false
     },
-    [applyChartWindow, earliestPlanStartMs],
+    [earliestPlanStartMs],
   )
 
   const handlePriceHourPointerEnter = useCallback(
     (window: EvPlanPriceHour) => {
+      const dragStartMs = dragStartMsRef.current
+
       if (dragStartMs === null || window.disabled) {
         return
       }
 
       if (window.startMs !== dragStartMs) {
-        setDidDragChart(true)
+        didDragChartRef.current = true
       }
 
       if (window.startMs > dragStartMs) {
         applyChartWindow(dragStartMs, window.startMs)
       }
     },
-    [applyChartWindow, dragStartMs],
+    [applyChartWindow],
   )
 
-  const handlePriceHourPointerUp = useCallback(() => {
-    setDragStartMs(null)
-  }, [])
+  const handlePriceHourPointerUp = useCallback((window: EvPlanPriceHour) => {
+    const wasDragged = didDragChartRef.current
+
+    dragStartMsRef.current = null
+    didDragChartRef.current = false
+
+    if (!wasDragged) {
+      handlePriceHourClick(window)
+    }
+  }, [handlePriceHourClick])
 
   const handlePlanFromChange = useCallback((value: string) => {
     setPendingPlanRange(null)
@@ -401,7 +403,8 @@ export function useEvChargerController({
   }, [saveChargePlan])
 
   const handlePriceHourPointerLeave = useCallback(() => {
-    setDragStartMs(null)
+    dragStartMsRef.current = null
+    didDragChartRef.current = false
   }, [])
 
   const priceHours = useMemo(
